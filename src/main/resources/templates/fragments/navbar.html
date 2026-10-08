@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <!-- Link logo -->
+            <a th:href="@{/}" class="navbar-brand">Hệ Thống Quản Lý</a>
+
+            <!-- Bat/Tat menu -->
+            <button class="navbar-toggler" type="button" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- menu -->
+             <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a th:href="@{/departments}" class="nav-link">Bộ Môn</a>
+                    </li>
+                    <!-- <li class="nav-item">
+                        <a th:href="@{/students}" class="nav-link">Sinh Viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/topics}" class="nav-link">Đề Tài</a>
+                    </li> -->
+                </ul>
+             </div>
+        </div>
+    </nav>
+</body>
+</html>
