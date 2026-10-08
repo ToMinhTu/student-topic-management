@@ -1,0 +1,450 @@
+Project student_topic_management {
+  database_type: 'MySQL'
+  Note: 'Thiet ke v1. SQL la nguon chay that; cac cot generated duoc mo ta trong Note.'
+}
+
+Table departments {
+  Note: 'Bộ môn thuộc khoa CNTT; không phải danh sách các khoa.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  name varchar(150) [not null, note: 'Tên bộ môn']
+  description text [note: 'Mô tả']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (name) [unique]
+  }
+}
+
+Table users {
+  Note: 'Tài khoản dùng chung, khóa mềm bằng enabled.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  username varchar(100) [not null, note: 'Tên đăng nhập']
+  password_hash varchar(255) [not null, note: 'Mật khẩu đã băm; không lưu bản rõ']
+  full_name varchar(150) [not null, note: 'Họ tên']
+  email varchar(254) [not null, note: 'Email liên hệ']
+  enabled boolean [not null, default: 1, note: 'Cho phép đăng nhập']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (username) [unique]
+    (email) [unique]
+  }
+}
+
+Table roles {
+  Note: 'Vai trò hệ thống; vai trò chủ tịch/thư ký lấy theo hội đồng.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  code varchar(30) [not null, note: 'ADMIN, DEAN, DEPARTMENT_HEAD, LECTURER, STUDENT']
+  indexes {
+    (code) [unique]
+  }
+}
+
+Table user_roles {
+  Note: 'Một người dùng có thể có nhiều vai trò.'
+  user_id bigint [not null, note: 'Tài khoản']
+  role_id bigint [not null, note: 'Vai trò']
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table students {
+  Note: 'Hồ sơ sinh viên; user_id vừa PK vừa FK.'
+  user_id bigint [not null, pk, note: 'Tài khoản sinh viên']
+  student_code varchar(30) [not null, note: 'MSSV']
+  class_name varchar(100) [note: 'Lớp']
+  department_id bigint [not null, note: 'Bộ môn']
+  indexes {
+    (student_code) [unique]
+  }
+}
+
+Table lecturers {
+  Note: 'Hồ sơ giảng viên; người chấm/hướng dẫn phải có hồ sơ này.'
+  user_id bigint [not null, pk, note: 'Tài khoản giảng viên']
+  lecturer_code varchar(30) [not null, note: 'Mã giảng viên']
+  department_id bigint [not null, note: 'Bộ môn']
+  indexes {
+    (lecturer_code) [unique]
+  }
+}
+
+Table registration_rounds {
+  Note: 'Đợt đăng ký; pha GV/SV suy ra từ cửa sổ thời gian, không từ status.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  name varchar(200) [not null, note: 'Tên đợt']
+  round_type varchar(20) [not null, note: 'COURSE, RESEARCH, SPECIALIZATION, THESIS']
+  proposal_starts_at datetime [not null, note: 'Bắt đầu giai đoạn 1']
+  proposal_ends_at datetime [not null, note: 'Kết thúc giai đoạn 1, không bao gồm mốc này']
+  student_starts_at datetime [not null, note: 'Bắt đầu giai đoạn 2']
+  student_ends_at datetime [not null, note: 'Kết thúc giai đoạn 2, không bao gồm mốc này']
+  reviewer_due_at datetime [note: 'Hạn GVPB: bắt buộc TLCN/KLTN, NULL các loại khác']
+  council_date date [note: 'Ngày hội đồng cấp đợt: chỉ KLTN']
+  report_due_at datetime [note: 'Mở rộng: hạn nộp báo cáo, nếu giảng viên đồng ý']
+  group_min_size tinyint [not null, default: 3, note: 'Giới hạn tối thiểu chờ xác nhận; mặc định đúng 3']
+  group_max_size tinyint [not null, default: 3, note: 'Giới hạn tối đa chờ xác nhận; mặc định đúng 3']
+  status varchar(20) [not null, default: 'DRAFT', note: 'Trạng thái: DRAFT, OPEN, CLOSED']
+  created_by bigint [not null, note: 'Trưởng khoa tạo đợt']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  checks {
+    `group_min_size BETWEEN 1 AND 5 AND group_max_size BETWEEN group_min_size AND 5`
+    `status IN ('DRAFT', 'OPEN', 'CLOSED')`
+    `round_type IN ('COURSE','RESEARCH','SPECIALIZATION','THESIS')`
+    `proposal_starts_at < proposal_ends_at AND proposal_ends_at <= student_starts_at AND student_starts_at < student_ends_at`
+    `((round_type IN ('SPECIALIZATION','THESIS') AND reviewer_due_at IS NOT NULL AND reviewer_due_at > student_ends_at) OR (round_type IN ('COURSE','RESEARCH') AND reviewer_due_at IS NULL))`
+    `((round_type = 'THESIS' AND council_date IS NOT NULL AND council_date >= DATE(student_ends_at)) OR (round_type <> 'THESIS' AND council_date IS NULL))`
+    `report_due_at IS NULL OR report_due_at > student_ends_at`
+  }
+}
+
+Table topics {
+  Note: 'Đề tài theo đợt và bộ môn. Giai đoạn 1 nhận đề xuất GV/SV theo giả định A1.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  round_id bigint [not null, note: 'Đợt']
+  department_id bigint [not null, note: 'Bộ môn quản lý']
+  code varchar(40) [not null, note: 'Mã đề tài trong đợt']
+  title varchar(255) [not null, note: 'Tên đề tài']
+  description text [not null, note: 'Nội dung']
+  requirements text [note: 'Yêu cầu thực hiện']
+  proposed_by bigint [not null, note: 'GV hoặc SV đề xuất']
+  status varchar(20) [not null, default: 'DRAFT', note: 'Trạng thái: DRAFT, SUBMITTED, APPROVED, REJECTED, PUBLISHED']
+  department_decision varchar(10) [note: 'APPROVED/REJECTED: sơ duyệt của trưởng bộ môn']
+  department_reviewed_by bigint [note: 'Trưởng bộ môn sơ duyệt']
+  department_reviewed_at datetime [note: 'Lúc sơ duyệt']
+  department_comment text [note: 'Ý kiến bộ môn']
+  approved_by bigint [note: 'Trưởng khoa phê duyệt']
+  approved_at datetime [note: 'Thời điểm duyệt']
+  rejection_reason text [note: 'Lý do từ chối']
+  published_at datetime [note: 'Thời điểm công bố']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (round_id, code) [unique]
+    (id, round_id) [unique]
+    (round_id, status)
+  }
+  checks {
+    `status IN ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'PUBLISHED')`
+    `department_decision IS NULL OR department_decision IN ('APPROVED','REJECTED')`
+  }
+}
+
+Table topic_supervisors {
+  Note: 'Tối đa 2 GVHD nhờ slot 1..2; tối thiểu 1 tại duyệt do Service bảo đảm.'
+  topic_id bigint [not null, note: 'Đề tài']
+  lecturer_id bigint [not null, note: 'GVHD']
+  slot_no tinyint [not null, note: 'Vị trí 1 hoặc 2, không phải trọng số']
+  indexes {
+    (topic_id, lecturer_id) [pk]
+    (topic_id, slot_no) [unique]
+  }
+  checks {
+    `slot_no BETWEEN 1 AND 2`
+  }
+}
+
+Table student_groups {
+  Note: 'Nhóm nghiệp vụ theo min/max của đợt; mặc định đúng 3; LOCKED khi được duyệt.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  round_id bigint [not null, note: 'Đợt']
+  name varchar(150) [not null, note: 'Tên nhóm']
+  status varchar(20) [not null, default: 'FORMING', note: 'Trạng thái: FORMING, LOCKED, COMPLETED']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  closed_at datetime [note: 'Kết thúc thực hiện và giải phóng thành viên']
+  indexes {
+    (id, round_id) [unique]
+  }
+  checks {
+    `status IN ('FORMING', 'LOCKED', 'COMPLETED')`
+  }
+}
+
+Table group_members {
+  Note: 'Slot 1 là nhóm trưởng. left_at NULL nghĩa là đang tham gia; lịch sử được giữ.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  group_id bigint [not null, note: 'Nhóm']
+  student_id bigint [not null, note: 'Sinh viên']
+  slot_no tinyint [not null, note: '1: trưởng nhóm; 2..5: thành viên; Service áp dụng max của đợt']
+  joined_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Lúc tham gia']
+  left_at datetime [note: 'Lúc rời nhóm hoặc kết thúc đề tài']
+  active_student_id bigint [note: 'Cột tính: duy nhất toàn hệ thống khi đang tham gia | MySQL GENERATED STORED: CASE WHEN left_at IS NULL THEN student_id ELSE NULL END']
+  active_slot_no tinyint [note: 'Cột tính: vị trí đang dùng trong nhóm | MySQL GENERATED STORED: CASE WHEN left_at IS NULL THEN slot_no ELSE NULL END']
+  indexes {
+    (active_student_id) [unique]
+    (group_id, active_slot_no) [unique]
+    (group_id, student_id) [unique]
+  }
+  checks {
+    `slot_no BETWEEN 1 AND 5`
+    `left_at IS NULL OR left_at >= joined_at`
+  }
+}
+
+Table topic_registrations {
+  Note: 'Mỗi nhóm một hồ sơ đăng ký; sửa lại hồ sơ bị từ chối và ghi audit, không tạo dòng mới.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  group_id bigint [not null, note: 'Nhóm duy nhất']
+  topic_id bigint [not null, note: 'Đề tài chọn']
+  round_id bigint [not null, note: 'Đợt đồng nhất với nhóm và đề tài']
+  status varchar(20) [not null, default: 'PENDING', note: 'Trạng thái: PENDING, APPROVED, REJECTED, CANCELLED']
+  submitted_by bigint [not null, note: 'Nhóm trưởng gửi']
+  submitted_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm gửi']
+  decided_by bigint [note: 'Trưởng khoa xét duyệt']
+  decided_at datetime [note: 'Thời điểm xét duyệt']
+  decision_note text [note: 'Lý do duyệt/từ chối']
+  reserved_topic_id bigint [note: 'Cột tính: giữ đề tài khi PENDING/APPROVED; giả định một đề tài một nhóm | MySQL GENERATED STORED: CASE WHEN status IN (\'PENDING\',\'APPROVED\') THEN topic_id ELSE NULL END']
+  indexes {
+    (group_id) [unique]
+    (reserved_topic_id) [unique]
+    (id, round_id) [unique]
+    (round_id, status)
+  }
+  checks {
+    `status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED')`
+  }
+}
+
+Table reports {
+  Note: 'Mỗi lần nộp là một phiên bản; file ở kho riêng, DB lưu metadata.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  registration_id bigint [not null, note: 'Hồ sơ đã duyệt']
+  version_no int [not null, note: 'Phiên bản tăng dần']
+  storage_key varchar(255) [not null, note: 'Khóa lưu file ngẫu nhiên, không phải URL công khai']
+  original_name varchar(255) [not null, note: 'Tên gốc để hiển thị']
+  content_type varchar(100) [not null, note: 'Loại nội dung đã kiểm tra']
+  size_bytes bigint [not null, note: 'Kích thước']
+  sha256 char(64) [not null, note: 'Checksum file']
+  submitted_by bigint [not null, note: 'Nhóm trưởng tại thời điểm nộp']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (registration_id, version_no) [unique]
+    (storage_key) [unique]
+  }
+  checks {
+    `version_no > 0`
+    `size_bytes > 0`
+  }
+}
+
+Table councils {
+  Note: 'Một hội đồng thuộc một đợt và chấm nhiều đề tài.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  round_id bigint [not null, note: 'Đợt']
+  name varchar(150) [not null, note: 'Tên hội đồng']
+  status varchar(20) [not null, default: 'DRAFT', note: 'Trạng thái: DRAFT, ACTIVE, CLOSED']
+  created_by bigint [not null, note: 'Trưởng khoa']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (id, round_id) [unique]
+  }
+  checks {
+    `status IN ('DRAFT', 'ACTIVE', 'CLOSED')`
+  }
+}
+
+Table council_members {
+  Note: '3–5 GV khi ACTIVE; slot 1 chủ tịch, 2 thư ký, 3–5 ủy viên.'
+  council_id bigint [not null, note: 'Hội đồng']
+  lecturer_id bigint [not null, note: 'Giảng viên']
+  slot_no tinyint [not null, note: '1: chủ tịch; 2: thư ký; 3..5: ủy viên']
+  indexes {
+    (council_id, lecturer_id) [pk]
+    (council_id, slot_no) [unique]
+  }
+  checks {
+    `slot_no BETWEEN 1 AND 5`
+  }
+}
+
+Table defenses {
+  Note: 'Lịch bảo vệ một hồ sơ tại một hội đồng; cùng đợt được FK kép bảo đảm.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  registration_id bigint [not null, note: 'Hồ sơ đề tài']
+  round_id bigint [not null, note: 'Đợt']
+  council_id bigint [not null, note: 'Hội đồng']
+  scheduled_at datetime [not null, note: 'Giờ báo cáo']
+  location varchar(200) [not null, note: 'Phòng/địa điểm']
+  status varchar(20) [not null, default: 'SCHEDULED', note: 'Trạng thái: SCHEDULED, DONE, CANCELLED']
+  indexes {
+    (registration_id) [unique]
+  }
+  checks {
+    `status IN ('SCHEDULED', 'DONE', 'CANCELLED')`
+  }
+}
+
+Table reviewer_assignments {
+  Note: 'Danh sách người phải chấm: GVPB độc lập hoặc thành viên hội đồng; không trùng người.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  registration_id bigint [not null, note: 'Hồ sơ đề tài']
+  lecturer_id bigint [not null, note: 'Người chấm']
+  assignment_type varchar(20) [not null, note: 'REVIEWER hoặc COUNCIL']
+  assigned_by bigint [not null, note: 'Trưởng khoa']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (registration_id, lecturer_id) [unique]
+  }
+  checks {
+    `assignment_type IN ('REVIEWER','COUNCIL')`
+  }
+}
+
+Table evaluations {
+  Note: 'Một phiếu cho một phân công; submitted_at NULL là bản nháp.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  assignment_id bigint [not null, note: 'Phân công chấm']
+  score decimal(4,2) [not null, note: 'Điểm 0..10; dùng BigDecimal']
+  comments text [note: 'Nhận xét']
+  submitted_at datetime [note: 'Thời điểm chốt phiếu']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (assignment_id) [unique]
+  }
+  checks {
+    `score BETWEEN 0 AND 10`
+  }
+}
+
+Table results {
+  Note: 'Bản chốt điểm; sinh viên chỉ thấy khi published_at có giá trị.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  registration_id bigint [not null, note: 'Một kết quả mỗi hồ sơ']
+  final_score decimal(4,2) [not null, note: 'TB cộng mọi phiếu bắt buộc đã nộp; làm tròn 2 số']
+  component_count int [not null, note: 'Số phiếu dùng để tính']
+  conclusion text [not null, note: 'Kết luận do chủ tịch xác nhận']
+  confirmed_by bigint [not null, note: 'Chủ tịch hội đồng']
+  confirmed_at datetime [not null, note: 'Thời điểm tổng hợp']
+  published_by bigint [note: 'Trưởng khoa công bố']
+  published_at datetime [note: 'NULL: chưa công bố']
+  indexes {
+    (registration_id) [unique]
+  }
+  checks {
+    `final_score BETWEEN 0 AND 10`
+    `component_count > 0`
+    `(published_by IS NULL AND published_at IS NULL) OR (published_by IS NOT NULL AND published_at IS NOT NULL)`
+    `published_at IS NULL OR published_at >= confirmed_at`
+  }
+}
+
+Table announcements {
+  Note: 'Thông báo chính thức; chỉ hiển thị bản đã công bố.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  title varchar(255) [not null, note: 'Tiêu đề']
+  content text [not null, note: 'Nội dung văn bản; escape khi hiển thị']
+  author_id bigint [not null, note: 'Admin hoặc trưởng khoa']
+  published_at datetime [note: 'Thời điểm công bố']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+}
+
+Table audit_logs {
+  Note: 'Nhật ký nghiệp vụ, chỉ ghi thêm; không ghi mật khẩu hoặc nội dung file.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  actor_id bigint [note: 'Người thực hiện; NULL nếu tác vụ hệ thống']
+  action varchar(60) [not null, note: 'Mã thao tác']
+  entity_type varchar(60) [not null, note: 'Loại đối tượng, không có FK đa hình']
+  entity_id bigint [note: 'ID đối tượng']
+  details text [note: 'Tóm tắt thay đổi và lý do']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (entity_type, entity_id, created_at)
+  }
+}
+
+Table email_outbox {
+  Note: 'Email công bố kết quả; D ghi cùng transaction công bố, A gửi sau commit và retry.'
+  id bigint [not null, increment, pk, note: 'Khóa chính tự tăng']
+  result_id bigint [not null, note: 'Kết quả đã công bố']
+  student_id bigint [not null, note: 'Sinh viên nhận']
+  recipient_email varchar(254) [not null, note: 'Snapshot email khi công bố']
+  subject varchar(255) [not null, note: 'Tiêu đề']
+  body text [not null, note: 'Nội dung thông báo và link xem điểm']
+  status varchar(20) [not null, default: 'PENDING', note: 'Trạng thái: PENDING, PROCESSING, SENT, FAILED']
+  attempts int [not null, default: 0, note: 'Số lần gửi']
+  next_attempt_at datetime [note: 'Lần thử lại kế tiếp']
+  locked_at datetime [note: 'Lease worker; phục hồi PROCESSING bị treo']
+  sent_at datetime [note: 'Lúc SMTP chấp nhận']
+  last_error varchar(500) [note: 'Lỗi đã loại bỏ bí mật']
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'Thời điểm tạo; quy ước UTC']
+  indexes {
+    (result_id, student_id) [unique]
+    (status, next_attempt_at)
+  }
+  checks {
+    `status IN ('PENDING', 'PROCESSING', 'SENT', 'FAILED')`
+    `attempts >= 0`
+  }
+}
+
+Ref: user_roles.user_id > users.id
+Ref: user_roles.role_id > roles.id
+Ref: students.user_id > users.id
+Ref: students.department_id > departments.id
+Ref: lecturers.user_id > users.id
+Ref: lecturers.department_id > departments.id
+Ref: registration_rounds.created_by > users.id
+Ref: topics.department_reviewed_by > users.id
+Ref: topics.round_id > registration_rounds.id
+Ref: topics.department_id > departments.id
+Ref: topics.proposed_by > users.id
+Ref: topics.approved_by > users.id
+Ref: topic_supervisors.topic_id > topics.id
+Ref: topic_supervisors.lecturer_id > lecturers.user_id
+Ref: student_groups.round_id > registration_rounds.id
+Ref: group_members.group_id > student_groups.id
+Ref: group_members.student_id > students.user_id
+Ref: topic_registrations.(group_id, round_id) > student_groups.(id, round_id)
+Ref: topic_registrations.(topic_id, round_id) > topics.(id, round_id)
+Ref: topic_registrations.submitted_by > students.user_id
+Ref: topic_registrations.decided_by > users.id
+Ref: reports.registration_id > topic_registrations.id
+Ref: reports.submitted_by > students.user_id
+Ref: councils.round_id > registration_rounds.id
+Ref: councils.created_by > users.id
+Ref: council_members.council_id > councils.id
+Ref: council_members.lecturer_id > lecturers.user_id
+Ref: defenses.(registration_id, round_id) > topic_registrations.(id, round_id)
+Ref: defenses.(council_id, round_id) > councils.(id, round_id)
+Ref: reviewer_assignments.registration_id > topic_registrations.id
+Ref: reviewer_assignments.lecturer_id > lecturers.user_id
+Ref: reviewer_assignments.assigned_by > users.id
+Ref: evaluations.assignment_id > reviewer_assignments.id
+Ref: results.registration_id > topic_registrations.id
+Ref: results.confirmed_by > lecturers.user_id
+Ref: results.published_by > users.id
+Ref: announcements.author_id > users.id
+Ref: audit_logs.actor_id > users.id
+Ref: email_outbox.result_id > results.id
+Ref: email_outbox.student_id > students.user_id
+
+TableGroup Identity {
+  departments
+  users
+  roles
+  user_roles
+  students
+  lecturers
+  announcements
+  audit_logs
+  email_outbox
+}
+
+TableGroup Topic {
+  registration_rounds
+  topics
+  topic_supervisors
+}
+
+TableGroup Registration {
+  student_groups
+  group_members
+  topic_registrations
+  reports
+}
+
+TableGroup Assessment {
+  councils
+  council_members
+  defenses
+  reviewer_assignments
+  evaluations
+  results
+}
