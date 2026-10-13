@@ -3,7 +3,8 @@ spring:
     name: student-topic-management
   # MySQL
   datasource:
-    url: jdbc:mysql://localhost:3306/student_topic_management?useSSL=false&serverTimeZone=UTC
+    # url: jdbc:mysql://localhost:3306/student_topic_management?useSSL=false&serverTimeZone=UTC
+    url: jdbc:mysql://localhost:3306/student_topic_management?connectionTimeZone=UTC
     username: root
     password: 12345
   # Jpa/Hibernate
@@ -11,6 +12,9 @@ spring:
     hibernate:
       ddl-auto: validate # Kiem tra code co khop vs DB, thay vi tu tao bang
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          time_zone: UTC
