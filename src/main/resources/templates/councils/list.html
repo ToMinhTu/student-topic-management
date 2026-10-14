@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách hội đồng</title>
+</head>
+
+<body>
+
+    <h1>Danh sách hội đồng</h1>
+
+    <a href="/councils/new">Tạo hội đồng mới</a>
+
+    <br><br>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên hội đồng</th>
+                <th>Đợt</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr th:each="council : ${councils}">
+                <td th:text="${council.id}"></td>
+                <td th:text="${council.name}"></td>
+                <td th:text="${council.roundId}"></td>
+                <td th:text="${council.status}"></td>
+                <td>
+                    <a th:href="@{/councils/{id}/edit(id=${council.id})}">
+                        Sửa
+                    </a>
+
+                    &nbsp;|&nbsp;
+
+                    <a th:href="@{/councils/{id}/members(id=${council.id})}">
+                        Thành viên
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+
+</html>
