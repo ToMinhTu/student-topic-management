@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hội đồng</title>
+</head>
+
+<body>
+
+<h1>Tạo hội đồng</h1>
+
+<form th:action="@{/councils/save}"
+      th:object="${councilForm}"
+      method="post">
+
+    <input type="hidden"
+           th:field="*{id}">
+
+    <label>Round ID:</label>
+    <input type="number"
+           th:field="*{roundId}">
+
+    <p th:if="${#fields.hasErrors('roundId')}"
+       th:errors="*{roundId}">
+    </p>
+
+    <br>
+
+    <label>Tên hội đồng:</label>
+    <input type="text"
+           th:field="*{name}">
+
+    <p th:if="${#fields.hasErrors('name')}"
+       th:errors="*{name}">
+    </p>
+
+    <br>
+
+    <button type="submit">Lưu hội đồng</button>
+
+</form>
+
+<br>
+
+<a href="/councils">Quay lại danh sách</a>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Thành viên hội đồng</title>
+</head>
+
+<body>
+
+    <h1>Thành viên hội đồng</h1>
+
+    <p>
+        Tên hội đồng:
+        <b th:text="${council.name}"></b>
+    </p>
+
+    <p>
+        Trạng thái:
+        <b th:text="${council.status}"></b>
+    </p>
+
+    <a th:href="@{/councils/{id}/members/new(id=${council.id})}">
+        Thêm thành viên
+    </a>
+
+    <br><br>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Giảng viên ID</th>
+                <th>Vị trí</th>
+                <th>Vai trò</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr th:each="member : ${members}">
+                <td th:text="${member.id.lecturerId}"></td>
+                <td th:text="${member.slotNo}"></td>
+
+                <td>
+                    <span th:if="${member.slotNo == 1}">
+                        Chủ tịch
+                    </span>
+
+                    <span th:if="${member.slotNo == 2}">
+                        Thư ký
+                    </span>
+
+                    <span th:if="${member.slotNo >= 3}">
+                        Ủy viên
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+
+    <a href="/councils">
+        Quay lại danh sách hội đồng
+    </a>
+
+</body>
+
+</html>

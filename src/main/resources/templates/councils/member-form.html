@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm thành viên</title>
+</head>
+
+<body>
+
+    <h1>Thêm thành viên hội đồng</h1>
+
+    <p>
+        Hội đồng:
+        <b th:text="${council.name}"></b>
+    </p>
+
+    <form th:action="@{/councils/{id}/members/save(id=${council.id})}" th:object="${memberForm}" method="post">
+
+        <label>Mã giảng viên:</label>
+
+        <input type="number" th:field="*{lecturerId}">
+
+        <p th:if="${#fields.hasErrors('lecturerId')}" th:errors="*{lecturerId}">
+        </p>
+
+        <br><br>
+
+        <label>Vị trí:</label>
+
+        <select th:field="*{slotNo}">
+            <option value="">-- Chọn vị trí --</option>
+            <option value="1">1 - Chủ tịch</option>
+            <option value="2">2 - Thư ký</option>
+            <option value="3">3 - Ủy viên</option>
+            <option value="4">4 - Ủy viên</option>
+            <option value="5">5 - Ủy viên</option>
+        </select>
+
+        <p th:if="${#fields.hasErrors('slotNo')}" th:errors="*{slotNo}">
+        </p>
+
+        <br><br>
+
+        <button type="submit">
+            Lưu thành viên
+        </button>
+
+    </form>
+
+    <br>
+
+    <a th:href="@{/councils/{id}/members(id=${council.id})}">
+        Quay lại
+    </a>
+
+</body>
+
+</html>
