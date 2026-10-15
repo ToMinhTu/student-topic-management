@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Danh sách nhóm sinh viên</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 35px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #1d4ed8;
+            margin-top: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-detail {
+            background: #0f766e;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 14px;
+            text-align: left;
+        }
+
+        th {
+            background: #eff6ff;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h2>Danh sách nhóm sinh viên</h2>
+
+        <a class="btn" th:href="@{/groups/create}">
+            + Tạo nhóm mới
+        </a>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Mã nhóm</th>
+            <th>Tên nhóm</th>
+            <th>Đợt đăng ký</th>
+            <th>Số thành viên</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        <tr th:each="group : ${groups}">
+            <td th:text="${group.id}"></td>
+
+            <td th:text="${group.name}"></td>
+
+            <td th:text="${group.roundId}"></td>
+
+            <td th:text="${group.memberCount}">
+                0
+            </td>
+
+            <td>
+                <span class="status"
+                      th:text="${group.status}">
+                    FORMING
+                </span>
+            </td>
+
+            <td>
+                <a class="btn btn-detail"
+                   th:href="@{/groups/{id}(id=${group.id})}">
+                    Xem chi tiết
+                </a>
+            </td>
+        </tr>
+
+        <tr th:if="${groups == null or #lists.isEmpty(groups)}">
+            <td colspan="6" class="empty">
+                Hiện chưa có nhóm sinh viên nào.
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>
