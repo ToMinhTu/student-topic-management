@@ -7,4 +7,6 @@ public interface RoundAccess {
     void lockRound(Long roundId);
 
     void requireStudentWindow(Long roundId, Instant now);
+
+    int getGroupMaxSize(Long roundId);
 }
