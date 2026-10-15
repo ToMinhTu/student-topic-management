@@ -193,30 +193,31 @@
 
     <h3>Danh sách thành viên</h3>
 
-    <table>
 
-        <thead>
+<table>
+    <thead>
         <tr>
             <th>STT</th>
             <th>Mã sinh viên</th>
+            <th>Họ tên</th>
             <th>Vị trí</th>
             <th>Vai trò</th>
         </tr>
-        </thead>
+    </thead>
 
-        <tbody>
-
+    <tbody>
         <tr th:each="member, stat : ${members}">
-
             <td th:text="${stat.count}">1</td>
 
-            <td th:text="${member.studentId}">
-                10
+            <td th:text="${member.studentCode}">
+                C01DEMO001
             </td>
 
-            <td th:text="${member.slotNo}">
-                1
+            <td th:text="${member.fullName}">
+                Nguyen Van An
             </td>
+
+            <td th:text="${member.slotNo}">1</td>
 
             <td>
                 <span th:if="${member.slotNo == 1}"
@@ -228,18 +229,16 @@
                     Thành viên
                 </span>
             </td>
-
         </tr>
 
-        <tr th:if="${members == null or #lists.isEmpty(members)}">
-            <td colspan="4" class="empty">
+        <tr th:if="${#lists.isEmpty(members)}">
+            <td colspan="5" class="empty">
                 Chưa có thành viên.
             </td>
         </tr>
+    </tbody>
+</table>
 
-        </tbody>
-
-    </table>
 
     <div class="actions">
 
