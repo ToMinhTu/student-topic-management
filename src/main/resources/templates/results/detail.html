@@ -1,0 +1,55 @@
+<!-- toan-D3 -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết kết quả</title>
+</head>
+
+<body>
+
+    <h1>Chi tiết kết quả</h1>
+
+    <p>
+        ID kết quả:
+        <span th:text="${result.id}"></span>
+    </p>
+
+    <p>
+        Mã hồ sơ:
+        <span th:text="${result.registrationId}"></span>
+    </p>
+
+    <p>
+        Điểm cuối:
+        <span th:text="${result.finalScore}"></span>
+    </p>
+
+    <p>
+        Số phiếu chấm:
+        <span th:text="${result.componentCount}"></span>
+    </p>
+
+    <p>
+        Kết luận:
+        <span th:text="${result.conclusion}"></span>
+    </p>
+
+    <p>
+        Người xác nhận:
+        <span th:text="${result.confirmedBy}"></span>
+    </p>
+
+    <p>
+        Thời gian xác nhận:
+        <span th:text="${result.confirmedAt}"></span>
+    </p>
+
+    <a href="/results">
+        Quay lại danh sách
+    </a>
+
+</body>
+
+</html>

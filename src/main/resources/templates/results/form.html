@@ -1,0 +1,54 @@
+<!-- toan-D3 -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tổng hợp kết quả</title>
+</head>
+
+<body>
+
+    <h1>Tổng hợp kết quả</h1>
+
+    <form th:action="@{/results/consolidate}" th:object="${resultForm}" method="post">
+
+        <label>Mã hồ sơ:</label>
+        <input type="number" th:field="*{registrationId}">
+
+        <p th:if="${#fields.hasErrors('registrationId')}" th:errors="*{registrationId}">
+        </p>
+
+        <br>
+
+        <label>Mã người xác nhận:</label>
+        <input type="number" th:field="*{confirmedBy}">
+
+        <p th:if="${#fields.hasErrors('confirmedBy')}" th:errors="*{confirmedBy}">
+        </p>
+
+        <br>
+
+        <label>Kết luận:</label>
+        <input type="text" th:field="*{conclusion}">
+
+        <p th:if="${#fields.hasErrors('conclusion')}" th:errors="*{conclusion}">
+        </p>
+
+        <br><br>
+
+        <button type="submit">
+            Tổng hợp kết quả
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="/results">
+        Quay lại danh sách
+    </a>
+
+</body>
+
+</html>
