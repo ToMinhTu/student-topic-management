@@ -11,4 +11,7 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     // nap san roles
     @EntityGraph(attributePaths = "roles")
     Optional<AppUser> findByUsername(String username);
+
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }
