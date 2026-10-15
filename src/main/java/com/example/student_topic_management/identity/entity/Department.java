@@ -35,6 +35,7 @@ public class Department {
         this.description = description;
     }
 
+    // Spring run ham nay truoc khi insert vao db de set gio utc
     @PrePersist 
     void initializeTime() {
         if(createdAt == null) {

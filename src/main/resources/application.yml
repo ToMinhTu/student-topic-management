@@ -6,7 +6,7 @@ spring:
     # url: jdbc:mysql://localhost:3306/student_topic_management?useSSL=false&serverTimeZone=UTC
     url: jdbc:mysql://localhost:3306/student_topic_management?connectionTimeZone=UTC
     username: root
-    password: 29092002
+    password: 12345
   # Jpa/Hibernate
   jpa:
     hibernate:
