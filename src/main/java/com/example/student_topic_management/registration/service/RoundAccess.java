@@ -10,3 +10,4 @@ public interface RoundAccess {
 
     int getGroupMaxSize(Long roundId);
 }
+
