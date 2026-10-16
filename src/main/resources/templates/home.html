@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Trang chủ</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <!-- <style>
+            nav.navbar {
+                display: none !important;
+            }
+        </style> -->
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <!-- THÔNG BÁO -->
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+        <h1>Chào mừng đến hệ thống</h1>
+
+        <!-- NÚT BẤM TEST khoa user -->
+        <div class="mt-5 p-4 border rounded bg-white">
+            <h5 class="text-danger">Nhấn nút dưới đây để mô phỏng hành động admin tự khóa chính mình.</h5>
+
+            <!-- Form POST sẽ tự động được Thymeleaf chèn CSRF Token -->
+            <form th:action="@{/admin/users/6/lock}" method="post">
+                <button type="submit" class="btn btn-danger">Tự khóa tài khoản Admin (ID: 6)</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>

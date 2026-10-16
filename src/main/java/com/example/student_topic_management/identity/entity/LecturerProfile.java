@@ -9,9 +9,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "lecturers")
+@Getter 
+@Setter 
+@NoArgsConstructor 
 public class LecturerProfile {
     @Id
     @Column(name = "user_id")
@@ -31,47 +37,10 @@ public class LecturerProfile {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    public LecturerProfile() {
-    }
-
     public LecturerProfile(Long userid, AppUser user, String lecturerCode, Department department) {
         this.userid = userid;
         this.user = user;
         this.lecturerCode = lecturerCode;
         this.department = department;
     }
-
-    public Long getUserid() {
-        return userid;
-    }
-
-    public void setUserid(Long userid) {
-        this.userid = userid;
-    }
-
-    public AppUser getUser() {
-        return user;
-    }
-
-    public void setUser(AppUser user) {
-        this.user = user;
-    }
-
-    public String getLecturerCode() {
-        return lecturerCode;
-    }
-
-    public void setLecturerCode(String lecturerCode) {
-        this.lecturerCode = lecturerCode;
-    }
-
-    public Department getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(Department department) {
-        this.department = department;
-    }
-
-    
 }

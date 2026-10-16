@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Lỗi</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <!-- <style>
+            nav.navbar {
+                display: none !important;
+            }
+        </style> -->
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <h1>Bạn không có quyền truy cập</h1>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>
