@@ -50,9 +50,11 @@ class GroupServiceTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(clock.instant())
+
+        lenient()
+                .when(clock.instant())
                 .thenReturn(
-                    Instant.parse("2026-10-15T10:00:00Z")
+                        Instant.parse("2026-10-15T10:00:00Z")
                 );
     }
 
@@ -77,7 +79,8 @@ class GroupServiceTest {
 
         when(groupRepository.save(any(StudentGroup.class)))
                 .thenAnswer(invocation ->
-                        invocation.getArgument(0));
+                        invocation.getArgument(0)
+                );
 
         groupService.createGroup(form);
 
@@ -98,12 +101,13 @@ class GroupServiceTest {
         verify(memberRepository)
                 .save(argThat(member ->
                         member.getStudentId().equals(10L)
-                        && member.getSlotNo() == 1
+                                && member.getSlotNo() == 1
                 ));
     }
 
     // =====================================
     // TEST 2: SINH VIEN DA CO NHOM
+    // KHONG DUOC TAO NHOM MOI
     // =====================================
 
     @Test
@@ -141,7 +145,10 @@ class GroupServiceTest {
     void joinGroup_success() {
 
         StudentGroup group =
-                new StudentGroup(1L, "Nhóm đồ án 01");
+                new StudentGroup(
+                        1L,
+                        "Nhóm đồ án 01"
+                );
 
         when(groupRepository.findById(5L))
                 .thenReturn(Optional.of(group));
@@ -156,7 +163,11 @@ class GroupServiceTest {
                 .thenReturn(3);
 
         GroupMember leader =
-                new GroupMember(group, 10L, (byte) 1);
+                new GroupMember(
+                        group,
+                        10L,
+                        (byte) 1
+                );
 
         when(memberRepository.findActiveMembers(5L))
                 .thenReturn(List.of(leader));
@@ -174,19 +185,23 @@ class GroupServiceTest {
         verify(memberRepository)
                 .save(argThat(member ->
                         member.getStudentId().equals(20L)
-                        && member.getSlotNo() == 2
+                                && member.getSlotNo() == 2
                 ));
     }
 
     // =====================================
     // TEST 4: NHOM DA DU THANH VIEN
+    // KHONG DUOC THAM GIA
     // =====================================
 
     @Test
     void joinGroup_groupIsFull() {
 
         StudentGroup group =
-                new StudentGroup(1L, "Nhóm đồ án 01");
+                new StudentGroup(
+                        1L,
+                        "Nhóm đồ án 01"
+                );
 
         when(groupRepository.findById(5L))
                 .thenReturn(Optional.of(group));
@@ -201,13 +216,25 @@ class GroupServiceTest {
                 .thenReturn(3);
 
         GroupMember leader =
-                new GroupMember(group, 10L, (byte) 1);
+                new GroupMember(
+                        group,
+                        10L,
+                        (byte) 1
+                );
 
         GroupMember member2 =
-                new GroupMember(group, 11L, (byte) 2);
+                new GroupMember(
+                        group,
+                        11L,
+                        (byte) 2
+                );
 
         GroupMember member3 =
-                new GroupMember(group, 12L, (byte) 3);
+                new GroupMember(
+                        group,
+                        12L,
+                        (byte) 3
+                );
 
         when(memberRepository.findActiveMembers(5L))
                 .thenReturn(List.of(
@@ -215,6 +242,42 @@ class GroupServiceTest {
                         member2,
                         member3
                 ));
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> groupService.joinGroup(5L)
+        );
+
+        verify(memberRepository, never())
+                .save(any(GroupMember.class));
+    }
+
+    // =====================================
+    // TEST 5: SINH VIEN DA CO NHOM
+    // KHONG DUOC THAM GIA NHOM KHAC
+    // =====================================
+
+    @Test
+    void joinGroup_studentAlreadyHasGroup() {
+
+        StudentGroup group =
+                new StudentGroup(
+                        1L,
+                        "Nhóm đồ án 01"
+                );
+
+        when(groupRepository.findById(5L))
+                .thenReturn(Optional.of(group));
+
+        when(studentAccess.requireCurrentStudentId())
+                .thenReturn(20L);
+
+        when(groupRepository.findGroupForUpdate(5L))
+                .thenReturn(Optional.of(group));
+
+        when(memberRepository
+                .existsByStudentIdAndLeftAtIsNull(20L))
+                .thenReturn(true);
 
         assertThrows(
                 IllegalStateException.class,

@@ -48,6 +48,16 @@ public class StudentAccessImpl implements StudentAccess {
                     "Ban chua dang nhap");
         }
 
+        boolean isStudent = authentication.getAuthorities()
+                .stream()
+                .anyMatch(authority ->
+                        "ROLE_STUDENT".equals(authority.getAuthority()));
+
+        if (!isStudent) {
+        throw new org.springframework.security.access.AccessDeniedException(
+                "Chuc nang nay chi danh cho sinh vien");
+        }
+
         String username = authentication.getName();
 
         AppUser user = userRepository

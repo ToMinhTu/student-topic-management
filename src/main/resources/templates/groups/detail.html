@@ -191,10 +191,16 @@
 
     </div>
 
-    <h3>Danh sách thành viên</h3>
+    <h3 th:if="${canViewMembers}">
+    Danh sách thành viên
+</h3>
+
+<p th:unless="${canViewMembers}" class="empty">
+    Bạn không có quyền xem danh sách thành viên của nhóm này.
+</p>
 
 
-<table>
+<table th:if="${canViewMembers}">
     <thead>
         <tr>
             <th>STT</th>
