@@ -14,7 +14,7 @@
     <!-- trang con nhung them file css rieng -->
     <th:block layout:fragment="css"></th:block>
 </head>
-<body class="bg-light">
+<body class="bg-light" th:classappend="${bodyClass}">
     <div th:replace="~{fragments/navbar :: navbar}"></div>
 
     <!-- Noi dung trang con -->
