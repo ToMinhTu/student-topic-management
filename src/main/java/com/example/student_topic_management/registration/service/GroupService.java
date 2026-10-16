@@ -1,11 +1,13 @@
-
-package com.example.student_topic_management.registration.service;
+﻿package com.example.student_topic_management.registration.service;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -27,6 +29,9 @@ public class GroupService {
     private final RoundAccess roundAccess;
     private final GroupRegistrationAccess registrationAccess;
     private final Clock clock;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public GroupService(
             StudentGroupRepository groupRepository,
@@ -290,6 +295,221 @@ public class GroupService {
         );
 
         memberRepository.save(member);
+    }
+
+    // =====================================
+    // C02.1 - SINH VIEN ROI NHOM
+    // =====================================
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void leaveGroup(Long groupId) {
+
+        requirePositive(groupId, "Ma nhom");
+
+        // Tim nhom de lay ma dot dang ky
+        StudentGroup initialGroup =
+                groupRepository.findById(groupId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Nhom khong ton tai")
+                        );
+
+        Long roundId = initialGroup.getRoundId();
+
+        // Lay sinh vien dang dang nhap
+        Long studentId =
+                studentAccess.requireCurrentStudentId();
+
+        requirePositive(studentId, "Ma sinh vien");
+
+        // Khoa theo thu tu:
+        // Round -> Student -> Group
+        roundAccess.lockRound(roundId);
+
+        studentAccess.lockEnabledStudent(studentId);
+
+        StudentGroup group =
+                groupRepository.findGroupForUpdate(groupId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Nhom khong ton tai")
+                        );
+
+        // Kiem tra lai dot dang ky sau khi khoa
+        if (!roundId.equals(group.getRoundId())) {
+            throw new IllegalStateException(
+                    "Dot dang ky cua nhom da thay doi");
+        }
+
+        Instant now = clock.instant();
+
+        // Kiem tra dot dang ky con cho phep
+        // sinh vien thay doi thanh vien nhom
+        roundAccess.requireStudentWindow(
+                roundId,
+                now
+        );
+
+        // Nhom phai o trang thai FORMING
+        if (group.getStatus() != GroupStatus.FORMING) {
+            throw new IllegalStateException(
+                    "Nhom da bi khoa, khong the roi");
+        }
+
+        // Khong cho sua thanh vien khi nhom
+        // co dang ky de tai PENDING/APPROVED
+        registrationAccess
+                .requireNoActiveRegistration(groupId);
+
+        // Lay danh sach thanh vien dang hoat dong
+        List<GroupMember> members =
+                memberRepository.findActiveMembers(groupId);
+
+        // Tim thanh vien dang dang nhap
+        GroupMember currentMember = members.stream()
+                .filter(member ->
+                        studentId.equals(member.getStudentId()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Ban khong thuoc nhom nay")
+                );
+
+        // Truong nhom o slot 1
+        // phai chuyen quyen truoc khi roi
+        if (currentMember.getSlotNo() != null
+                && currentMember.getSlotNo().intValue() == 1) {
+
+            throw new IllegalStateException(
+                    "Truong nhom phai chuyen quyen "
+                    + "truoc khi roi nhom");
+        }
+
+        // Khong xoa ban ghi, chi danh dau da roi
+        currentMember.setLeftAt(
+                LocalDateTime.ofInstant(
+                        now,
+                        ZoneOffset.UTC
+                )
+        );
+
+        memberRepository.save(currentMember);
+    }
+
+    // =====================================
+    // C02.2 - CHUYEN QUYEN TRUONG NHOM
+    // =====================================
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void transferLeader(Long groupId, Long newLeaderStudentId) {
+        requirePositive(groupId, "Ma nhom");
+        requirePositive(newLeaderStudentId, "Ma sinh vien nhan quyen");
+
+        StudentGroup initialGroup = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Nhom khong ton tai"));
+        Long roundId = initialGroup.getRoundId();
+        Long currentStudentId = studentAccess.requireCurrentStudentId();
+        requirePositive(currentStudentId, "Ma sinh vien");
+
+        if (currentStudentId.equals(newLeaderStudentId)) {
+            throw new IllegalArgumentException("Khong the tu chuyen quyen cho minh");
+        }
+
+        // Thu tu khoa: Round -> Student -> Group
+        roundAccess.lockRound(roundId);
+        studentAccess.lockEnabledStudent(currentStudentId);
+        StudentGroup group = groupRepository.findGroupForUpdate(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Nhom khong ton tai"));
+
+        if (!roundId.equals(group.getRoundId())) {
+            throw new IllegalStateException("Dot dang ky cua nhom da thay doi");
+        }
+
+        Instant now = clock.instant();
+        roundAccess.requireStudentWindow(roundId, now);
+        if (group.getStatus() != GroupStatus.FORMING) {
+            throw new IllegalStateException("Nhom khong cho phep chuyen quyen");
+        }
+        registrationAccess.requireNoActiveRegistration(groupId);
+
+        List<GroupMember> members = memberRepository.findActiveMembers(groupId);
+        if (members.size() < 2 || members.size() > 5) {
+            throw new IllegalStateException("So thanh vien nhom khong hop le");
+        }
+
+        List<GroupMember> leaders = members.stream()
+                .filter(member -> member.getSlotNo() != null
+                        && member.getSlotNo().intValue() == 1)
+                .toList();
+        if (leaders.size() != 1) {
+            throw new IllegalStateException("Nhom khong co dung mot truong nhom");
+        }
+
+        GroupMember oldLeader = leaders.get(0);
+        if (!currentStudentId.equals(oldLeader.getStudentId())) {
+            throw new IllegalStateException("Chi truong nhom moi duoc chuyen quyen");
+        }
+
+        GroupMember newLeader = members.stream()
+                .filter(member -> newLeaderStudentId.equals(member.getStudentId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Sinh vien nhan quyen khong thuoc nhom"));
+        if (newLeader.getSlotNo() == null) {
+            throw new IllegalStateException("Vi tri nguoi nhan quyen khong hop le");
+        }
+        int receiverSlot = newLeader.getSlotNo().intValue();
+        if (receiverSlot < 2 || receiverSlot > 5) {
+            throw new IllegalStateException("Vi tri nguoi nhan quyen khong hop le");
+        }
+
+        // Dung slot 2..5 con trong de tranh vi pham unique (group_id, active_slot_no).
+        int temporarySlot = 0;
+        for (int slot = 2; slot <= 5; slot++) {
+            final int candidate = slot;
+            boolean occupied = members.stream()
+                    .anyMatch(member -> member.getSlotNo() != null
+                            && member.getSlotNo().intValue() == candidate);
+            if (!occupied) {
+                temporarySlot = slot;
+                break;
+            }
+        }
+        if (temporarySlot == 0) {
+            throw new IllegalStateException(
+                    "Nhom da su dung het 5 vi tri. Chua ho tro chuyen quyen khi nhom day 5 thanh vien");
+        }
+
+        if (entityManager == null) {
+            throw new IllegalStateException("EntityManager chua duoc khoi tao");
+        }
+        // Flush truoc native SQL; ba update nam trong cung transaction.
+        entityManager.flush();
+        updateMemberSlot(oldLeader.getId(), groupId, 1, temporarySlot);
+        updateMemberSlot(newLeader.getId(), groupId, receiverSlot, 1);
+        updateMemberSlot(oldLeader.getId(), groupId, temporarySlot, receiverSlot);
+        // JPA cache da cu do SQL native thay doi slot_no.
+        entityManager.clear();
+    }
+
+    private void updateMemberSlot(Long memberId, Long groupId,
+                                  int expectedSlot, int newSlot) {
+        int updated = entityManager.createNativeQuery("""
+                UPDATE group_members
+                   SET slot_no = :newSlot
+                 WHERE id = :memberId
+                   AND group_id = :groupId
+                   AND slot_no = :expectedSlot
+                   AND left_at IS NULL
+                """)
+                .setParameter("newSlot", newSlot)
+                .setParameter("memberId", memberId)
+                .setParameter("groupId", groupId)
+                .setParameter("expectedSlot", expectedSlot)
+                .executeUpdate();
+        if (updated != 1) {
+            throw new IllegalStateException("Khong the cap nhat vi tri thanh vien");
+        }
     }
 
     // =====================================

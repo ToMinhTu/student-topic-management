@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -65,7 +66,7 @@ public class GroupController {
     }
 
     // =====================================
-    // CAC DTO HIEN THI
+    // DTO HIEN THI
     // =====================================
 
     public record GroupView(
@@ -178,7 +179,8 @@ public class GroupController {
     @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/create")
     public String createGroup(
-            @Valid @ModelAttribute("groupForm") GroupCreateForm form,
+            @Valid @ModelAttribute("groupForm")
+            GroupCreateForm form,
             BindingResult errors,
             Model model,
             RedirectAttributes redirect) {
@@ -229,158 +231,135 @@ public class GroupController {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Nhom khong ton tai")
-                );
+                                "Nhom khong ton tai"
+                        ));
 
         List<GroupMember> activeMembers =
                 memberRepository.findActiveMembers(id);
 
-        List<StudentInfo> studentInfos = jdbc.query(
-                """
-                SELECT
-                    s.user_id AS student_id,
-                    s.student_code,
-                    u.full_name
-                FROM group_members gm
-                JOIN students s ON s.user_id = gm.student_id
-                JOIN users u ON u.id = s.user_id
-                WHERE gm.group_id = ?
-                  AND gm.left_at IS NULL
-                """,
-                (rs, rowNum) -> new StudentInfo(
-                        rs.getLong("student_id"),
-                        rs.getString("student_code"),
-                        rs.getString("full_name")
-                ),
-                id
-        );
+        Authentication auth =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        Map<Long, StudentInfo> infoById =
-                studentInfos.stream()
-                        .collect(Collectors.toMap(
-                                StudentInfo::studentId,
-                                Function.identity()
-                        ));
+        boolean isStudent = hasRole(auth, "ROLE_STUDENT");
+        boolean isAdmin = hasRole(auth, "ROLE_ADMIN");
 
-        List<MemberView> members = activeMembers.stream()
-                .map(member -> {
+        Long currentStudentId = isStudent
+                ? studentAccess.requireCurrentStudentId()
+                : null;
 
-                    StudentInfo info = infoById.get(
-                            member.getStudentId()
-                    );
+        GroupMember myMembership = currentStudentId == null
+                ? null
+                : activeMembers.stream()
+                        .filter(m -> currentStudentId.equals(
+                                m.getStudentId()))
+                        .findFirst()
+                        .orElse(null);
 
-                    return new MemberView(
-                            member.getStudentId(),
-                            info != null
-                                    ? info.studentCode()
-                                    : "Khong tim thay",
-                            info != null
-                                    ? info.fullName()
-                                    : "Khong tim thay",
-                            member.getSlotNo()
-                    );
-                })
-                .sorted((a, b) ->
-                        Byte.compare(
-                                a.slotNo(),
-                                b.slotNo()
-                        ))
-                .toList();
+        boolean isLeader = myMembership != null
+                && myMembership.getSlotNo() != null
+                && myMembership.getSlotNo().intValue() == 1;
 
-        model.addAttribute("group", group);
-        model.addAttribute("members", members);
-        model.addAttribute("memberCount", members.size());
+        boolean canViewMembers =
+                isAdmin || myMembership != null;
 
-        // C01 - KIEM TRA QUYEN XEM THANH VIEN
+        List<MemberView> members = List.of();
 
-        Authentication currentAuth = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        // Chi doc thong tin ca nhan cua thanh vien
+        // neu nguoi xem co quyen.
 
-        boolean isAdmin = currentAuth != null
-                && currentAuth.getAuthorities().stream()
-                        .anyMatch(a ->
-                                "ROLE_ADMIN".equals(a.getAuthority()));
+        if (canViewMembers) {
 
-        boolean isStudentMember = false;
+            List<StudentInfo> studentInfos = jdbc.query(
+                    """
+                    SELECT
+                        s.user_id AS student_id,
+                        s.student_code,
+                        u.full_name
+                    FROM group_members gm
+                    JOIN students s
+                        ON s.user_id = gm.student_id
+                    JOIN users u
+                        ON u.id = s.user_id
+                    WHERE gm.group_id = ?
+                      AND gm.left_at IS NULL
+                    """,
+                    (rs, rowNum) -> new StudentInfo(
+                            rs.getLong("student_id"),
+                            rs.getString("student_code"),
+                            rs.getString("full_name")
+                    ),
+                    id
+            );
 
-        boolean authenticatedStudent = currentAuth != null
-                && currentAuth.isAuthenticated()
-                && currentAuth.getAuthorities().stream()
-                        .anyMatch(a ->
-                                "ROLE_STUDENT".equals(a.getAuthority()));
+            Map<Long, StudentInfo> infoById =
+                    studentInfos.stream()
+                            .collect(Collectors.toMap(
+                                    StudentInfo::studentId,
+                                    Function.identity()
+                            ));
 
-        if (authenticatedStudent) {
-            Long currentStudentId =
-                    studentAccess.requireCurrentStudentId();
+            members = activeMembers.stream()
+                    .map(member -> {
 
-            isStudentMember = activeMembers.stream()
-                    .anyMatch(member ->
-                            currentStudentId.equals(
-                                    member.getStudentId()));
-        }
+                        StudentInfo info =
+                                infoById.get(
+                                        member.getStudentId());
 
-        boolean canViewMembers = isAdmin || isStudentMember;
-
-        model.addAttribute(
-                "canViewMembers",
-                canViewMembers
-        );
-
-        // Khong gui danh sach thanh vien cho
-        // nguoi khong co quyen xem
-        if (!canViewMembers) {
-            model.addAttribute("members", List.of());
+                        return new MemberView(
+                                member.getStudentId(),
+                                info != null
+                                        ? info.studentCode()
+                                        : "Khong tim thay",
+                                info != null
+                                        ? info.fullName()
+                                        : "Khong tim thay",
+                                member.getSlotNo()
+                        );
+                    })
+                    .sorted((a, b) ->
+                            Byte.compare(
+                                    a.slotNo(),
+                                    b.slotNo()
+                            ))
+                    .toList();
         }
 
         // =====================================
-        // KIEM TRA DIEU KIEN HIEN NUT JOIN
+        // QUYEN HIEN THI CAC NUT
         // =====================================
 
         boolean canJoin = false;
-
-        Authentication auth = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-
-        boolean isStudent = auth != null
-                && auth.isAuthenticated()
-                && auth.getAuthorities().stream()
-                        .anyMatch(authority ->
-                                "ROLE_STUDENT".equals(
-                                        authority.getAuthority()
-                                ));
+        boolean canLeave = false;
+        boolean canTransferLeader = false;
 
         if (isStudent
                 && group.getStatus() == GroupStatus.FORMING) {
 
-            Long studentId =
-                    studentAccess.requireCurrentStudentId();
+            LocalDateTime now = LocalDateTime.ofInstant(
+                    clock.instant(),
+                    ZoneOffset.UTC
+            );
 
-            boolean alreadyInAnyGroup =
-                    memberRepository
-                            .existsByStudentIdAndLeftAtIsNull(
-                                    studentId);
+            Integer validRound = jdbc.queryForObject(
+                    """
+                    SELECT COUNT(*)
+                    FROM registration_rounds
+                    WHERE id = ?
+                      AND status = 'OPEN'
+                      AND student_starts_at <= ?
+                      AND student_ends_at > ?
+                    """,
+                    Integer.class,
+                    group.getRoundId(),
+                    now,
+                    now
+            );
 
-            boolean joinedThisGroupBefore =
-                    memberRepository
-                            .existsByGroup_IdAndStudentId(
-                                    id,
-                                    studentId
-                            );
+            boolean roundOpen =
+                    validRound != null && validRound > 0;
 
-            if (!alreadyInAnyGroup
-                    && !joinedThisGroupBefore) {
-
-                Integer maxSize = jdbc.queryForObject(
-                        """
-                        SELECT group_max_size
-                        FROM registration_rounds
-                        WHERE id = ?
-                        """,
-                        Integer.class,
-                        group.getRoundId()
-                );
+            if (roundOpen) {
 
                 Integer activeRegistrations =
                         jdbc.queryForObject(
@@ -388,54 +367,141 @@ public class GroupController {
                                 SELECT COUNT(*)
                                 FROM topic_registrations
                                 WHERE group_id = ?
-                                  AND status IN ('PENDING', 'APPROVED')
+                                  AND status IN (
+                                      'PENDING',
+                                      'APPROVED'
+                                  )
                                 """,
                                 Integer.class,
                                 id
                         );
 
-                LocalDateTime now =
-                        LocalDateTime.ofInstant(
-                                clock.instant(),
-                                ZoneOffset.UTC
+                boolean noRegistration =
+                        activeRegistrations != null
+                        && activeRegistrations == 0;
+
+                if (noRegistration) {
+
+                    // C02.1 - Roi nhom:
+                    // Truong nhom khong duoc roi truc tiep.
+
+                    canLeave = myMembership != null
+                            && myMembership.getSlotNo() != null
+                            && myMembership.getSlotNo()
+                                    .intValue() != 1;
+
+                    // C02.2 - Chuyen truong nhom:
+                    // Can co it nhat 2 thanh vien,
+                    // co slot tam trong pham vi 1..5.
+
+                    boolean hasReceiver =
+                            activeMembers.stream()
+                                    .anyMatch(m ->
+                                            m.getSlotNo() != null
+                                            && m.getSlotNo()
+                                                    .intValue() >= 2
+                                            && m.getSlotNo()
+                                                    .intValue() <= 5);
+
+                    boolean hasTemporarySlot =
+                            java.util.stream.IntStream
+                                    .rangeClosed(2, 5)
+                                    .anyMatch(slot ->
+                                            activeMembers.stream()
+                                                    .noneMatch(m ->
+                                                            m.getSlotNo()
+                                                                    != null
+                                                            && m.getSlotNo()
+                                                                    .intValue()
+                                                                    == slot));
+
+                    long leaderCount =
+                            activeMembers.stream()
+                                    .filter(m ->
+                                            m.getSlotNo() != null
+                                            && m.getSlotNo()
+                                                    .intValue() == 1)
+                                    .count();
+
+                    canTransferLeader = isLeader
+                            && activeMembers.size() >= 2
+                            && leaderCount == 1
+                            && hasReceiver
+                            && hasTemporarySlot;
+
+                    // C01.4 - Tham gia nhom.
+
+                    if (myMembership == null
+                            && !memberRepository
+                                    .existsByStudentIdAndLeftAtIsNull(
+                                            currentStudentId)
+                            && !memberRepository
+                                    .existsByGroup_IdAndStudentId(
+                                            id,
+                                            currentStudentId)) {
+
+                        Integer maxSize = jdbc.queryForObject(
+                                """
+                                SELECT group_max_size
+                                FROM registration_rounds
+                                WHERE id = ?
+                                """,
+                                Integer.class,
+                                group.getRoundId()
                         );
 
-                Integer validRound = jdbc.queryForObject(
-                        """
-                        SELECT COUNT(*)
-                        FROM registration_rounds
-                        WHERE id = ?
-                          AND status = 'OPEN'
-                          AND student_starts_at <= ?
-                          AND student_ends_at > ?
-                        """,
-                        Integer.class,
-                        group.getRoundId(),
-                        now,
-                        now
-                );
-
-                long leaderCount = members.stream()
-                        .filter(member ->
-                                member.slotNo() != null
-                                && member.slotNo().intValue() == 1)
-                        .count();
-
-                canJoin = maxSize != null
-                        && maxSize >= 1
-                        && maxSize <= 5
-                        && members.size() < maxSize
-                        && leaderCount == 1
-                        && activeRegistrations != null
-                        && activeRegistrations == 0
-                        && validRound != null
-                        && validRound > 0;
+                        canJoin = maxSize != null
+                                && maxSize >= 1
+                                && maxSize <= 5
+                                && activeMembers.size() < maxSize
+                                && leaderCount == 1;
+                    }
+                }
             }
         }
 
+        // =====================================
+        // TRUYEN DU LIEU SANG THYMELEAF
+        // =====================================
+
+        model.addAttribute("group", group);
+        model.addAttribute("members", members);
+
+        model.addAttribute(
+                "memberCount",
+                activeMembers.size()
+        );
+
+        model.addAttribute(
+                "canViewMembers",
+                canViewMembers
+        );
+
         model.addAttribute("canJoin", canJoin);
+        model.addAttribute("canLeave", canLeave);
+        model.addAttribute("isLeader", isLeader);
+
+        model.addAttribute(
+                "canTransferLeader",
+                canTransferLeader
+        );
 
         return "groups/detail";
+    }
+
+    // =====================================
+    // KIEM TRA VAI TRO DANG NHAP
+    // =====================================
+
+    private boolean hasRole(
+            Authentication auth,
+            String role) {
+
+        return auth != null
+                && auth.isAuthenticated()
+                && auth.getAuthorities().stream()
+                        .anyMatch(a ->
+                                role.equals(a.getAuthority()));
     }
 
     // =====================================
@@ -450,6 +516,7 @@ public class GroupController {
             RedirectAttributes redirect) {
 
         try {
+
             groupService.joinGroup(id);
 
             redirect.addFlashAttribute(
@@ -464,7 +531,90 @@ public class GroupController {
             redirect.addFlashAttribute(
                     "errorMessage",
                     ex instanceof DataIntegrityViolationException
-                            ? "Khong the tham gia do vi pham rang buoc du lieu."
+                            ? "Khong the tham gia do vi pham "
+                                + "rang buoc du lieu."
+                            : ex.getMessage()
+            );
+        }
+
+        return "redirect:/groups/" + id;
+    }
+
+    // =====================================
+    // C02.1 - ROI NHOM
+    // POST /groups/{id}/leave
+    // =====================================
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @PostMapping("/{id:\\d+}/leave")
+    public String leaveGroup(
+            @PathVariable("id") Long id,
+            RedirectAttributes redirect) {
+
+        try {
+
+            groupService.leaveGroup(id);
+
+            redirect.addFlashAttribute(
+                    "successMessage",
+                    "Ban da roi nhom thanh cong!"
+            );
+
+            return "redirect:/groups";
+
+        } catch (IllegalArgumentException |
+                 IllegalStateException |
+                 DataIntegrityViolationException ex) {
+
+            redirect.addFlashAttribute(
+                    "errorMessage",
+                    ex instanceof DataIntegrityViolationException
+                            ? "Khong the roi nhom do "
+                                + "rang buoc du lieu."
+                            : ex.getMessage()
+            );
+
+            return "redirect:/groups/" + id;
+        }
+    }
+
+    // =====================================
+    // C02.2 - CHUYEN QUYEN TRUONG NHOM
+    // POST /groups/{id}/transfer-leader
+    // =====================================
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @PostMapping("/{id:\\d+}/transfer-leader")
+    public String transferLeader(
+            @PathVariable("id") Long id,
+            @RequestParam("newLeaderStudentId")
+            Long newLeaderStudentId,
+            RedirectAttributes redirect) {
+
+        try {
+
+            // GroupService tu lay nguoi thao tac
+            // tu tai khoan dang nhap.
+
+            groupService.transferLeader(
+                    id,
+                    newLeaderStudentId
+            );
+
+            redirect.addFlashAttribute(
+                    "successMessage",
+                    "Chuyen quyen truong nhom thanh cong!"
+            );
+
+        } catch (IllegalArgumentException |
+                 IllegalStateException |
+                 DataIntegrityViolationException ex) {
+
+            redirect.addFlashAttribute(
+                    "errorMessage",
+                    ex instanceof DataIntegrityViolationException
+                            ? "Khong the chuyen quyen do "
+                                + "rang buoc du lieu."
                             : ex.getMessage()
             );
         }
