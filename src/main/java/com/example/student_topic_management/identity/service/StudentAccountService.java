@@ -19,11 +19,11 @@ import com.example.student_topic_management.identity.repository.StudentProfileRe
 
 @Service
 public class StudentAccountService {
-    private AppUserRepository userRepository;
-    private StudentProfileRepository studentProfileRepository;
-    private RoleRepository roleRepository;
-    private DepartmentRepository departmentRepository;
-    private PasswordEncoder passwordEncoder;
+    private final AppUserRepository userRepository;
+    private final StudentProfileRepository studentProfileRepository;
+    private final RoleRepository roleRepository;
+    private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public StudentAccountService(AppUserRepository userRepository, StudentProfileRepository studentProfileRepository,
             RoleRepository roleRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {

@@ -12,9 +12,9 @@ import com.example.student_topic_management.identity.repository.RoleRepository;
 
 @Component
 public class AdminSeeder implements CommandLineRunner {
-    private AppUserRepository userRepository;
-    private RoleRepository roleRepository;
-    private PasswordEncoder passwordEncoder;
+    private final AppUserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminSeeder(AppUserRepository userRepository, RoleRepository roleRepository,
             PasswordEncoder passwordEncoder) {

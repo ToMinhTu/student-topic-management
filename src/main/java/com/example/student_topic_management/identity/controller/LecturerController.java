@@ -20,8 +20,8 @@ import jakarta.validation.Valid;
 @Controller
 @RequestMapping("/admin/lecturers")
 public class LecturerController {
-    private LecturerAccountService lecturerAccountService;
-    private DepartmentRepository departmentRepository;
+    private final LecturerAccountService lecturerAccountService;
+    private final DepartmentRepository departmentRepository;
 
     public LecturerController(LecturerAccountService lecturerAccountService,
             DepartmentRepository departmentRepository) {
