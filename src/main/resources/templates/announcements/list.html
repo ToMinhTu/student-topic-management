@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Danh sách Thông báo</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <style>
+
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Thông báo chính thức</h2>
+            <a th:href="@{/}" class="btn btn-outline-secondary">Quay lại Trang chủ</a>
+        </div>
+
+        <div class="alert alert-info text-center py-4" th:if="${#lists.isEmpty(announcements)}">
+            Hiện tại chưa có thông báo mới nào được công bố
+        </div>
+
+        <div class="card shadow-sm" th:if="${!#lists.isEmpty(announcements)}">
+            <div class="card-body p-0">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 80px;" class="text-center">STT</th>
+                            <th>Tiêu đề thông báo</th>
+                            <th>Người đăng</th>
+                            <th>Thời gian công bố (UTC)</th>
+                            <th style="width: 140px;" class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ann, stat : ${announcements}">
+                            <td th:text="${stat.count}" class="text-center"></td>
+                            <td>
+                                <a th:href="@{/announcements/{id}(id=${ann.id})}"
+                                    class="fw-bold text-decoration-none text-primary" th:text="${ann.title}">Tiêu đề
+                                    thông báo</a>
+                            </td>
+                            <td th:text="${ann.author.fullname}">Tên người đăng</td>
+                            <td th:text="${ann.publishedAt}">2026-10-16 10:00:00</td>
+                            <td class="text-center">
+                                <a th:action="@{announcements/{id}(id=${ann.id})}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    Xem chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>

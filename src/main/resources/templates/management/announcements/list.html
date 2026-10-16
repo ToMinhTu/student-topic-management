@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Quản lý Thông báo</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <style>
+
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <h2>Danh sách Bản Nháp</h2>
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+        <a th:href="@{/management/announcements/new}" class="btn btn-primary mb-3">+ Soạn thông báo mới</a>
+
+        <table class="table table-bordered bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Tiêu đề</th>
+                    <th>Người tạo</th>
+                    <th>Ngày tạo (UTC)</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="draft : ${drafts}">
+                    <td th:text="${draft.id}"></td>
+                    <td th:text="${draft.title}"></td>
+                    <td th:text="${draft.author.fullname}"></td>
+                    <td th:text="${draft.createdAt}"></td>
+                    <td>
+                        <form th:action="@{management/announcements/{id}/publish(id=${draft.id})}" method="post">
+                            <button type="submit" class="btn btn-success btn-sm">Công bố ngay</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>
