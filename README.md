@@ -16,31 +16,55 @@ Tài khoản:
 
 [Link Test](http://127.0.0.1:8080/)
 
+# Phần A:
 ### 1. Phần bộ môn (departments):
-- [✔] thêm mới
-- [✔] Sửa
-- [✔] Xoá
-- [✔] Báo lỗi khi tên trùng với bộ môn đã có sẵn
-- [✔] Báo lỗi khi bộ môn có tài khoản trực thuộc
+- [x] thêm mới
+- [x] Sửa
+- [x] Xoá
+- [x] Báo lỗi khi tên trùng với bộ môn đã có sẵn
+- [x] Báo lỗi khi bộ môn có tài khoản trực thuộc
 
 ### 2. Chia quyền đăng nhập theo role: ✔
+### 3. Out session khi đổi mật khẩu: ✔
 	
-### 3. Phần quản lý người dùng (users):
-- [✔] Màn hình quản lý
-- [✔] Tính năng khoá người dùng - đồng thời logout các session đăng nhập khác
-- [✔] Không khoá người dùng ADMIN cuối cùng
-- [✔] Xoá người dùng: Chưa làm
+### 4. Phần quản lý người dùng (users):
+- [x] Màn hình quản lý
+- [x] Tính năng khoá người dùng - đồng thời logout các session đăng nhập khác
+- [x] Không khoá người dùng ADMIN cuối cùng
+- [x] Xoá người dùng: Chưa làm
 	
-### 4. Phần thêm sinh viên (students):
-- [✔] validate các trường dữ liệu
-- [✔] Không tạo trùng username
-- [✔] Không tạo trùng email
-- [✔] Không tạo trùng mã số sinh viên
-- [✔] Tạo sinh viên
+### 5. Phần thêm sinh viên (students):
+- [x] validate các trường dữ liệu
+- [x] Không tạo trùng username
+- [x] Không tạo trùng email
+- [x] Không tạo trùng mã số sinh viên
+- [x] Tạo sinh viên
 	
-### 5. Phần thêm giảng viên (lecturers):
-- [✔] validate các trường dữ liệu
-- [✔] Không tạo trùng username
-- [✔] Không tạo trùng email
-- [✔] Không tạo trùng mã số giảng viên
-- [✔] Tạo giảng viên
+### 6. Phần thêm giảng viên (lecturers):
+- [x] validate các trường dữ liệu
+- [x] Không tạo trùng username
+- [x] Không tạo trùng email
+- [x] Không tạo trùng mã số giảng viên
+- [x] Tạo giảng viên
+
+### 7. Phần thông báo (announcements):
+- Danh sách quản lý thông báo (Admin/Dean)
+    - [x] Thêm thông báo (Nháp)
+    - [x] validate
+    - [x] Sửa
+    - [x] Xoá
+    - [x] Công bố
+    - [x] Sau khi công bố thì thông báo biến mất ở danh sách quản lý (Không cho phép thay đổi thông báo đã công bố)
+- Thông báo cho student/lecturer:
+    - [x] Hiện danh sách
+    - [x] Đọc chi tiết
+    - [x] Hiện lỗi khi vào bằng url với thông báo chưa được publish
+
+
+# Phần B:
+
+
+# Phần C:
+
+
+# Phần D:
