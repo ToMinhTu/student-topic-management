@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|Chi tiết đợt: ${round.name}|">Chi tiết đợt đăng ký</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --surface-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --border-subtle: #f1f5f9;
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --radius-main: 14px;
+            --radius-sub: 10px;
+            --shadow-subtle: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+            --shadow-float: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            background-color: var(--surface-bg);
+            color: var(--text-body);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page-container {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        /* Breadcrumb navigation */
+        .page-breadcrumb a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.15s ease;
+        }
+        .page-breadcrumb a:hover {
+            color: var(--primary);
+        }
+        .page-breadcrumb .separator {
+            color: #cbd5e1;
+            margin: 0 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Card panels */
+        .custom-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-main);
+            box-shadow: var(--shadow-subtle);
+            transition: box-shadow 0.2s ease;
+        }
+        .custom-card:hover {
+            box-shadow: var(--shadow-float);
+        }
+
+        /* Status & Type Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-draft {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .status-draft .dot {
+            background-color: #94a3b8;
+        }
+
+        .status-open {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+        .status-open .dot {
+            background-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .status-closed {
+            background-color: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+        .status-closed .dot {
+            background-color: #ef4444;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        .type-badge {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: 9999px;
+        }
+
+        /* Timeline block */
+        .timeline-step {
+            position: relative;
+            padding-left: 28px;
+            padding-bottom: 24px;
+        }
+        .timeline-step:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-step::before {
+            content: "";
+            position: absolute;
+            left: 9px;
+            top: 24px;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+        .timeline-step:last-child::before {
+            display: none;
+        }
+        .timeline-indicator {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .timeline-indicator::after {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--primary);
+        }
+
+        .time-box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sub);
+            padding: 12px 16px;
+        }
+
+        /* Meta list */
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 0.92rem;
+        }
+        .meta-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .meta-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .meta-value {
+            color: var(--text-heading);
+            font-weight: 600;
+        }
+
+        /* Action buttons */
+        .btn-action-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-custom {
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: var(--radius-sub);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+        .btn-custom-secondary {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-body);
+        }
+        .btn-custom-secondary:hover {
+            background: #f1f5f9;
+            color: var(--text-heading);
+            border-color: #cbd5e1;
+        }
+        .btn-custom-primary {
+            background: var(--primary);
+            border: 1px solid var(--primary);
+            color: #ffffff;
+        }
+        .btn-custom-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: #ffffff;
+        }
+        .btn-custom-warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #b45309;
+        }
+        .btn-custom-warning:hover {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .btn-custom-success {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #047857;
+        }
+        .btn-custom-success:hover {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .btn-custom-danger {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+        .btn-custom-danger:hover {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="py-4">
+
+<div class="page-container px-3">
+
+    <!-- Top Breadcrumb -->
+    <div class="page-breadcrumb d-flex align-items-center mb-3">
+        <a th:href="@{/dean/rounds}"><i class="bi bi-calendar3 me-1"></i> Quản lý đợt đăng ký</a>
+        <span class="separator"><i class="bi bi-chevron-right"></i></span>
+        <span class="text-secondary fw-semibold">Chi tiết đợt #<span th:text="${round.id}"></span></span>
+    </div>
+
+    <!-- Alert Messages -->
+    <div class="alert alert-success d-flex align-items-center shadow-sm rounded-3 py-3 px-4 mb-4"
+         th:if="${message}">
+        <i class="bi bi-check-circle-fill fs-5 text-success me-3"></i>
+        <div th:text="${message}"></div>
+    </div>
+
+    <!-- Header Panel -->
+    <div class="custom-card p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <span class="status-badge status-draft" th:if="${round.status.name() == 'DRAFT'}">
+                        <span class="dot"></span>
+                        <span th:text="${round.status.label}">Nháp</span>
+                    </span>
+                    <span class="status-badge status-open" th:if="${round.status.name() == 'OPEN'}">
+                        <span class="dot"></span>
+                        <span th:text="${round.status.label}">Đang mở</span>
+                    </span>
+                    <span class="status-badge status-closed" th:if="${round.status.name() == 'CLOSED'}">
+                        <span class="dot"></span>
+                        <span th:text="${round.status.label}">Đã đóng</span>
+                    </span>
+
+                    <span class="type-badge">
+                        <i class="bi bi-mortarboard me-1"></i>
+                        <span th:text="${round.roundType?.label}">Loại đợt</span>
+                    </span>
+
+                    <span class="text-muted small">
+                        Mã đợt: <strong class="text-dark" th:text="|#${round.id}|">#1</strong>
+                    </span>
+                </div>
+                <h2 class="fw-bold mb-1" style="color: var(--text-heading);" th:text="${round.name}">Tên đợt đăng ký</h2>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="btn-action-group">
+                <a th:href="@{/dean/rounds}" class="btn-custom btn-custom-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+
+                <a th:if="${round.status.name() == 'DRAFT'}"
+                   th:href="@{/dean/rounds/{id}/edit(id=${round.id})}"
+                   class="btn-custom btn-custom-warning">
+                    <i class="bi bi-pencil-square"></i> Chỉnh sửa
+                </a>
+
+                <form th:if="${round.status.name() == 'DRAFT'}"
+                      th:action="@{/dean/rounds/{id}/open(id=${round.id})}"
+                      method="post" class="d-inline">
+                    <button type="submit" class="btn-custom btn-custom-success">
+                        <i class="bi bi-play-circle"></i> Mở đợt
+                    </button>
+                </form>
+
+                <form th:if="${round.status.name() == 'OPEN'}"
+                      th:action="@{/dean/rounds/{id}/close(id=${round.id})}"
+                      method="post" class="d-inline">
+                    <button type="submit" class="btn-custom btn-custom-danger">
+                        <i class="bi bi-stop-circle"></i> Đóng đợt
+                    </button>
+                </form>
+
+                <form th:if="${round.status.name() == 'DRAFT'}"
+                      th:action="@{/dean/rounds/{id}/delete(id=${round.id})}"
+                      method="post" class="d-inline"
+                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa đợt đăng ký nháp này?');">
+                    <button type="submit" class="btn-custom btn-custom-danger">
+                        <i class="bi bi-trash"></i> Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="row g-4">
+        <!-- Left Column: Timeline & Phases -->
+        <div class="col-lg-7">
+            <div class="custom-card p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                    <h5 class="fw-bold m-0" style="color: var(--text-heading);">
+                        <i class="bi bi-clock-history text-primary me-2"></i> Lịch trình & Các mốc thời hạn
+                    </h5>
+                    <span class="badge bg-light text-secondary border">Giờ Việt Nam (UTC+7)</span>
+                </div>
+
+                <!-- Step 1: Proposal Phase -->
+                <div class="timeline-step">
+                    <div class="timeline-indicator"></div>
+                    <div>
+                        <h6 class="fw-bold mb-2" style="color: var(--text-heading);">Giai đoạn 1: Đề xuất đề tài</h6>
+                        <div class="row g-2">
+                            <div class="col-sm-6">
+                                <div class="time-box">
+                                    <div class="text-muted small mb-1"><i class="bi bi-box-arrow-in-right text-success me-1"></i> Bắt đầu đề xuất</div>
+                                    <div class="fw-semibold text-dark"
+                                         th:text="${schedule.proposalStartsAt == null ? '—' : #temporals.format(schedule.proposalStartsAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="time-box">
+                                    <div class="text-muted small mb-1"><i class="bi bi-box-arrow-right text-danger me-1"></i> Kết thúc đề xuất</div>
+                                    <div class="fw-semibold text-dark"
+                                         th:text="${schedule.proposalEndsAt == null ? '—' : #temporals.format(schedule.proposalEndsAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Student Registration Phase -->
+                <div class="timeline-step">
+                    <div class="timeline-indicator"></div>
+                    <div>
+                        <h6 class="fw-bold mb-2" style="color: var(--text-heading);">Giai đoạn 2: Sinh viên đăng ký</h6>
+                        <div class="row g-2">
+                            <div class="col-sm-6">
+                                <div class="time-box">
+                                    <div class="text-muted small mb-1"><i class="bi bi-person-check text-success me-1"></i> Bắt đầu đăng ký</div>
+                                    <div class="fw-semibold text-dark"
+                                         th:text="${schedule.studentStartsAt == null ? '—' : #temporals.format(schedule.studentStartsAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="time-box">
+                                    <div class="text-muted small mb-1"><i class="bi bi-person-x text-danger me-1"></i> Kết thúc đăng ký</div>
+                                    <div class="fw-semibold text-dark"
+                                         th:text="${schedule.studentEndsAt == null ? '—' : #temporals.format(schedule.studentEndsAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Evaluation & Reports -->
+                <div class="timeline-step">
+                    <div class="timeline-indicator"></div>
+                    <div>
+                        <h6 class="fw-bold mb-2" style="color: var(--text-heading);">Giai đoạn 3: Phản biện & Đánh giá</h6>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="time-box d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small"><i class="bi bi-pencil-square text-warning me-1"></i> Hạn phản biện</div>
+                                    <div class="small text-secondary">Dành cho tiểu luận chuyên ngành & khóa luận</div>
+                                </div>
+                                <div class="fw-semibold text-dark fs-6"
+                                     th:text="${schedule.reviewerDueAt == null ? '—' : #temporals.format(schedule.reviewerDueAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                            </div>
+
+                            <div class="time-box d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small"><i class="bi bi-people text-info me-1"></i> Ngày hội đồng bảo vệ</div>
+                                    <div class="small text-secondary">Áp dụng cho khóa luận tốt nghiệp</div>
+                                </div>
+                                <div class="fw-semibold text-dark fs-6"
+                                     th:text="${round.councilDate == null ? '—' : #temporals.format(round.councilDate, 'dd/MM/yyyy')}">—</div>
+                            </div>
+
+                            <div class="time-box d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small"><i class="bi bi-file-earmark-check text-primary me-1"></i> Hạn nộp báo cáo</div>
+                                    <div class="small text-secondary">Thời hạn hoàn thiện tài liệu đề tài</div>
+                                </div>
+                                <div class="fw-semibold text-dark fs-6"
+                                     th:text="${schedule.reportDueAt == null ? '—' : #temporals.format(schedule.reportDueAt, 'dd/MM/yyyy HH:mm')}">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right Column: Rules & Administrative Info -->
+        <div class="col-lg-5">
+            <div class="d-flex flex-column gap-4">
+
+                <!-- Team Size Rule Card -->
+                <div class="custom-card p-4">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom" style="color: var(--text-heading);">
+                        <i class="bi bi-people text-primary me-2"></i> Quy định nhóm sinh viên
+                    </h5>
+                    <div class="row g-3 text-center">
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid var(--border-color);">
+                                <div class="text-muted small mb-1">Tối thiểu</div>
+                                <div class="fs-3 fw-bold text-primary" th:text="${round.groupMinSize}">1</div>
+                                <div class="text-muted small">sinh viên / nhóm</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid var(--border-color);">
+                                <div class="text-muted small mb-1">Tối đa</div>
+                                <div class="fs-3 fw-bold text-primary" th:text="${round.groupMaxSize}">3</div>
+                                <div class="text-muted small">sinh viên / nhóm</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin & Audit Metadata Card -->
+                <div class="custom-card p-4">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom" style="color: var(--text-heading);">
+                        <i class="bi bi-shield-check text-primary me-2"></i> Thông tin quản trị
+                    </h5>
+                    <div class="meta-item">
+                        <span class="meta-label">Mã định danh (ID)</span>
+                        <span class="meta-value font-monospace" th:text="${round.id}">1</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Người tạo (User ID)</span>
+                        <span class="meta-value font-monospace" th:text="${round.createdBy}">DEAN-01</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Thời gian tạo (UTC)</span>
+                        <span class="meta-value" th:text="${round.createdAt}">2026-10-17 00:00</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Loại đợt đăng ký</span>
+                        <span class="meta-value" th:text="${round.roundType?.label}">Khóa luận tốt nghiệp</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Trạng thái hiện tại</span>
+                        <span class="meta-value" th:text="${round.status.label}">Nháp</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

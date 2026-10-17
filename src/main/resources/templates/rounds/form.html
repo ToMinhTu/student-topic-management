@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${editId == null} ? 'Tạo đợt đăng ký mới' : 'Chỉnh sửa đợt đăng ký'">Thông tin đợt đăng ký</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --surface-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --border-subtle: #f1f5f9;
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --radius-main: 14px;
+            --radius-sub: 10px;
+            --shadow-subtle: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+            --shadow-float: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            background-color: var(--surface-bg);
+            color: var(--text-body);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .form-container {
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        /* Breadcrumb navigation */
+        .page-breadcrumb a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.15s ease;
+        }
+        .page-breadcrumb a:hover {
+            color: var(--primary);
+        }
+        .page-breadcrumb .separator {
+            color: #cbd5e1;
+            margin: 0 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Card styles */
+        .custom-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-main);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        /* Form sections */
+        .form-section {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sub);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin: 0;
+        }
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background-color: #eff6ff;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-heading);
+            margin-bottom: 6px;
+        }
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 9px 13px;
+            font-size: 0.92rem;
+            color: var(--text-body);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        /* Field Error Message */
+        .text-danger {
+            font-size: 0.82rem;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Phase Card Inside Section */
+        .phase-box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .phase-title {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-heading);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Action buttons */
+        .btn-custom {
+            font-weight: 500;
+            font-size: 0.92rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+        }
+        .btn-custom-primary {
+            background: var(--primary);
+            border: 1px solid var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+        .btn-custom-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: #ffffff;
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-custom-secondary {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-body);
+        }
+        .btn-custom-secondary:hover {
+            background: #f1f5f9;
+            color: var(--text-heading);
+            border-color: #cbd5e1;
+        }
+    </style>
+</head>
+<body class="py-4">
+
+<div class="form-container px-3">
+
+    <!-- Top Breadcrumb -->
+    <div class="page-breadcrumb d-flex align-items-center mb-3">
+        <a th:href="@{/dean/rounds}"><i class="bi bi-calendar3 me-1"></i> Quản lý đợt đăng ký</a>
+        <span class="separator"><i class="bi bi-chevron-right"></i></span>
+        <span class="text-secondary fw-semibold" th:text="${editId == null} ? 'Tạo mới' : 'Chỉnh sửa đợt #' + ${editId}">Tạo mới</span>
+    </div>
+
+    <!-- Main Card -->
+    <div class="custom-card p-4 p-md-5">
+
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1" style="color: var(--text-heading);"
+                th:text="${editId == null} ? 'Tạo đợt đăng ký mới' : 'Chỉnh sửa đợt đăng ký'">
+                Tạo đợt mới
+            </h3>
+            <p class="text-muted small">Vui lòng điền đầy đủ các thông tin và thiết lập lịch trình cho đợt đăng ký đề tài.</p>
+        </div>
+
+        <form th:object="${roundForm}"
+              th:action="${editId == null} ?
+                @{/dean/rounds} :
+                @{/dean/rounds/{id}/edit(id=${editId})}"
+              method="post">
+
+            <!-- Global Errors Alert -->
+            <div class="alert alert-danger d-flex align-items-start rounded-3 py-3 px-4 mb-4"
+                 th:if="${#fields.hasGlobalErrors()}">
+                <i class="bi bi-exclamation-octagon-fill fs-5 text-danger me-3 mt-1"></i>
+                <div>
+                    <div class="fw-bold mb-1">Không thể lưu thông tin:</div>
+                    <ul class="mb-0 ps-3">
+                        <li th:each="e : ${#fields.globalErrors()}" th:text="${e}"></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 1: Thông tin cơ bản -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="bi bi-info-circle"></i></div>
+                    <h4 class="section-title">1. Thông tin cơ bản</h4>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Tên đợt đăng ký <span class="text-danger">*</span></label>
+                    <input class="form-control"
+                           placeholder="Ví dụ: Đợt đăng ký Khóa luận tốt nghiệp Học kỳ 2 (2025 - 2026)"
+                           th:field="*{name}" maxlength="200" required>
+                    <div class="text-danger" th:errors="*{name}"></div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Loại đợt đăng ký <span class="text-danger">*</span></label>
+                    <select class="form-select" th:field="*{roundType}" required>
+                        <option value="">-- Chọn loại đợt đăng ký --</option>
+                        <option th:each="t : ${roundTypes}"
+                                th:value="${t}"
+                                th:text="${t.label}"></option>
+                    </select>
+                    <div class="text-danger" th:errors="*{roundType}"></div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Lịch trình & Các mốc thời gian -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="bi bi-calendar3"></i></div>
+                    <h4 class="section-title">2. Lịch trình các giai đoạn</h4>
+                </div>
+
+                <!-- Phase 1: Topic Proposal -->
+                <div class="phase-box">
+                    <div class="phase-title">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Giai đoạn 1</span>
+                        <span>Đề xuất đề tài (Giảng viên)</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Thời gian bắt đầu <span class="text-danger">*</span></label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   th:field="*{proposalStartsAt}" required>
+                            <div class="text-danger" th:errors="*{proposalStartsAt}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Thời gian kết thúc <span class="text-danger">*</span></label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   th:field="*{proposalEndsAt}" required>
+                            <div class="text-danger" th:errors="*{proposalEndsAt}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2: Student Registration -->
+                <div class="phase-box">
+                    <div class="phase-title">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Giai đoạn 2</span>
+                        <span>Sinh viên đăng ký đề tài</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Thời gian bắt đầu <span class="text-danger">*</span></label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   th:field="*{studentStartsAt}" required>
+                            <div class="text-danger" th:errors="*{studentStartsAt}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Thời gian kết thúc <span class="text-danger">*</span></label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   th:field="*{studentEndsAt}" required>
+                            <div class="text-danger" th:errors="*{studentEndsAt}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 3: Deadlines & Evaluation -->
+                <div class="phase-box mb-0">
+                    <div class="phase-title">
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Giai đoạn 3</span>
+                        <span>Các mốc phản biện, hội đồng & báo cáo</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0">Hạn phản biện</label>
+                            <span class="badge bg-light text-secondary border">Bắt buộc cho Tiểu luận & Khóa luận</span>
+                        </div>
+                        <input type="datetime-local"
+                               class="form-control"
+                               th:field="*{reviewerDueAt}">
+                        <div class="text-danger" th:errors="*{reviewerDueAt}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0">Ngày hội đồng bảo vệ</label>
+                            <span class="badge bg-light text-secondary border">Chỉ bắt buộc cho Khóa luận tốt nghiệp</span>
+                        </div>
+                        <input type="date"
+                               class="form-control"
+                               th:field="*{councilDate}">
+                        <div class="text-danger" th:errors="*{councilDate}"></div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0">Hạn nộp báo cáo đề tài</label>
+                            <span class="badge bg-light text-secondary border">Tùy chọn</span>
+                        </div>
+                        <input type="datetime-local"
+                               class="form-control"
+                               th:field="*{reportDueAt}">
+                        <div class="text-danger" th:errors="*{reportDueAt}"></div>
+                    </div>
+                </div>
+
+                <div class="mt-3 d-flex align-items-center text-muted small">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>
+                    <span>Tất cả các mốc giờ đều được nhập và lưu theo giờ chuẩn Việt Nam (UTC+7).</span>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Quy định nhóm sinh viên -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="bi bi-people"></i></div>
+                    <h4 class="section-title">3. Quy mô nhóm sinh viên</h4>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Số thành viên tối thiểu <span class="text-danger">*</span></label>
+                        <input type="number" min="1" max="5"
+                               class="form-control"
+                               th:field="*{groupMinSize}" required>
+                        <div class="text-muted small mt-1">Từ 1 đến 5 sinh viên</div>
+                        <div class="text-danger" th:errors="*{groupMinSize}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Số thành viên tối đa <span class="text-danger">*</span></label>
+                        <input type="number" min="1" max="5"
+                               class="form-control"
+                               th:field="*{groupMaxSize}" required>
+                        <div class="text-muted small mt-1">Từ 1 đến 5 sinh viên (>= tối thiểu)</div>
+                        <div class="text-danger" th:errors="*{groupMaxSize}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex align-items-center gap-3 pt-2">
+                <button type="submit" class="btn-custom btn-custom-primary">
+                    <i class="bi bi-check-lg"></i> Lưu thông tin
+                </button>
+
+                <a th:href="@{/dean/rounds}" class="btn-custom btn-custom-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

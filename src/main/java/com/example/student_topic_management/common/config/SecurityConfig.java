@@ -22,14 +22,6 @@ public class SecurityConfig {
         }
 
         @Bean
-        public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
-                        PasswordEncoder encoder) {
-                var provider = new DaoAuthenticationProvider(userDetailsService);
-                provider.setPasswordEncoder(encoder);
-                return provider;
-        }
-
-        @Bean
         public SessionRegistry sessionRegistry() {
                 // Luu giu danh sach toan bo user dang online va token session trong bo nho
                 return new SessionRegistryImpl();
@@ -43,13 +35,17 @@ public class SecurityConfig {
         }
 
         @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider provider)
-                        throws Exception {
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        UserDetailsService userDetailsService,
+                        PasswordEncoder encoder) throws Exception {
                 // Tam thoi cho phep truy cap khong can login
                 // http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 // .csrf(csrf -> csrf.disable());
                 // return http.build();
 
+                var provider = new DaoAuthenticationProvider(userDetailsService);
+                provider.setPasswordEncoder(encoder);
                 http.authenticationProvider(provider);
 
                 http.authorizeHttpRequests(auth -> auth
