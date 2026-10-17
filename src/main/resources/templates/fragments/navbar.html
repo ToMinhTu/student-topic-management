@@ -25,6 +25,13 @@
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DEAN')">
                         <a th:href="@{/management/announcements}" class="nav-link">QL Thông báo</a>
                     </li>
+                    <!-- STUDENT va ADMIN: Quan ly nhom sinh vien -->
+                    <li class="nav-item"
+                        sec:authorize="hasAnyRole('STUDENT', 'ADMIN')">
+                        <a th:href="@{/groups}" class="nav-link">
+                            Nhóm sinh viên
+                        </a>
+                    </li>
                     <!-- ADMIN -->
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                         <a th:href="@{/admin/departments}" class="nav-link">Bộ Môn</a>
