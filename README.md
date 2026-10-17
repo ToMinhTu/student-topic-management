@@ -14,11 +14,33 @@ Tài khoản:
 | ADMIN         |    admin      |         admin123 |
 | text         |     text       |          text |
 
-[Run departments](http://127.0.0.1:8080/admin/departments)
+[Link Test](http://127.0.0.1:8080/)
 
-Phần bộ môn (departments):
+### 1. Phần bộ môn (departments):
 - [✔] thêm mới
 - [✔] Sửa
 - [✔] Xoá
 - [✔] Báo lỗi khi tên trùng với bộ môn đã có sẵn
 - [✔] Báo lỗi khi bộ môn có tài khoản trực thuộc
+
+### 2. Chia quyền đăng nhập theo role: ✔
+	
+### 3. Phần quản lý người dùng (users):
+- [✔] Màn hình quản lý
+- [✔] Tính năng khoá người dùng - đồng thời logout các session đăng nhập khác
+- [✔] Không khoá người dùng ADMIN cuối cùng
+- [✔] Xoá người dùng: Chưa làm
+	
+### 4. Phần thêm sinh viên (students):
+- [✔] validate các trường dữ liệu
+- [✔] Không tạo trùng username
+- [✔] Không tạo trùng email
+- [✔] Không tạo trùng mã số sinh viên
+- [✔] Tạo sinh viên
+	
+### 5. Phần thêm giảng viên (lecturers):
+- [✔] validate các trường dữ liệu
+- [✔] Không tạo trùng username
+- [✔] Không tạo trùng email
+- [✔] Không tạo trùng mã số giảng viên
+- [✔] Tạo giảng viên

@@ -1,7 +1,5 @@
 package com.example.student_topic_management.identity.controller;
 
-import java.util.List;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
