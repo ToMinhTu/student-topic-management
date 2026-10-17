@@ -1,36 +1,40 @@
 <!DOCTYPE html>
-<html lang="vi"
-        xmlns:th="http://www.thymeleaf.org"
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="~{layout}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
 <head>
-    <title>Thêm mới bộ môn</title>
+    <title th:text="${form.id == null ? 'Thêm mới Bộ Môn' : 'Chỉnh sửa Bộ Môn'}">Form Bộ Môn</title>
 </head>
+
 <body>
     <div layout:fragment="content">
-        <div class="card shadow-sm" style="max-width: 600px; margin: 0 auto;">
+        <div class="card shadow-sm mx-auto" style="max-width: 600px;">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Thêm mới/Cập nhật bộ môn</h4>
+                <h4 class="mb-0" th:text="${form.id == null ? 'Thêm mới Bộ Môn' : 'Cập nhật Bộ Môn'}"></h4>
             </div>
             <div class="card-body">
-                <form th:action="@{/admin/departments/save}" th:object="${departmentDTO}" method="post">
-                    <!-- ID an phuc vu cho viec update -->
+                <form th:action="@{/admin/departments/save}" th:object="${form}" method="post">
+                    <!-- ID an phuc vu cho viec sua thay vi them moi -->
                     <input type="hidden" th:field="*{id}">
+
                     <div class="mb3">
                         <label class="form-label fw-bold">Tên Bộ Môn (*)</label>
-                        <input type="text" class="form-control" th:field="*{name}" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" placeholder="Nhập tên bộ môn">
+                        <input type="text" class="form-control" th:field="*{name}"
+                            th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''">
                         <!-- Hien thi loi -->
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
                     </div>
 
                     <div class="mb3">
                         <label class="form-label fw-bold">Mô tả</label>
-                        <textarea class="form-control" th:field="*{description}" rows="3" placeholder="Nhập tên bộ môn"></textarea>
+                        <textarea class="form-control" th:field="*{description}" rows="4"
+                            th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"></textarea>
+                        <div class="invalid-feedback" th:errors="*{description}"></div>
                     </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a th:href="@{/admin/departments}" class="btn btn-secondary">Quay lại</a>
-                        <button type="submit" class="btn btn-success">Lưu bộ môn</button>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a th:href="@{/admin/departments}" class="btn btn-secondary">Quay lại danh sách</a>
+                        <button type="submit" class="btn btn-success">Lưu dữ liệu</button>
                     </div>
                 </form>
             </div>
@@ -44,4 +48,5 @@
         </script>
     </th:block>
 </body>
+
 </html>

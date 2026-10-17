@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Quản lý Tài Khoản</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <style></style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">Danh sách Tài khoản Hệ thống</h2>
+
+        <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
+        <div th:if="${error}" th:text="${error}" class="alert alert-danger"></div>
+
+        <div class="d-flex gap-2 mb-3">
+            <a th:href="@{/admin/students/new}" class="btn btn-primary">+ Thêm Sinh Viên</a>
+            <a th:href="@{/admin/lecturers/new}" class="btn btn-info text-white">+ Thêm Giảng Viên</a>
+        </div>
+
+        <table class="table table-bordered bg-white shadow-sm align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 50px;">ID</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Họ và Tên</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
+                    <th style="width: 120px;" class="text-center">Trạng thái</th>
+                    <th style="width: 120px;" class="text-center">Hành động</th>
+                </tr>
+            <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.username}" class="fw-bold"></td>
+                    <td th:text="${user.fullname}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td th:text="${user.roleNames}"></td>
+                    <td class="text-center">
+                        <span th:if="${user.enabled}" class="badge bg-success">Hoạt động</span>
+                        <span th:unless="${user.enabled}" class="badge bg-danger">Bị khóa</span>
+                    </td>
+                    <td class="text-center">
+                        <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}" method="post">
+                            <button type="submit"
+                                th:class="${user.enabled} ? 'btn btn-sm btn-danger' : 'btn btn-sm btn-success'"
+                                th:text="${user.enabled} ? 'Khoá' : 'Mở Khoá'"
+                                onclick="return confirm('Xác nhận thay đổi trạng thái tài khoản này?');"></button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+            </thead>
+        </table>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>

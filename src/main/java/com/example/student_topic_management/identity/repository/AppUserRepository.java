@@ -1,5 +1,6 @@
 package com.example.student_topic_management.identity.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -12,6 +13,10 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     // nap san roles
     @EntityGraph(attributePaths = "roles")
     Optional<AppUser> findByUsername(String username);
+
+    @Override
+    @EntityGraph(attributePaths = "roles")
+    List<AppUser> findAll();
 
     boolean existsByUsername(String username);
 

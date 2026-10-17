@@ -1,6 +1,5 @@
 package com.example.student_topic_management.identity.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,14 +12,18 @@ import com.example.student_topic_management.identity.repository.AppUserRepositor
 
 @Service
 public class AccountSecurityService {
-    @Autowired
-    private AppUserRepository userRepository;
-    @Autowired
-    private CurrentUserService currentUserService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
+    private final AppUserRepository userRepository;
+    private final CurrentUserService currentUserService;
+    private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public AccountSecurityService(AppUserRepository userRepository, CurrentUserService currentUserService,
+            PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
+        this.userRepository = userRepository;
+        this.currentUserService = currentUserService;
+        this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
+    }
 
     @Transactional
     public void changePassword(ChangePasswordForm form) {

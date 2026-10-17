@@ -2,13 +2,7 @@ package com.example.student_topic_management.identity.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
 public class DepartmentForm {
     private Long id;
 
@@ -16,13 +10,42 @@ public class DepartmentForm {
     @Size(max = 150, message = "Tên Bộ môn tối đa 150 ký tự")
     private String name;
 
+    @Size(max = 5000, message = "Mô tả tối đa 5000 ký tự")
     private String description;
+
+    public DepartmentForm() {
+    }
 
     public DepartmentForm(Long id,
             @NotBlank(message = "Tên Bộ môn không được để trống") @Size(max = 150, message = "Tên Bộ môn tối đa 150 ký tự") String name,
-            String description) {
+            @Size(max = 5000, message = "Mô tả tối đa 5000 ký tự") String description) {
         this.id = id;
         this.name = name;
         this.description = description;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
 }

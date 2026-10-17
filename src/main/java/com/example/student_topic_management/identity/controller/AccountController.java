@@ -1,6 +1,5 @@
 package com.example.student_topic_management.identity.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -24,8 +23,11 @@ import jakarta.validation.Valid;
 @Controller
 @RequestMapping("/account")
 public class AccountController {
-    @Autowired
-    private AccountSecurityService accountSecurityService;
+    private final AccountSecurityService accountSecurityService;
+
+    public AccountController(AccountSecurityService accountSecurityService) {
+        this.accountSecurityService = accountSecurityService;
+    }
 
     @GetMapping("/password")
     public String showChangePasswordForm(Model model) {

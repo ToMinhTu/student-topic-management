@@ -1,7 +1,8 @@
 package com.example.student_topic_management.identity.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,18 +14,28 @@ import com.example.student_topic_management.identity.service.UserManagementServi
 @Controller
 @RequestMapping("/admin/users")
 public class UserManagementController {
-    @Autowired
-    private UserManagementService userManagementService;
+    private final UserManagementService userManagementService;
 
-    @PostMapping("/{id}/lock")
-    public String lockUser(@PathVariable("id") Long userId, RedirectAttributes redirect) {
+    public UserManagementController(UserManagementService userManagementService) {
+        this.userManagementService = userManagementService;
+    }
+
+    // Hien thi danh sach tai khoan
+    @GetMapping
+    public String listUsers(Model model) {
+        model.addAttribute("users", userManagementService.getAllUsers());
+        return "users/list";
+    }
+
+    // Chuyen trang thai khoa/mo khoa
+    @PostMapping("/{id}/toggle-lock")
+    public String toggleLock(@PathVariable("id") Long id, RedirectAttributes redirect) {
         try {
-            userManagementService.lockAccount(userId);
-            redirect.addFlashAttribute("success", "Đã khoá tài khoản và thu hồi phiên thành công.");
+            userManagementService.toggleUserLock(id);
+            redirect.addFlashAttribute("success", "Cập nhật trạng thái tài khoản thành công.");
         } catch (BusinessException ex) {
             redirect.addFlashAttribute("error", ex.getMessage());
         }
-        // back to homepage
-        return "redirect:/";
+        return "redirect:/admin/users";
     }
 }

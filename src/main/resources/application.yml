@@ -18,3 +18,7 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
+  # server:
+  #   servlet:
+  #     session:
+  #       timeout: 1h #h, m, s

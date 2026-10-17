@@ -9,15 +9,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "students")
-@Getter
-@Setter
-@NoArgsConstructor
 public class StudentProfile {
     @Id
     @Column(name = "user_id")
@@ -40,11 +34,54 @@ public class StudentProfile {
     @JoinColumn(name = "department_id")
     private Department department;
 
+    public StudentProfile() {
+    }
+
     public StudentProfile(Long userId, AppUser user, String studentCode, String className, Department department) {
         this.userId = userId;
         this.user = user;
         this.studentCode = studentCode;
         this.className = className;
+        this.department = department;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public AppUser getUser() {
+        return user;
+    }
+
+    public void setUser(AppUser user) {
+        this.user = user;
+    }
+
+    public String getStudentCode() {
+        return studentCode;
+    }
+
+    public void setStudentCode(String studentCode) {
+        this.studentCode = studentCode;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
         this.department = department;
     }
 
