@@ -3,7 +3,10 @@
 [FIle EXCEL Tổng hợp](https://docs.google.com/spreadsheets/d/15j5iLNbXE_Gw3CXLfULijvWwq__4noOaoX7NG0bpk4o/edit?usp=sharing)
 
 > [!IMPORTANT]
-> Dùng edge thì chạy link 127.0.0.1:8080/
+> Dùng edge thì chạy link `127.0.0.1:8080/` thay cho `localhost`
+
+>[!NOTE]
+> Nếu build bị lỗi entity thì chạy lệnh `mvn clean` -> `mvn spring-boot:run`
 
 Tài khoản:
 | Role | Tài khoản | mật khẩu |
