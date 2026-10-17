@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đề tài của tôi</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 12px; }
+        th { background: #f3f4f6; }
+        a { color: #2563eb; }
+        .btn { display: inline-block; padding: 10px 14px;
+               background: #2563eb; color: white;
+               text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<h1>Đề tài của tôi</h1>
+
+<p><a class="btn" th:href="@{/topics/new}">Tạo đề xuất mới</a></p>
+
+<p th:if="${success}" th:text="${success}"></p>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Mã đề tài</th>
+        <th>Tên đề tài</th>
+        <th>Trạng thái</th>
+        <th>Thao tác</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="topic : ${topics.content}">
+        <td th:text="${topic.id}"></td>
+        <td th:text="${topic.code}"></td>
+        <td th:text="${topic.title}"></td>
+        <td th:text="${topic.status}"></td>
+        <td>
+            <a th:href="@{/topics/{id}(id=${topic.id})}">Chi tiết</a>
+        </td>
+    </tr>
+    <tr th:if="${topics.empty}">
+        <td colspan="5">Bạn chưa có đề xuất nào.</td>
+    </tr>
+    </tbody>
+</table>
+
+<p th:if="${topics.totalPages > 1}">
+    <a th:if="${topics.hasPrevious()}"
+       th:href="@{/topics/my(page=${topics.number - 1})}">
+        Trang trước
+    </a>
+
+    <span th:text="${topics.number + 1}"></span>
+    /
+    <span th:text="${topics.totalPages}"></span>
+
+    <a th:if="${topics.hasNext()}"
+       th:href="@{/topics/my(page=${topics.number + 1})}">
+        Trang sau
+    </a>
+</p>
+
+</body>
+</html>

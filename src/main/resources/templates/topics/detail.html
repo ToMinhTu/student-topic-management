@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chi tiết đề tài</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 850px;
+               margin: 30px auto; line-height: 1.6; }
+        .actions { margin-top: 24px; display: flex; gap: 12px; }
+        button, .btn { padding: 10px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h1 th:text="${topic.title}">Chi tiết đề tài</h1>
+
+<p th:if="${success}" th:text="${success}"></p>
+
+<p><strong>Mã đề tài:</strong>
+    <span th:text="${topic.code}"></span></p>
+
+<p><strong>Đợt đăng ký:</strong>
+    <span th:text="${topic.roundId}"></span></p>
+
+<p><strong>Bộ môn:</strong>
+    <span th:text="${topic.departmentId}"></span></p>
+
+<p><strong>Trạng thái:</strong>
+    <span th:text="${topic.status}"></span></p>
+
+<h3>Mô tả</h3>
+<p th:text="${topic.description}"></p>
+
+<h3>Yêu cầu</h3>
+<p th:text="${topic.requirements}"></p>
+
+<div class="actions"
+     th:if="${topic.status.name() == 'DRAFT'}">
+
+    <a class="btn"
+       th:href="@{/topics/{id}/edit(id=${topic.id})}">
+        Chỉnh sửa
+    </a>
+
+    <form th:action="@{/topics/{id}/submit(id=${topic.id})}"
+          method="post">
+        <button type="submit">
+            Gửi đề xuất
+        </button>
+    </form>
+</div>
+
+<p><a th:href="@{/topics/my}">Quay lại danh sách</a></p>
+
+</body>
+</html>
