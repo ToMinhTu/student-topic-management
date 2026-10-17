@@ -1,32 +1,45 @@
 <!DOCTYPE html>
-<html lang="vi"
-        xmlns:th="http://www.thymeleaf.org"
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="~{layout}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
 <head>
     <title>Danh Sách Bộ Môn</title>
 </head>
+
 <body>
     <div layout:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Quản lý bộ môn</h2>
+            <h2 class="mb-4">Quản lý bộ môn</h2>
+
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
             <a th:href="@{/admin/departments/new}" class="btn btn-primary mb-3">+ Thêm bộ môn mới</a>
         </div>
-        <table class="table table-bordered table-striped bg-white mt-3">
+        <table class="table table-bordered bg-white shadow-sm">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
+                    <th style="width: 50px;">ID</th>
                     <th>Tên bộ môn</th>
                     <th>Mô tả</th>
-                    <th>Ngày tạo</th>
+                    <th style="width: 150px;" class="text-center">Hành động</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="dept : ${departments}">
-                    <td th:text="${dept.id}">1</td>
-                    <td th:text="${dept.name}">Công nghệ phần mềm</td>
-                    <td th:text="${dept.description}">Mô tả...</td>
-                    <td th:text="${dept.createdAt}">2026-10-06</td>
+                    <td th:text="${dept.id}"></td>
+                    <td th:text="${dept.name}" class="fw-bold"></td>
+                    <td th:text="${dept.description}"></td>
+                    <td class="text-center">
+                        <!-- Sua -->
+                        <a th:href="@{/admin/departments/{id}/edit(id=${dept.id})}"
+                            class="btn btn-sm btn-warning">Sửa</a>
+                        <!-- Xoa -->
+                        <form th:action="@{/admin/departments/{id}/delete(id=${dept.id})}" method="post"
+                            onsubmit="return confirm('Bạn có chắc chắn muốn xoá bộ môn này?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Xoá</button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -39,4 +52,5 @@
         </script>
     </th:block>
 </body>
+
 </html>
