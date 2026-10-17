@@ -21,6 +21,9 @@
                     <li class="nav-item">
                         <a th:href="@{/admin/users}" class="nav-link">Người dùng</a>
                     </li>
+                    <li class="nav-item">
+                        <a th:href="@{/management/announcements}" class="nav-link">QL Thông báo</a>
+                    </li>
                     <!-- <li class="nav-item">
                         <a th:href="@{/students}" class="nav-link">Sinh Viên</a>
                     </li>
@@ -29,6 +32,9 @@
                     </li> -->
                 </ul>
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a th:href="@{/announcements}" class="nav-link">Thông báo</a>
+                    </li>
                     <li class="nav-item">
                         <form th:action="@{/logout}" method="post" class="d-inline">
                             <button type="submit" class="btn nav-link text-danger fw-bold"

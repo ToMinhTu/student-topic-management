@@ -44,3 +44,16 @@ Tài khoản:
 - [✔] Không tạo trùng email
 - [✔] Không tạo trùng mã số giảng viên
 - [✔] Tạo giảng viên
+
+### 6. Phần thông báo (announcements):
+- Danh sách quản lý thông báo (Admin/Dean)
+    - [✔] Thêm thông báo (Nháp)
+    - [✔] validate
+    - [✔] Sửa
+    - [✔] Xoá
+    - [✔] Công bố
+    - [✔] Sau khi công bố thì thông báo biến mất ở danh sách quản lý (Không cho phép thay đổi thông báo đã công bố)
+- Thông báo cho student/lecturer:
+    - [✔] Hiện danh sách
+    - [✔] Đọc chi tiết
+    - [✔] Hiện lỗi khi vào bằng url với thông báo chưa được publish
