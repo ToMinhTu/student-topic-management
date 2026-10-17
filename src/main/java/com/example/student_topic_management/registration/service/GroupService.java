@@ -1,4 +1,4 @@
-﻿package com.example.student_topic_management.registration.service;
+package com.example.student_topic_management.registration.service;
 
 import java.time.Clock;
 import java.time.Instant;
