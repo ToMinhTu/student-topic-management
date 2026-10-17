@@ -3,7 +3,6 @@ package com.example.student_topic_management.identity.controller;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +16,11 @@ import com.example.student_topic_management.identity.repository.AnnouncementRepo
 @Controller
 @RequestMapping("/announcements")
 public class PublicAnnouncementController {
-    @Autowired
-    private AnnouncementRepository announcementRepository;
+    private final AnnouncementRepository announcementRepository;
+
+    public PublicAnnouncementController(AnnouncementRepository announcementRepository) {
+        this.announcementRepository = announcementRepository;
+    }
 
     // Danh sach da cong bo
     @GetMapping

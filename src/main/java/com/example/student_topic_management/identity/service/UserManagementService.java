@@ -16,8 +16,8 @@ import com.example.student_topic_management.identity.repository.AppUserRepositor
 
 @Service
 public class UserManagementService {
-    private AppUserRepository userRepository;
-    private ApplicationEventPublisher eventPublisher;
+    private final AppUserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserManagementService(AppUserRepository userRepository, ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;

@@ -28,6 +28,16 @@
                         <a th:href="@{/topics}" class="nav-link">Đề Tài</a>
                     </li> -->
                 </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn nav-link text-danger fw-bold"
+                                style="border: none; background: transparent;">
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>

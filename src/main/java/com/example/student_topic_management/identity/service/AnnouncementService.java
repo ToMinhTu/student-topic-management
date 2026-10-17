@@ -3,7 +3,6 @@ package com.example.student_topic_management.identity.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +15,8 @@ import com.example.student_topic_management.identity.repository.AnnouncementRepo
 
 @Service
 public class AnnouncementService {
-    @Autowired
-    private AnnouncementRepository announcementRepository;
-    @Autowired
-    private CurrentUserService currentUserService;
+    private final AnnouncementRepository announcementRepository;
+    private final CurrentUserService currentUserService;
 
     public AnnouncementService(AnnouncementRepository announcementRepository, CurrentUserService currentUserService) {
         this.announcementRepository = announcementRepository;

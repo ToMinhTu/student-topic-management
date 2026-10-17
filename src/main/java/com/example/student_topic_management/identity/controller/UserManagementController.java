@@ -14,7 +14,7 @@ import com.example.student_topic_management.identity.service.UserManagementServi
 @Controller
 @RequestMapping("/admin/users")
 public class UserManagementController {
-    private UserManagementService userManagementService;
+    private final UserManagementService userManagementService;
 
     public UserManagementController(UserManagementService userManagementService) {
         this.userManagementService = userManagementService;

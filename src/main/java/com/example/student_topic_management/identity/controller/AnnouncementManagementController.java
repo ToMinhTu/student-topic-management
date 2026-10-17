@@ -1,6 +1,5 @@
 package com.example.student_topic_management.identity.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,10 +19,14 @@ import jakarta.validation.Valid;
 @Controller
 @RequestMapping("/management/announcements")
 public class AnnouncementManagementController {
-    @Autowired
-    private AnnouncementService announcementService;
-    @Autowired
-    private AnnouncementRepository announcementRepository;
+    private final AnnouncementService announcementService;
+    private final AnnouncementRepository announcementRepository;
+
+    public AnnouncementManagementController(AnnouncementService announcementService,
+            AnnouncementRepository announcementRepository) {
+        this.announcementService = announcementService;
+        this.announcementRepository = announcementRepository;
+    }
 
     // Xem danh sach Nhap
     @GetMapping
