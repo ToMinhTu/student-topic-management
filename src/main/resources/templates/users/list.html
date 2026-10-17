@@ -42,8 +42,12 @@
                     <td th:text="${user.email}"></td>
                     <td th:text="${user.roleNames}"></td>
                     <td class="text-center">
-                        <span th:if="${user.enabled}" class="badge bg-success">Hoạt động</span>
-                        <span th:unless="${user.enabled}" class="badge bg-danger">Bị khóa</span>
+                        <span th:if="${user.enabled}" class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i> Hoạt động
+                        </span>
+                        <span th:unless="${user.enabled}" class="badge bg-danger">
+                            <i class="bi bi-lock-fill me-1"></i> Bị khóa
+                        </span>
                     </td>
                     <td class="text-center">
                         <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}" method="post">
