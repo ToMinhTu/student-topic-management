@@ -1,0 +1,60 @@
+<!-- toan-D2 -->
+<!-- toan-D2 - thêm chức năng quản lý lịch bảo vệ -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách lịch bảo vệ</title>
+</head>
+
+<body>
+
+    <h1>Danh sách lịch bảo vệ</h1>
+
+    <a href="/defenses/new">
+        Tạo lịch bảo vệ mới
+    </a>
+
+    <br><br>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Hồ sơ</th>
+                <th>Đợt</th>
+                <th>Hội đồng</th>
+                <th>Thời gian</th>
+                <th>Địa điểm</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr th:each="defense : ${defenses}">
+                <td th:text="${defense.id}"></td>
+                <td th:text="${defense.registrationId}"></td>
+                <td th:text="${defense.roundId}"></td>
+                <td th:text="${defense.councilId}"></td>
+                <td th:text="${defense.scheduledAt}"></td>
+                <td th:text="${defense.location}"></td>
+                <td>
+                    <a th:href="@{/defenses/{id}(id=${defense.id})}">
+                        Xem chi tiết
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+
+    <a href="/councils">
+        Quay lại hội đồng
+    </a>
+
+</body>
+
+</html>
