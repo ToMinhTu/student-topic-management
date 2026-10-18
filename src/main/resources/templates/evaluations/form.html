@@ -1,0 +1,55 @@
+<!-- toan-D3 -->
+<!-- toan-D3 - thêm chức năng nhập điểm -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Nhập điểm</title>
+</head>
+
+<body>
+
+    <h1>Nhập phiếu chấm</h1>
+
+    <form th:action="@{/evaluations/save}" th:object="${evaluationForm}" method="post">
+
+        <label>Mã phân công:</label>
+        <input type="number" th:field="*{assignmentId}">
+
+        <p th:if="${#fields.hasErrors('assignmentId')}" th:errors="*{assignmentId}">
+        </p>
+
+        <br>
+
+        <label>Điểm:</label>
+        <input type="number" step="0.01" min="0" max="10" th:field="*{score}">
+
+        <p th:if="${#fields.hasErrors('score')}" th:errors="*{score}">
+        </p>
+
+        <br>
+
+        <label>Nhận xét:</label>
+        <textarea th:field="*{comments}" rows="5" cols="40">
+    </textarea>
+
+        <p th:if="${#fields.hasErrors('comments')}" th:errors="*{comments}">
+        </p>
+
+        <br><br>
+
+        <button type="submit">
+            Lưu phiếu chấm
+        </button>
+    </form>
+
+    <br>
+
+    <a href="/evaluations">
+        Quay lại danh sách
+    </a>
+
+</body>
+
+</html>

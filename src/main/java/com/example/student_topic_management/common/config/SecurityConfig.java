@@ -56,7 +56,7 @@ public class SecurityConfig {
                                 // Duong dan ma ai cung vao duoc
                                 .requestMatchers("/login", "/error", "/vendor/**", "/css/**").permitAll()
                                 // Phan quyen theo URL
-                                .requestMatchers("/management/announcements/**").hasAnyRole("ADMIN", "DEAN")
+                                .requestMatchers("/management/announcements/**").hasAnyRole("ADMIN", "DEAN")                                .requestMatchers("/councils/**").hasAnyRole("DEAN", "DEPARTMENT_HEAD", "LECTURER")
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/dean/**").hasRole("DEAN")
                                 .requestMatchers("/department/**").hasRole("DEPARTMENT_HEAD")

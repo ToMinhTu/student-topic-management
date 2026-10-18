@@ -234,6 +234,10 @@ public class GroupController {
                                 "Nhom khong ton tai"
                         ));
 
+        List<Map<String, Object>> councils = jdbc.queryForList(
+                "SELECT id, name, status FROM councils WHERE round_id = ? ORDER BY id",
+                group.getRoundId());
+        model.addAttribute("councils", councils);
         List<GroupMember> activeMembers =
                 memberRepository.findActiveMembers(id);
 

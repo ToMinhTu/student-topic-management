@@ -21,23 +21,38 @@
                     <li class="nav-item" sec:authorize="isAuthenticated()">
                         <a th:href="@{/announcements}" class="nav-link">Thông báo</a>
                     </li>
-                    <!-- ADMIN va DEAN -->
-                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DEAN')">
-                        <a th:href="@{/management/announcements}" class="nav-link">QL Thông báo</a>
+
+                    <!-- ADMIN Dropdown -->
+                    <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Quản trị hệ thống
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                            <li><a class="dropdown-item" th:href="@{/admin/departments}">Bộ Môn</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/users}">Người dùng</a></li>
+                            <li><a class="dropdown-item" th:href="@{/management/announcements}">QL Thông báo</a></li>
+                        </ul>
                     </li>
+
                     <!-- STUDENT va ADMIN: Quan ly nhom sinh vien -->
-                    <li class="nav-item"
-                        sec:authorize="hasAnyRole('STUDENT', 'ADMIN')">
+                    <li class="nav-item" sec:authorize="hasAnyRole('STUDENT', 'ADMIN')">
                         <a th:href="@{/groups}" class="nav-link">
                             Nhóm sinh viên
                         </a>
                     </li>
-                    <!-- ADMIN -->
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a th:href="@{/admin/departments}" class="nav-link">Bộ Môn</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a th:href="@{/admin/users}" class="nav-link">Người dùng</a>
+
+                    <!-- DEAN: Dropdown Nghiem vu khoa -->
+                    <li class="nav-item dropdown" sec:authorize="hasRole('DEAN')">
+                        <a class="nav-link dropdown-toggle" href="#" id="deanDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Nghiệp vụ khoa
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="deanDropdown">
+                            <li><a class="dropdown-item" th:href="@{/dean/rounds}">Quản lý đăng ký</a></li>
+                            <li><a class="dropdown-item" th:href="@{/councils}">Hội đồng</a></li>
+                            <li><a class="dropdown-item" th:href="@{/management/announcements}">Thông báo khoa</a></li>
+                        </ul>
                     </li>
 
                     <!-- <li class="nav-item">
@@ -48,6 +63,10 @@
                     </li> -->
                 </ul>
                 <ul class="navbar-nav ms-auto">
+
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/account/password}" class="nav-link">Đổi mật khẩu</a>
+                    </li>
 
                     <li class="nav-item" sec:authorize="isAuthenticated()">
                         <form th:action="@{/logout}" method="post" class="d-inline">
