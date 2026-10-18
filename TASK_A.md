@@ -1,3 +1,7 @@
+<!-- Thanh dieu huong -->
+| [📄 README](./README.md) | [📋 TASK A](./TASK_A.md) |
+| :--- | :--- |
+
 # Phần A:
 ### ⚙ Cấu hình môi trường:
 - [x] application: ✔
