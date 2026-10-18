@@ -1,44 +1,44 @@
 <!-- Thanh dieu huong -->
-| [📄 README](./README.md) | [📋 TASK A](./TASK_A.md) |
-| :--- | :--- |
+| [📄 README](./README.md) | [📋 TASKS A](./TASKS_A.md) | [📋 TASKS B](./TASKS_B.md) | [📋 TASKS C](./TASKS_C.md) | [📋 TASKS D](./TASKS_D.md) |
+| :--- | :--- | :--- | :--- | :--- |
 
 # Phần A:
-### ⚙ Cấu hình môi trường:
+## ⚙ Cấu hình môi trường:
 - [x] application: ✔
 - [x] application-dev: ✔
 - [x] application-prod: ✔
 - [x] env: ✔
-### 1. Phần bộ môn (departments):
+## 1. Phần bộ môn (departments):
 - [x] thêm mới
 - [x] Sửa
 - [x] Xoá
 - [x] Báo lỗi khi tên trùng với bộ môn đã có sẵn
 - [x] Báo lỗi khi bộ môn có tài khoản trực thuộc
 
-### 2. Chia quyền đăng nhập theo role: ✔
-### 3. Out session khi đổi mật khẩu: ✔
+## 2. Chia quyền đăng nhập theo role: ✔
+## 3. Out session khi đổi mật khẩu: ✔
 	
-### 4. Phần quản lý người dùng (users):
+## 4. Phần quản lý người dùng (users):
 - [x] Màn hình quản lý
 - [x] Tính năng khoá người dùng - đồng thời logout các session đăng nhập khác
 - [x] Không khoá người dùng ADMIN cuối cùng
 - [x] Xoá người dùng: Chưa làm
 	
-### 5. Phần thêm sinh viên (students):
+## 5. Phần thêm sinh viên (students):
 - [x] validate các trường dữ liệu
 - [x] Không tạo trùng username
 - [x] Không tạo trùng email
 - [x] Không tạo trùng mã số sinh viên
 - [x] Tạo sinh viên
 	
-### 6. Phần thêm giảng viên (lecturers):
+## 6. Phần thêm giảng viên (lecturers):
 - [x] validate các trường dữ liệu
 - [x] Không tạo trùng username
 - [x] Không tạo trùng email
 - [x] Không tạo trùng mã số giảng viên
 - [x] Tạo giảng viên
 
-### 7. Phần thông báo (announcements):
+## 7. Phần thông báo (announcements):
 - Danh sách quản lý thông báo (Admin/Dean)
     - [x] Thêm thông báo (Nháp)
     - [x] validate
