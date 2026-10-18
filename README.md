@@ -8,6 +8,8 @@
 > Tạo 1 file .env ngang hàng với file README.md này.
 >
 > Copy đoạn code dưới vào file .env và thay đổi thông tin theo setup của mình (ví dụ: DB_PASSWORD=123123).
+
+**.env**
 ```.env
 DB_DATABASE=student_topic_management
 DB_HOST=localhost
