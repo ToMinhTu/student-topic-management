@@ -3,10 +3,39 @@
 [FIle EXCEL Tổng hợp](https://docs.google.com/spreadsheets/d/15j5iLNbXE_Gw3CXLfULijvWwq__4noOaoX7NG0bpk4o/edit?usp=sharing)
 
 > [!IMPORTANT]
+> Setup .env để cấu hình cho application.
+>
+> Tạo 1 file .env ngang hàng với file README.md này.
+>
+> Copy đoạn code dưới vào file .env và thay đổi thông tin theo setup của mình (ví dụ: DB_PASSWORD=123123).
+
+**.env**
+```.env
+DB_DATABASE=student_topic_management
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=12345
+PORT=8080
+```
+
+> [!IMPORTANT]
 > Dùng edge thì chạy link `127.0.0.1:8080/` thay cho `localhost`
+```url
+127.0.0.1:8080/
+```
 
 >[!NOTE]
-> Nếu build bị lỗi entity thì chạy lệnh `mvn clean` -> `mvn spring-boot:run`
+> Nếu build bị lỗi entity thì chạy lệnh sau: `mvn clean` -> `mvn spring-boot:run`
+
+**cmd**
+```cmd
+mvn clean && mvn spring-boot:run
+```
+**powershell**
+```powershell
+mvn clean; mvn spring-boot:run
+```
 
 Tài khoản:
 | Role | Tài khoản | mật khẩu |
@@ -17,6 +46,11 @@ Tài khoản:
 [Link Test](http://127.0.0.1:8080/)
 
 # Phần A:
+### ⚙ Cấu hình môi trường:
+- [x] application: ✔
+- [x] application-dev: ✔
+- [x] application-prod: ✔
+- [x] env: ✔
 ### 1. Phần bộ môn (departments):
 - [x] thêm mới
 - [x] Sửa
@@ -90,7 +124,9 @@ Tài khoản:
 - [x] Trang danh sách nhóm sinh viên
 - [x] Trang tạo nhóm
 - [x] Trang chi tiết nhóm
-- [x] Chức năng tham gia, rời nhóm và chuyển quyền trưởng nhóm
+- [x] Chức năng tham gia nhóm
+- [x] Chức năng rời nhóm
+- [x] Chức năng chuyển quyền trưởng nhóm
 - [x] Thêm đường dẫn Nhóm sinh viên vào navbar
 
 ### 4. Kiểm thử:
@@ -107,8 +143,8 @@ Tài khoản:
 ### 6. Giới hạn hiện tại:
 - Chưa hỗ trợ chuyển quyền trưởng nhóm khi cả 5 vị trí thành viên đang được sử dụng.
 
-# Phần D:
 
+# Phần D:
 
 ### 1. Phần hội đồng thi (councils): ✔
 - [x] Hiển thị danh sách hội đồng theo đợt đăng ký

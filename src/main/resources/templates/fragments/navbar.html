@@ -2,147 +2,81 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <body>
-    <nav th:fragment="navbar" class="site-navbar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-        <style>
-            .site-navbar {
-                background: #fff;
-                border-bottom: 1px solid #e2e8f0;
-                box-shadow: 0 2px 8px rgba(15, 23, 42, .06)
-            }
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light shadow-sm"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+        <div class="container">
+            <!-- Link logo -->
+            <a th:href="@{/}" class="navbar-brand fw-bold text-primary">Hệ Thống Quản Lý</a>
 
-            .site-navbar .nav-inner {
-                max-width: 1100px;
-                margin: 0 auto;
-                min-height: 64px;
-                padding: 0 24px;
-                display: flex;
-                align-items: center;
-                gap: 24px
-            }
+            <!-- Bat/Tat menu -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-            .site-navbar .brand {
-                color: #1d4ed8;
-                font-size: 20px;
-                font-weight: 700;
-                text-decoration: none;
-                white-space: nowrap
-            }
+            <!-- menu -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <!-- Tat ca user -->
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/announcements}" class="nav-link">Thông báo</a>
+                    </li>
 
-            .site-navbar .nav-links,
-            .site-navbar .account-links {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                flex-wrap: wrap
-            }
+                    <!-- ADMIN Dropdown -->
+                    <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Quản trị hệ thống
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                            <li><a class="dropdown-item" th:href="@{/admin/departments}">Bộ Môn</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/users}">Người dùng</a></li>
+                            <li><a class="dropdown-item" th:href="@{/management/announcements}">QL Thông báo</a></li>
+                        </ul>
+                    </li>
 
-            .site-navbar .nav-links {
-                flex: 1
-            }
+                    <!-- STUDENT va ADMIN: Quan ly nhom sinh vien -->
+                    <li class="nav-item" sec:authorize="hasAnyRole('STUDENT', 'ADMIN')">
+                        <a th:href="@{/groups}" class="nav-link">
+                            Nhóm sinh viên
+                        </a>
+                    </li>
 
-            .site-navbar .account-links {
-                margin-left: auto
-            }
+                    <!-- DEAN: Dropdown Nghiem vu khoa -->
+                    <li class="nav-item dropdown" sec:authorize="hasRole('DEAN')">
+                        <a class="nav-link dropdown-toggle" href="#" id="deanDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Nghiệp vụ khoa
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="deanDropdown">
+                            <li><a class="dropdown-item" th:href="@{/dean/rounds}">Quản lý đăng ký</a></li>
+                            <li><a class="dropdown-item" th:href="@{/councils}">Hội đồng</a></li>
+                            <li><a class="dropdown-item" th:href="@{/management/announcements}">Thông báo khoa</a></li>
+                        </ul>
+                    </li>
 
-            .site-navbar a,
-            .site-navbar button {
-                color: #334155;
-                font: inherit;
-                text-decoration: none
-            }
+                    <!-- <li class="nav-item">
+                        <a th:href="@{/students}" class="nav-link">Sinh Viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/topics}" class="nav-link">Đề Tài</a>
+                    </li> -->
+                </ul>
+                <ul class="navbar-nav ms-auto">
 
-            .site-navbar .nav-link,
-            .site-navbar .menu-button {
-                border: 0;
-                background: transparent;
-                padding: 10px 12px;
-                border-radius: 7px;
-                cursor: pointer
-            }
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/account/password}" class="nav-link">Đổi mật khẩu</a>
+                    </li>
 
-            .site-navbar .nav-link:hover,
-            .site-navbar .menu-button:hover {
-                background: #eff6ff;
-                color: #1d4ed8
-            }
-
-            .site-navbar .nav-group {
-                position: relative
-            }
-
-            .site-navbar .dropdown {
-                display: none;
-                position: absolute;
-                z-index: 20;
-                top: calc(100% + 9px);
-                left: 0;
-                min-width: 210px;
-                padding: 12px 8px 8px;
-                background: #fff;
-                border: 1px solid #e2e8f0;
-                border-radius: 8px;
-                box-shadow: 0 8px 20px rgba(15, 23, 42, .12)
-            }
-
-            .site-navbar .nav-group:hover .dropdown,
-            .site-navbar .nav-group:focus-within .dropdown {
-                display: block
-            }
-
-            .site-navbar .dropdown a {
-                display: block;
-                padding: 9px 11px;
-                border-radius: 6px
-            }
-
-            .site-navbar .dropdown a:hover {
-                background: #eff6ff;
-                color: #1d4ed8
-            }
-
-            .site-navbar .logout {
-                color: #b91c1c
-            }
-
-            @media(max-width:800px) {
-                .site-navbar .nav-inner {
-                    flex-wrap: wrap;
-                    padding: 12px 16px;
-                    gap: 8px
-                }
-
-                .site-navbar .nav-links,
-                .site-navbar .account-links {
-                    width: 100%;
-                    margin-left: 0
-                }
-            }
-        </style>
-        <div class="nav-inner">
-            <a th:href="@{/}" class="brand">Cổng thông tin trường</a>
-            <div class="nav-links">
-                <a sec:authorize="isAuthenticated()" th:href="@{/}" class="nav-link">Trang chủ</a>
-                <a sec:authorize="isAuthenticated()" th:href="@{/announcements}" class="nav-link">Thông báo</a>
-                <div sec:authorize="hasRole('ADMIN')" class="nav-group">
-                    <button class="menu-button" type="button">Quản trị hệ thống ▾</button>
-                    <div class="dropdown"><a th:href="@{/admin/users}">Tài khoản</a><a
-                            th:href="@{/admin/students/new}">Thêm sinh viên</a><a th:href="@{/admin/lecturers/new}">Thêm
-                            giảng viên</a><a th:href="@{/admin/departments}">Khoa / bộ môn</a><a
-                            th:href="@{/management/announcements}">Quản lý thông báo</a></div>
-                </div>
-                <div sec:authorize="hasRole('DEAN')" class="nav-group">
-                    <button class="menu-button" type="button">Nghiệp vụ khoa ▾</button>
-                    <div class="dropdown"><a th:href="@{/dean/rounds}">Quản lý đăng ký</a><a th:href="@{/councils}">Hội
-                            đồng</a><a th:href="@{/management/announcements}">Thông báo khoa</a></div>
-                </div>
-
-                <a sec:authorize="hasRole('STUDENT')" th:href="@{/groups}" class="nav-link">Nhóm của tôi</a>
-            </div>
-            <div class="account-links"><a sec:authorize="isAuthenticated()" th:href="@{/account/password}"
-                    class="nav-link">Đổi mật khẩu</a><a sec:authorize="!isAuthenticated()" th:href="@{/login}"
-                    class="nav-link">Đăng nhập</a>
-                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post"><button type="submit"
-                        class="nav-link logout">Đăng xuất</button></form>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn nav-link text-danger fw-bold"
+                                style="border: none; background: transparent;">
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
