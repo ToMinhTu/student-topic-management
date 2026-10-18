@@ -1,0 +1,11 @@
+spring:
+  thymeleaf:
+    cache: false # Tắt cache để F5 thấy ngay giao diện
+logging:
+  level:
+    com.example.student_topic_management: DEBUG
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
