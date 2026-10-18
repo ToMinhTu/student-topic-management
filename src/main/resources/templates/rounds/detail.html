@@ -262,6 +262,8 @@
 </head>
 <body class="py-4">
 
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
 <div class="page-container px-3">
 
     <!-- Top Breadcrumb -->
@@ -308,6 +310,15 @@
                 <h2 class="fw-bold mb-1" style="color: var(--text-heading);" th:text="${round.name}">Tên đợt đăng ký</h2>
             </div>
 
+            <!-- Luồng tiếp theo: từ đợt đăng ký sang hội đồng -->
+            <div class="mb-3">
+                <a th:href="@{/councils/new(roundId=${round.id})}" class="btn-custom btn-custom-primary">
+                    <i class="bi bi-people"></i> Tạo hội đồng cho đợt này
+                </a>
+                <a th:href="@{/councils}" class="btn-custom btn-custom-secondary">
+                    Xem danh sách hội đồng
+                </a>
+            </div>
             <!-- Action buttons -->
             <div class="btn-action-group">
                 <a th:href="@{/dean/rounds}" class="btn-custom btn-custom-secondary">

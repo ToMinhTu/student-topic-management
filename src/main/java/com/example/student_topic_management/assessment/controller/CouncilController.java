@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.student_topic_management.assessment.dto.CouncilForm;
 import com.example.student_topic_management.assessment.service.CouncilService;
@@ -31,9 +32,9 @@ public class CouncilController {
     }
 
     @GetMapping("/councils/new")
-    public String showCreateForm(Model model) {
+    public String showCreateForm(@RequestParam(required = false) Long roundId, Model model) {
         CouncilForm form = new CouncilForm();
-        form.setRoundId(1L);
+        form.setRoundId(roundId != null ? roundId : 1L);
 
         model.addAttribute("councilForm", form);
         return "councils/form";
