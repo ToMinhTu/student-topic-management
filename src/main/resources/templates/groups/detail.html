@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}" lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Chi tiết nhóm sinh viên</title>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         * {
             box-sizing: border-box;
@@ -26,10 +28,11 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            max-width: 1200px;
         }
 
         h2 {
-            color: #1d4ed8;
+            color: #173B34;
             margin-top: 0;
         }
 
@@ -71,7 +74,7 @@
 
         .leader {
             font-weight: bold;
-            color: #1d4ed8;
+            color: #173B34;
         }
 
         .actions {
@@ -99,11 +102,11 @@
         }
 
         .btn-primary {
-            background: #2563eb;
+            background: #173B34;
         }
 
         .btn-primary:hover {
-            background: #1d4ed8;
+            background: #2f4e47;
         }
 
         .btn-success {
@@ -162,7 +165,9 @@
             background: #eff6ff;
             color: #173b66;
             font-weight: bold;
-        }        .empty {
+        }
+
+        .empty {
             text-align: center;
             color: #64748b;
         }
@@ -172,7 +177,7 @@
             padding: 12px 15px;
             border-radius: 6px;
             background: #eff6ff;
-            color: #1e40af;
+            color: #173B34;
         }
 
         .table-wrapper {
@@ -191,7 +196,7 @@
 
         .transfer-box h3 {
             margin-top: 0;
-            color: #1d4ed8;
+            color: #173B34;
         }
 
         .transfer-box p {
@@ -220,7 +225,7 @@
 
         .form-select:focus {
             outline: 2px solid #93c5fd;
-            border-color: #2563eb;
+            border-color: #173B34;
         }
 
         .transfer-note {
@@ -251,280 +256,281 @@
     </style>
 </head>
 
-<body>
+<body class="py-4">
 
-<div th:replace="~{fragments/navbar :: navbar}"></div>
+    <main layout:fragment="content" class="topic-page">
 
-    <div class="container">
+        <div class="container">
 
-        <h2>Chi tiết nhóm sinh viên</h2>
+            <h2>Chi tiết nhóm sinh viên</h2>
 
-        <!-- =====================================
+            <!-- =====================================
          THONG BAO THANH CONG
          ===================================== -->
 
-        <div class="alert alert-success" role="status" th:if="${successMessage != null}" th:text="${successMessage}">
-        </div>
+            <div class="alert alert-success" role="status" th:if="${successMessage != null}"
+                th:text="${successMessage}">
+            </div>
 
-        <!-- =====================================
+            <!-- =====================================
          THONG BAO LOI
          ===================================== -->
 
-        <div class="alert alert-error" role="alert" th:if="${errorMessage != null}" th:text="${errorMessage}">
-        </div>
+            <div class="alert alert-error" role="alert" th:if="${errorMessage != null}" th:text="${errorMessage}">
+            </div>
 
-        <!-- =====================================
+            <!-- =====================================
          THONG TIN CHUNG CUA NHOM
          ===================================== -->
 
-        <div class="info">
+            <div class="info">
 
-            <div class="info-item">
-                <strong>Mã nhóm</strong>
-                <span th:text="${group.id}">1</span>
+                <div class="info-item">
+                    <strong>Mã nhóm</strong>
+                    <span th:text="${group.id}">1</span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Tên nhóm</strong>
+                    <span th:text="${group.name}">
+                        Nhóm đồ án 07
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Đợt đăng ký</strong>
+                    <span th:text="${roundName}">Đợt đăng ký</span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Trạng thái</strong>
+                    <span th:text="${group.status}">
+                        FORMING
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <strong>Số thành viên</strong>
+                    <span th:text="${memberCount}">1</span>
+                </div>
+
             </div>
 
-            <div class="info-item">
-                <strong>Tên nhóm</strong>
-                <span th:text="${group.name}">
-                    Nhóm đồ án 07
-                </span>
+            <!-- HỘI ĐỒNG THI CỦA ĐỢT ĐĂNG KÝ -->
+            <h3 class="council-title">Hội đồng thi của đợt đăng ký</h3>
+
+            <div class="notice" th:if="${#lists.isEmpty(councils)}">
+                Đang sắp xếp hội đồng
             </div>
 
-            <div class="info-item">
-                <strong>Đợt đăng ký</strong>
-                <span th:text="${group.roundId}">1</span>
+            <div class="table-wrapper council-table" th:unless="${#lists.isEmpty(councils)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID hội đồng</th>
+                            <th>Tên hội đồng</th>
+                            <th>Trạng thái</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="council : ${councils}">
+                            <td th:text="${council.id}"></td>
+                            <td th:text="${council.name}"></td>
+                            <td th:text="${council.status}"></td>
+
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-
-            <div class="info-item">
-                <strong>Trạng thái</strong>
-                <span th:text="${group.status}">
-                    FORMING
-                </span>
-            </div>
-
-            <div class="info-item">
-                <strong>Số thành viên</strong>
-                <span th:text="${memberCount}">1</span>
-            </div>
-
-        </div>
-
-        <!-- HỘI ĐỒNG THI CỦA ĐỢT ĐĂNG KÝ -->
-        <h3 class="council-title">Hội đồng thi của đợt đăng ký</h3>
-
-        <div class="notice" th:if="${#lists.isEmpty(councils)}">
-            Đang sắp xếp hội đồng
-        </div>
-
-        <div class="table-wrapper council-table" th:unless="${#lists.isEmpty(councils)}">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID hội đồng</th>
-                        <th>Tên hội đồng</th>
-                        <th>Trạng thái</th>
-
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="council : ${councils}">
-                        <td th:text="${council.id}"></td>
-                        <td th:text="${council.name}"></td>
-                        <td th:text="${council.status}"></td>
-
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <!-- =====================================
+            <!-- =====================================
          C01.2 - DANH SACH THANH VIEN
          ===================================== -->
 
-        <h3 th:if="${canViewMembers == true}">
-            Danh sách thành viên
-        </h3>
+            <h3 th:if="${canViewMembers == true}">
+                Danh sách thành viên
+            </h3>
 
-        <p th:unless="${canViewMembers == true}" class="empty">
-            Bạn không có quyền xem danh sách
-            thành viên của nhóm này.
-        </p>
+            <p th:unless="${canViewMembers == true}" class="empty">
+                Bạn không có quyền xem danh sách
+                thành viên của nhóm này.
+            </p>
 
-        <div class="table-wrapper" th:if="${canViewMembers == true}">
+            <div class="table-wrapper" th:if="${canViewMembers == true}">
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Mã sinh viên</th>
-                        <th>Họ tên</th>
-                        <th>Vị trí</th>
-                        <th>Vai trò</th>
-                    </tr>
-                </thead>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã sinh viên</th>
+                            <th>Họ tên</th>
+                            <th>Vị trí</th>
+                            <th>Vai trò</th>
+                        </tr>
+                    </thead>
 
-                <tbody>
+                    <tbody>
 
-                    <tr th:each="member, stat : ${members}">
+                        <tr th:each="member, stat : ${members}">
 
-                        <td th:text="${stat.count}">
-                            1
-                        </td>
+                            <td th:text="${stat.count}">
+                                1
+                            </td>
 
-                        <td th:text="${member.studentCode}">
-                            C01DEMO001
-                        </td>
+                            <td th:text="${member.studentCode}">
+                                C01DEMO001
+                            </td>
 
-                        <td th:text="${member.fullName}">
-                            Nguyễn Văn A
-                        </td>
+                            <td th:text="${member.fullName}">
+                                Nguyễn Văn A
+                            </td>
 
-                        <td th:text="${member.slotNo}">
-                            1
-                        </td>
+                            <td th:text="${member.slotNo}">
+                                1
+                            </td>
 
-                        <td>
-                            <span class="leader" th:if="${member.slotNo == 1}">
-                                Trưởng nhóm
-                            </span>
+                            <td>
+                                <span class="leader" th:if="${member.slotNo == 1}">
+                                    Trưởng nhóm
+                                </span>
 
-                            <span th:unless="${member.slotNo == 1}">
-                                Thành viên
-                            </span>
-                        </td>
+                                <span th:unless="${member.slotNo == 1}">
+                                    Thành viên
+                                </span>
+                            </td>
 
-                    </tr>
+                        </tr>
 
-                    <tr th:if="${#lists.isEmpty(members)}">
-                        <td colspan="5" class="empty">
-                            Chưa có thành viên.
-                        </td>
-                    </tr>
+                        <tr th:if="${#lists.isEmpty(members)}">
+                            <td colspan="5" class="empty">
+                                Chưa có thành viên.
+                            </td>
+                        </tr>
 
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
 
-        </div>
+            </div>
 
-        <!-- =====================================
+            <!-- =====================================
          C02.1 - HUONG DAN TRUONG NHOM
          ===================================== -->
 
-        <div class="notice" th:if="${canViewMembers == true
+            <div class="notice" th:if="${canViewMembers == true
                   and isLeader == true}">
 
-            Bạn đang là trưởng nhóm.
-            Nếu muốn rời nhóm, bạn cần chuyển quyền
-            trưởng nhóm cho thành viên khác trước.
+                Bạn đang là trưởng nhóm.
+                Nếu muốn rời nhóm, bạn cần chuyển quyền
+                trưởng nhóm cho thành viên khác trước.
 
-        </div>
+            </div>
 
-        <!-- =====================================
+            <!-- =====================================
          C02.2 - CHUYEN QUYEN TRUONG NHOM
          ===================================== -->
 
-        <div class="transfer-box" th:if="${canTransferLeader == true}">
+            <div class="transfer-box" th:if="${canTransferLeader == true}">
 
-            <h3>Chuyển quyền trưởng nhóm</h3>
+                <h3>Chuyển quyền trưởng nhóm</h3>
 
-            <p>
-                Bạn đang là trưởng nhóm.
-                Hãy chọn một thành viên đang hoạt động
-                để chuyển quyền trưởng nhóm.
-            </p>
+                <p>
+                    Bạn đang là trưởng nhóm.
+                    Hãy chọn một thành viên đang hoạt động
+                    để chuyển quyền trưởng nhóm.
+                </p>
 
-            <form th:action="@{/groups/{id}/transfer-leader(id=${group.id})}" method="post"
-                onsubmit="return confirm('Bạn có chắc chắn muốn chuyển quyền trưởng nhóm cho sinh viên này không?');">
+                <form th:action="@{/groups/{id}/transfer-leader(id=${group.id})}" method="post"
+                    onsubmit="return confirm('Bạn có chắc chắn muốn chuyển quyền trưởng nhóm cho sinh viên này không?');">
 
-                <!-- Spring Security CSRF -->
+                    <!-- Spring Security CSRF -->
 
-                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}"
-                    th:value="${_csrf.token}">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}"
+                        th:value="${_csrf.token}">
 
-                <div class="form-group">
+                    <div class="form-group">
 
-                    <label for="newLeaderStudentId">
-                        Chọn sinh viên nhận quyền
-                    </label>
+                        <label for="newLeaderStudentId">
+                            Chọn sinh viên nhận quyền
+                        </label>
 
-                    <select id="newLeaderStudentId" name="newLeaderStudentId" class="form-select" required>
+                        <select id="newLeaderStudentId" name="newLeaderStudentId" class="form-select" required>
 
-                        <option value="">
-                            -- Chọn thành viên --
-                        </option>
+                            <option value="">
+                                -- Chọn thành viên --
+                            </option>
 
-                        <option th:each="member : ${members}" th:if="${member.slotNo != null
+                            <option th:each="member : ${members}" th:if="${member.slotNo != null
                                      and member.slotNo != 1}" th:value="${member.studentId}" th:text="${member.studentCode
                                      + ' - '
                                      + member.fullName}">
-                            C02TEST003 - Nguyễn Văn B
-                        </option>
+                                C02TEST003 - Nguyễn Văn B
+                            </option>
 
-                    </select>
+                        </select>
 
-                </div>
+                    </div>
 
-                <button type="submit" class="btn btn-primary">
-                    Chuyển trưởng nhóm
-                </button>
+                    <button type="submit" class="btn btn-primary">
+                        Chuyển trưởng nhóm
+                    </button>
 
-            </form>
+                </form>
 
-            <p class="transfer-note">
-                Sau khi chuyển quyền, bạn trở thành
-                thành viên thường và sinh viên được
-                chọn sẽ trở thành trưởng nhóm.
-            </p>
+                <p class="transfer-note">
+                    Sau khi chuyển quyền, bạn trở thành
+                    thành viên thường và sinh viên được
+                    chọn sẽ trở thành trưởng nhóm.
+                </p>
 
-        </div>
+            </div>
 
-        <!-- =====================================
+            <!-- =====================================
          CAC NUT THAO TAC
          ===================================== -->
 
-        <div class="actions">
+            <div class="actions">
 
-            <!-- QUAY LAI -->
+                <!-- QUAY LAI -->
 
-            <a class="btn btn-secondary" th:href="@{/groups}">
-                Quay lại
-            </a>
+                <a class="btn btn-secondary" th:href="@{/groups}">
+                    Quay lại
+                </a>
 
-            <!-- =================================
+                <!-- =================================
              C01.4 - THAM GIA NHOM
              ================================= -->
 
-            <form th:if="${canJoin == true}" th:action="@{/groups/{id}/join(id=${group.id})}" method="post">
+                <form th:if="${canJoin == true}" th:action="@{/groups/{id}/join(id=${group.id})}" method="post">
 
-                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}"
-                    th:value="${_csrf.token}">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}"
+                        th:value="${_csrf.token}">
 
-                <button type="submit" class="btn btn-success">
-                    Tham gia nhóm
-                </button>
+                    <button type="submit" class="btn btn-success">
+                        Tham gia nhóm
+                    </button>
 
-            </form>
+                </form>
 
-            <!-- =================================
+                <!-- =================================
              C02.1 - ROI NHOM
              ================================= -->
 
-            <form th:if="${canLeave == true}" th:action="@{/groups/{id}/leave(id=${group.id})}" method="post"
-                onsubmit="return confirm('Bạn có chắc chắn muốn rời nhóm này không?');">
+                <form th:if="${canLeave == true}" th:action="@{/groups/{id}/leave(id=${group.id})}" method="post"
+                    onsubmit="return confirm('Bạn có chắc chắn muốn rời nhóm này không?');">
 
-                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}"
-                    th:value="${_csrf.token}">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}"
+                        th:value="${_csrf.token}">
 
-                <button type="submit" class="btn btn-danger">
-                    Rời nhóm
-                </button>
+                    <button type="submit" class="btn btn-danger">
+                        Rời nhóm
+                    </button>
 
-            </form>
+                </form>
+
+            </div>
 
         </div>
-
-    </div>
-
+    </main>
 </body>
 
 </html>

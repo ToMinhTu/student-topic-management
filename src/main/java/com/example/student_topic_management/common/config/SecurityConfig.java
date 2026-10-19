@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -69,6 +70,14 @@ public class SecurityConfig {
                 // Chuc nang hoi dong tu main
                 .requestMatchers("/councils/**")
                 .hasAnyRole("DEAN", "DEPARTMENT_HEAD", "LECTURER")
+
+                // D2 - sinh vien chi xem, giang vien/co quan ly duoc thao tac
+                .requestMatchers(HttpMethod.GET, "/defenses", "/defenses/{id}")
+                .hasAnyRole("STUDENT", "LECTURER", "DEAN", "DEPARTMENT_HEAD")
+                .requestMatchers(HttpMethod.GET, "/defenses/new", "/defenses/{id}/edit")
+                .hasAnyRole("LECTURER", "DEAN", "DEPARTMENT_HEAD")
+                .requestMatchers(HttpMethod.POST, "/defenses/save", "/defenses/update", "/defenses/{id}/delete")
+                .hasAnyRole("LECTURER", "DEAN", "DEPARTMENT_HEAD")
 
                 // Phan quyen cac vai tro
                 .requestMatchers("/admin/**").hasRole("ADMIN")

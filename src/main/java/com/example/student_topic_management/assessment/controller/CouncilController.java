@@ -16,6 +16,7 @@ import com.example.student_topic_management.assessment.dto.CouncilForm;
 import com.example.student_topic_management.assessment.service.CouncilService;
 
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 public class CouncilController {
@@ -80,8 +81,24 @@ public class CouncilController {
         model.addAttribute(
                 "members",
                 councilService.findMembers(id));
+        model.addAttribute("canActivate", councilService.canActivate(id));
 
         return "councils/members";
+    }
+
+    @PreAuthorize("hasAnyRole('DEAN','DEPARTMENT_HEAD')")
+    @PostMapping("/councils/{id}/activate")
+    public String activateCouncil(@PathVariable Long id, Model model) {
+        try {
+            councilService.activate(id);
+            return "redirect:/councils/{id}/members";
+        } catch (RuntimeException ex) {
+            model.addAttribute("council", councilService.findById(id));
+            model.addAttribute("members", councilService.findMembers(id));
+            model.addAttribute("canActivate", councilService.canActivate(id));
+            model.addAttribute("errorMessage", ex.getMessage());
+            return "councils/members";
+        }
     }
 
     @GetMapping("/councils/{id}/members/new")

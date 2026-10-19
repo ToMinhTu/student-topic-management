@@ -16,4 +16,6 @@ public interface DefenseRepository
     List<Defense> findByCouncilId(Long councilId);
 
     boolean existsByRegistrationId(Long registrationId);
+
+    java.util.Optional<Defense> findByRegistrationId(Long registrationId);
 }
