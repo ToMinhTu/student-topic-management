@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${editId == null} ? 'Tạo đợt đăng ký mới' : 'Chỉnh sửa đợt đăng ký'">Thông tin đợt đăng ký</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
+    <style layout:fragment="css">
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
@@ -176,7 +176,7 @@
 </head>
 <body class="py-4">
 
-<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main layout:fragment="content">
 
 <div class="form-container px-3">
 
@@ -389,5 +389,6 @@
 
 </div>
 
+</main>
 </body>
 </html>
