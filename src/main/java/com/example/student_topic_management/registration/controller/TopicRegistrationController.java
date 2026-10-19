@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,10 +21,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.student_topic_management.entity.RegistrationRound;
 import com.example.student_topic_management.registration.dto.TopicView;
 import com.example.student_topic_management.registration.repository.TopicRepository;
 import com.example.student_topic_management.registration.service.StudentAccess;
 import com.example.student_topic_management.registration.service.TopicRegistrationService;
+import com.example.student_topic_management.repository.RegistrationRoundRepository;
 
 @Controller
 @RequestMapping("/topics")
@@ -32,6 +35,7 @@ public class TopicRegistrationController {
     private final TopicRepository topicRepository;
     private final TopicRegistrationService registrationService;
     private final StudentAccess studentAccess;
+    private final RegistrationRoundRepository roundRepository;
     private final JdbcTemplate jdbc;
     private final Clock clock;
 
@@ -40,29 +44,48 @@ public class TopicRegistrationController {
             TopicRegistrationService registrationService,
             StudentAccess studentAccess,
             JdbcTemplate jdbc,
-            Clock clock) {
+            Clock clock,
+            RegistrationRoundRepository roundRepository) {
 
         this.topicRepository = topicRepository;
         this.registrationService = registrationService;
         this.studentAccess = studentAccess;
         this.jdbc = jdbc;
         this.clock = clock;
+        this.roundRepository = roundRepository;
     }
 
-    // C03.1 - Danh sach de tai da cong bo
+    // =====================================================
+    // C03.1 - XEM DANH SACH DE TAI THEO DOT DANG KY
+    // =====================================================
+
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     @GetMapping
     public String listTopics(
-            @RequestParam(name = "roundId", required = false)
-            Long roundId,
+            @RequestParam(
+                    name = "roundId",
+                    required = false
+            ) Long roundId,
             Model model) {
 
+        // Danh sach cac dot dang ky
+        List<RegistrationRound> rounds = roundRepository
+                .findAllByOrderByCreatedAtDescIdDesc(
+                        Pageable.unpaged()
+                )
+                .getContent();
+
+        model.addAttribute("rounds", rounds);
+
+        // Gia tri mac dinh
         List<TopicView> topics = List.of();
         Long leaderGroupId = null;
         boolean canRegister = false;
 
+        // Chi lay de tai khi da chon dot hop le
         if (roundId != null && roundId > 0) {
 
+            // Lay de tai da cong bo
             topics = topicRepository.findPublishedTopics(roundId);
 
             Authentication auth = SecurityContextHolder
@@ -71,15 +94,19 @@ public class TopicRegistrationController {
 
             boolean isStudent = auth != null
                     && auth.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_STUDENT"
-                            .equals(a.getAuthority()));
+                    .anyMatch(a ->
+                            "ROLE_STUDENT".equals(
+                                    a.getAuthority()
+                            )
+                    );
 
             if (isStudent) {
 
+                // Xac dinh sinh vien dang dang nhap
                 Long studentId =
                         studentAccess.requireCurrentStudentId();
 
-                // Tim nhom ma sinh vien la truong nhom
+                // Tim nhom sinh vien dang lam truong nhom
                 List<Long> leaderGroups = jdbc.queryForList(
                         """
                         SELECT sg.id
@@ -98,14 +125,17 @@ public class TopicRegistrationController {
                 );
 
                 if (!leaderGroups.isEmpty()) {
+
                     leaderGroupId = leaderGroups.get(0);
 
-                    // Kiem tra thoi han dang ky
-                    LocalDateTime now = LocalDateTime.ofInstant(
-                            clock.instant(),
-                            ZoneOffset.UTC
-                    );
+                    // Thoi gian hien tai theo UTC
+                    LocalDateTime now =
+                            LocalDateTime.ofInstant(
+                                    clock.instant(),
+                                    ZoneOffset.UTC
+                            );
 
+                    // Kiem tra dot dang ky dang mo
                     Integer validRound = jdbc.queryForObject(
                             """
                             SELECT COUNT(*)
@@ -121,7 +151,7 @@ public class TopicRegistrationController {
                             now
                     );
 
-                    // Kiem tra so thanh vien
+                    // Kiem tra so luong thanh vien
                     Integer validGroup = jdbc.queryForObject(
                             """
                             SELECT COUNT(*)
@@ -141,7 +171,7 @@ public class TopicRegistrationController {
                             leaderGroupId
                     );
 
-                    // Nhom chua tung dang ky de tai
+                    // Kiem tra nhom chua tung dang ky de tai
                     Integer registrations = jdbc.queryForObject(
                             """
                             SELECT COUNT(*)
@@ -152,7 +182,8 @@ public class TopicRegistrationController {
                             leaderGroupId
                     );
 
-                    canRegister = validRound != null
+                    canRegister =
+                            validRound != null
                             && validRound > 0
                             && validGroup != null
                             && validGroup > 0
@@ -162,6 +193,7 @@ public class TopicRegistrationController {
             }
         }
 
+        // Truyen du lieu sang giao dien Thymeleaf
         model.addAttribute("topics", topics);
         model.addAttribute("roundId", roundId);
         model.addAttribute("leaderGroupId", leaderGroupId);
@@ -170,7 +202,10 @@ public class TopicRegistrationController {
         return "topics/list";
     }
 
-    // C03.2 - Truong nhom dang ky de tai
+    // =====================================================
+    // C03.2 - TRUONG NHOM DANG KY DE TAI
+    // =====================================================
+
     @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/{topicId:\\d+}/register")
     public String registerTopic(
@@ -180,16 +215,23 @@ public class TopicRegistrationController {
             RedirectAttributes redirect) {
 
         try {
-            registrationService.registerTopic(groupId, topicId);
+
+            // Xu ly dang ky trong Service
+            registrationService.registerTopic(
+                    groupId,
+                    topicId
+            );
 
             redirect.addFlashAttribute(
                     "successMessage",
                     "Dang ky de tai thanh cong! Dang cho duyet."
             );
 
-        } catch (IllegalArgumentException |
-                 IllegalStateException |
-                 DataIntegrityViolationException ex) {
+        } catch (
+                IllegalArgumentException |
+                IllegalStateException |
+                DataIntegrityViolationException ex
+        ) {
 
             redirect.addFlashAttribute(
                     "errorMessage",
@@ -199,6 +241,7 @@ public class TopicRegistrationController {
             );
         }
 
+        // Quay lai danh sach de tai cua dot da chon
         return "redirect:/topics?roundId=" + roundId;
     }
 }

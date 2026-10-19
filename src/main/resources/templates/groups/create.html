@@ -1,210 +1,152 @@
 
 <!DOCTYPE html>
 <html lang="vi"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
     <title>Tạo nhóm sinh viên</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            color: #263238;
-        }
-
-        .container {
-            max-width: 650px;
-            margin: 50px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        }
-
-        h2 {
-            margin-top: 0;
-            text-align: center;
-            color: #1d4ed8;
-        }
-
-        .description {
-            color: #64748b;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 15px;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #2563eb;
-        }
-
-        .hint {
-            margin-top: 6px;
-            font-size: 13px;
-            color: #64748b;
-        }
-
-        .error {
-            color: #dc2626;
-            margin-top: 6px;
-            font-size: 13px;
-        }
-
-        .alert {
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 25px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #334155;
-        }
-    </style>
 </head>
 
 <body>
 
-<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div layout:fragment="content">
 
-<div class="container">
+    <!-- TIEU DE TRANG -->
+    <div class="d-flex justify-content-between align-items-center
+                mb-4 border-bottom pb-2">
 
-    <h2>Tạo nhóm sinh viên</h2>
+        <div class="page-title-tab mb-0">
+            TẠO NHÓM SINH VIÊN
+        </div>
 
-    <p class="description">
-        Sinh viên tạo nhóm sẽ được chỉ định
-        làm trưởng nhóm (vị trí số 1).
-    </p>
+        <a th:href="@{/groups}"
+           class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Quay lại danh sách nhóm
+        </a>
 
-    <div th:if="${errorMessage != null}"
-         class="alert"
-         th:text="${errorMessage}">
     </div>
 
-    <form th:action="@{/groups/create}"
-          th:object="${groupForm}"
-          method="post">
+    <!-- NOI DUNG TAO NHOM -->
+    <div class="content-card">
 
-        <div class="form-group">
-            <label for="roundId">
-                Đợt đăng ký
-            </label>
+        <div class="mx-auto" style="max-width: 650px;">
 
-            <select id="roundId"
-                    th:field="*{roundId}"
-                    required>
+            <h4 class="text-center mb-3">
+                <i class="bi bi-people me-2"></i>
+                Tạo nhóm mới
+            </h4>
 
-                <option value="">
-                    -- Chọn đợt đăng ký --
-                </option>
-
-                <option th:each="round : ${rounds}"
-                        th:value="${round.id}"
-                        th:text="${round.name}">
-                </option>
-
-            </select>
-
-            <div class="error"
-                 th:if="${#fields.hasErrors('roundId')}"
-                 th:errors="*{roundId}">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label for="name">
-                Tên nhóm
-            </label>
-
-            <input type="text"
-                   id="name"
-                   th:field="*{name}"
-                   maxlength="150"
-                   placeholder="Ví dụ: Nhóm đồ án 07"
-                   required>
-
-            <p class="hint">
-                Tên nhóm không được để trống
-                và tối đa 150 ký tự.
+            <p class="text-muted text-center mb-4">
+                Sinh viên tạo nhóm sẽ được chỉ định làm
+                trưởng nhóm (vị trí số 1).
             </p>
 
-            <div class="error"
-                 th:if="${#fields.hasErrors('name')}"
-                 th:errors="*{name}">
+            <!-- THONG BAO LOI NGHIEP VU -->
+            <div class="alert alert-danger"
+                 role="alert"
+                 th:if="${errorMessage != null}"
+                 th:text="${errorMessage}">
             </div>
+
+            <!-- FORM TAO NHOM -->
+            <form th:action="@{/groups/create}"
+                  th:object="${groupForm}"
+                  method="post">
+
+                <!-- CSRF -->
+                <input type="hidden"
+                       th:if="${_csrf != null}"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}">
+
+                <!-- DOT DANG KY -->
+                <div class="mb-4">
+
+                    <label for="roundId"
+                           class="form-label fw-semibold">
+                        Đợt đăng ký
+                    </label>
+
+                    <select id="roundId"
+                            class="form-select"
+                            th:field="*{roundId}"
+                            th:classappend="${#fields.hasErrors('roundId')} ? 'is-invalid' : ''"
+                            required>
+
+                        <option value="">
+                            -- Chọn đợt đăng ký --
+                        </option>
+
+                        <option th:each="round : ${rounds}"
+                                th:value="${round.id}"
+                                th:text="${round.name}">
+                            Tên đợt đăng ký
+                        </option>
+
+                    </select>
+
+                    <div class="invalid-feedback"
+                         th:if="${#fields.hasErrors('roundId')}"
+                         th:errors="*{roundId}">
+                    </div>
+
+                </div>
+
+                <!-- TEN NHOM -->
+                <div class="mb-4">
+
+                    <label for="name"
+                           class="form-label fw-semibold">
+                        Tên nhóm
+                    </label>
+
+                    <input type="text"
+                           id="name"
+                           class="form-control"
+                           th:field="*{name}"
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                           maxlength="150"
+                           placeholder="Ví dụ: Nhóm đồ án 07"
+                           required>
+
+                    <div class="form-text">
+                        Tên nhóm không được để trống
+                        và tối đa 150 ký tự.
+                    </div>
+
+                    <div class="invalid-feedback"
+                         th:if="${#fields.hasErrors('name')}"
+                         th:errors="*{name}">
+                    </div>
+
+                </div>
+
+                <!-- CAC NUT THAO TAC -->
+                <div class="d-flex gap-3 mt-4">
+
+                    <a th:href="@{/groups}"
+                       class="btn btn-outline-secondary flex-fill">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Hủy
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-primary flex-fill">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Tạo nhóm
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
 
-        <div class="actions">
-
-            <a class="btn btn-secondary"
-               th:href="@{/groups}">
-                Quay lại
-            </a>
-
-            <button class="btn btn-primary"
-                    type="submit">
-                Tạo nhóm
-            </button>
-
-        </div>
-
-    </form>
+    </div>
 
 </div>
 
