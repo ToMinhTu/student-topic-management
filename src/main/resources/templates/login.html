@@ -8,52 +8,77 @@
     <th:block layout:fragment="css">
         <!-- link, style, etc -->
         <style>
-            nav.navbar {
+            /* An sidebar va header */
+            #app-sidebar,
+            #app-header {
                 display: none !important;
+            }
+
+            #page-content-wrapper {
+                background-color: #eaeaea;
+            }
+
+            #main-content {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 !important;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: 450px;
+                border-radius: 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border: none;
+            }
+
+            .login-logo {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .login-logo i {
+                font-size: 4rem;
+                color: var(--theme-color);
+            }
+
+            .login-logo h3 {
+                font-weight: bold;
+                color: var(--theme-color);
+                font-size: 1.2rem;
+                line-height: 1.5;
             }
         </style>
     </th:block>
 </head>
 
 <body>
-    <div layout:fragment="content">
-        <div class="row justify-content-center">
-            <div class="col-md-4">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h3 class="text-center mb-4">Đăng Nhập</h3>
+    <div layout:fragment="content" class="w-100">
+        <div class="login-logo">
+            <i class="bi bi-shield-shaded"></i>
+            <h3>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ KỸ THUẬT<br>TP.HCM</h3>
+        </div>
 
-                        <!-- Hien thi loi -->
-                        <div class="alert alert-danger" th:if="${param.error}">
-                            Thông tin đăng nhập không hợp lệ
-                        </div>
-                        <div class="alert alert-success" th:if="${param.logout}">
-                            Bạn đã đăng xuất thành công
-                        </div>
-                        <div class="alert alert-success" th:if="${param.passwordChanged}">
-                            Đổi mật khẩu thành công
-                        </div>
-                        <div class="alert alert-warning" th:if="${param.expired}">
-                            Phiên đăng nhập đã hết hạn hoặc tài khoản vừa được đổi mật khẩu. Vui lòng đăng nhập lại.
-                        </div>
+        <div class="card login-card mx-auto">
+            <div class="card-body p-5">
+                <h4 class="mb-1 text-theme fw-bold">Đăng Nhập</h4>
+                <p class="text-muted mb-4 small">Cổng thông tin đào tạo</p>
 
-                        <form th:action="@{/login}" method="post">
-                            <!-- Vuot qua loi CSRF 403 -->
-                            <!-- <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"> -->
-                            <div class="mb-3">
-                                <label class="form-label">Tên đăng nhập</label>
-                                <input type="text" name="username" class="form-control" required
-                                    autocomplete="username">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Mật khẩu</label>
-                                <input type="password" name="password" class="form-control" required
-                                    autocomplete="current-password">
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
-                        </form>
+                <form th:action="@{/login}" method="post">
+                    <!-- Vuot qua loi CSRF 403 -->
+                    <!-- <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"> -->
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Tên đăng nhập</label>
+                        <input type="text" name="username" class="form-control" autocomplete="username" required>
                     </div>
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Mật khẩu</label>
+                        <input type="password" name="password" class="form-control" autocomplete="current-password"
+                            required>
+                    </div>
+                    <button type="submit" class="btn btn-theme w-100 py-2 fw-bold">Đăng nhập</button>
+                </form>
             </div>
         </div>
     </div>
