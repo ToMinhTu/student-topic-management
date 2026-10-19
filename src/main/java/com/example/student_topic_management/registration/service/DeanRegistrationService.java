@@ -407,4 +407,241 @@ public class DeanRegistrationService {
             );
         }
     }
+
+    // =====================================================
+    // C04.3 - DEAN TU CHOI HO SO DANG KY DE TAI
+    // =====================================================
+
+    @PreAuthorize("hasRole('DEAN')")
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void rejectRegistration(Long registrationId, String reason) {
+
+        // 1. Kiem tra du lieu dau vao
+        if (registrationId == null || registrationId <= 0) {
+            throw new IllegalArgumentException(
+                    "Ma ho so dang ky khong hop le"
+            );
+        }
+
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Vui long nhap ly do tu choi"
+            );
+        }
+
+        String normalizedReason = reason.trim();
+
+        if (normalizedReason.length() > 1000) {
+            throw new IllegalArgumentException(
+                    "Ly do tu choi khong duoc vuot qua 1000 ky tu"
+            );
+        }
+
+        // 2. Kiem tra tai khoan DEAN
+        AppUser dean = currentUserService.getCurrentUser();
+
+        if (dean == null
+                || !Boolean.TRUE.equals(dean.getEnabled())
+                || dean.getRoles() == null
+                || dean.getRoles().stream().noneMatch(
+                        role -> "DEAN".equals(role.getCode())
+                )) {
+            throw new IllegalStateException(
+                    "Tai khoan khong co quyen tu choi dang ky"
+            );
+        }
+
+        Long deanId = dean.getId();
+
+        // 3. Doc thong tin ho so ban dau
+        List<RegistrationInfo> initialRegistrations = jdbc.query(
+                """
+                SELECT group_id, topic_id, round_id
+                FROM topic_registrations
+                WHERE id = ?
+                """,
+                (rs, rowNum) -> new RegistrationInfo(
+                        rs.getLong("group_id"),
+                        rs.getLong("topic_id"),
+                        rs.getLong("round_id")
+                ),
+                registrationId
+        );
+
+        if (initialRegistrations.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Ho so dang ky khong ton tai"
+            );
+        }
+
+        RegistrationInfo initial = initialRegistrations.get(0);
+
+        Long groupId = initial.groupId();
+        Long topicId = initial.topicId();
+        Long roundId = initial.roundId();
+
+        // 4. Khoa dot dang ky
+        roundAccess.lockRound(roundId);
+
+        // 5. Khoa nhom
+        List<GroupInfo> groups = jdbc.query(
+                """
+                SELECT status, round_id
+                FROM student_groups
+                WHERE id = ?
+                FOR UPDATE
+                """,
+                (rs, rowNum) -> new GroupInfo(
+                        rs.getString("status"),
+                        rs.getLong("round_id")
+                ),
+                groupId
+        );
+
+        if (groups.isEmpty()) {
+            throw new IllegalStateException(
+                    "Khong tim thay nhom sinh vien"
+            );
+        }
+
+        GroupInfo group = groups.get(0);
+
+        if (!roundId.equals(group.roundId())) {
+            throw new IllegalStateException(
+                    "Nhom khong thuoc dot dang ky cua ho so"
+            );
+        }
+
+        if (!"FORMING".equals(group.status())) {
+            throw new IllegalStateException(
+                    "Nhom khong o trang thai cho phep tu choi"
+            );
+        }
+
+        // 6. Khoa de tai
+        List<TopicInfo> topics = jdbc.query(
+                """
+                SELECT status, round_id
+                FROM topics
+                WHERE id = ?
+                FOR UPDATE
+                """,
+                (rs, rowNum) -> new TopicInfo(
+                        rs.getString("status"),
+                        rs.getLong("round_id")
+                ),
+                topicId
+        );
+
+        if (topics.isEmpty()) {
+            throw new IllegalStateException(
+                    "Khong tim thay de tai"
+            );
+        }
+
+        TopicInfo topic = topics.get(0);
+
+        if (!roundId.equals(topic.roundId())) {
+            throw new IllegalStateException(
+                    "De tai khong thuoc dot dang ky cua ho so"
+            );
+        }
+
+        // Khong bat buoc topic phai PUBLISHED khi tu choi.
+        // DEAN can co the tu choi ho so PENDING khong con hop le.
+
+        // 7. Khoa ho so va kiem tra lai trang thai
+        List<LockedRegistration> registrations = jdbc.query(
+                """
+                SELECT status, group_id, topic_id, round_id
+                FROM topic_registrations
+                WHERE id = ?
+                FOR UPDATE
+                """,
+                (rs, rowNum) -> new LockedRegistration(
+                        rs.getString("status"),
+                        rs.getLong("group_id"),
+                        rs.getLong("topic_id"),
+                        rs.getLong("round_id")
+                ),
+                registrationId
+        );
+
+        if (registrations.isEmpty()) {
+            throw new IllegalStateException(
+                    "Ho so dang ky khong con ton tai"
+            );
+        }
+
+        LockedRegistration registration = registrations.get(0);
+
+        if (!groupId.equals(registration.groupId())
+                || !topicId.equals(registration.topicId())
+                || !roundId.equals(registration.roundId())) {
+            throw new IllegalStateException(
+                    "Thong tin ho so da thay doi"
+            );
+        }
+
+        if (!"PENDING".equals(registration.status())) {
+            throw new IllegalStateException(
+                    "Chi co the tu choi ho so dang cho duyet"
+            );
+        }
+
+        // 8. Lay thoi gian xu ly theo UTC
+        LocalDateTime decidedAt = LocalDateTime.ofInstant(
+                clock.instant(),
+                ZoneOffset.UTC
+        );
+
+        // 9. Chuyen PENDING -> REJECTED
+        int rejected = jdbc.update(
+                """
+                UPDATE topic_registrations
+                SET status = 'REJECTED',
+                    decided_by = ?,
+                    decided_at = ?,
+                    decision_note = ?
+                WHERE id = ?
+                  AND status = 'PENDING'
+                """,
+                deanId,
+                decidedAt,
+                normalizedReason,
+                registrationId
+        );
+
+        if (rejected != 1) {
+            throw new IllegalStateException(
+                    "Khong the cap nhat trang thai tu choi"
+            );
+        }
+
+        // reserved_topic_id duoc MySQL tu dong tinh lai:
+        // status = REJECTED -> reserved_topic_id = NULL.
+        // Nhom van giu trang thai FORMING.
+
+        // 10. Ghi audit log trong cung transaction
+        int audited = jdbc.update(
+                """
+                INSERT INTO audit_logs
+                    (actor_id, action, entity_type, entity_id, details)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                deanId,
+                "REGISTRATION_REJECTED",
+                "TOPIC_REGISTRATION",
+                registrationId,
+                "Rejected registration " + registrationId
+                        + ", group " + groupId
+                        + ", topic " + topicId
+        );
+
+        if (audited != 1) {
+            throw new IllegalStateException(
+                    "Khong the ghi nhat ky tu choi ho so"
+            );
+        }
+    }
 }

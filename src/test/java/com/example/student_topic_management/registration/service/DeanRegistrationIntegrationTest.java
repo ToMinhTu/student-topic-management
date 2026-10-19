@@ -34,6 +34,9 @@ class DeanRegistrationIntegrationTest {
     private static final String AUDIT_TRIGGER =
             "c04_test_reject_approval_audit";
 
+    private static final String REJECT_AUDIT_TRIGGER =
+            "c04_test_reject_audit_failure";
+
     @Autowired
     private JdbcTemplate jdbc;
 
@@ -46,10 +49,10 @@ class DeanRegistrationIntegrationTest {
     private Long registrationId;
     private Long groupId;
 
-    /*
-     * Bao ve database:
-     * Chi cho phep test ghi vao C04_TEST.
-     */
+    // =====================================================
+    // KIEM TRA AN TOAN DATABASE
+    // =====================================================
+
     private void requireTestDatabase() {
 
         String database = jdbc.queryForObject(
@@ -65,11 +68,9 @@ class DeanRegistrationIntegrationTest {
 
         try (var connection = dataSource.getConnection()) {
 
-            String catalog = connection.getCatalog();
-
             assertEquals(
                     TEST_DATABASE,
-                    catalog,
+                    connection.getCatalog(),
                     "DataSource khong tro den C04 TEST."
             );
 
@@ -78,8 +79,11 @@ class DeanRegistrationIntegrationTest {
         }
     }
 
-    private String registrationStatus() {
+    // =====================================================
+    // CAC HAM DOC DU LIEU
+    // =====================================================
 
+    private String registrationStatus() {
         return jdbc.queryForObject(
                 """
                 SELECT status
@@ -92,7 +96,6 @@ class DeanRegistrationIntegrationTest {
     }
 
     private String groupStatus() {
-
         return jdbc.queryForObject(
                 """
                 SELECT status
@@ -105,7 +108,6 @@ class DeanRegistrationIntegrationTest {
     }
 
     private Integer approvalAuditCount() {
-
         return jdbc.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -119,6 +121,24 @@ class DeanRegistrationIntegrationTest {
         );
     }
 
+    private Integer rejectionAuditCount() {
+        return jdbc.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM audit_logs
+                WHERE entity_type = 'TOPIC_REGISTRATION'
+                  AND entity_id = ?
+                  AND action = 'REGISTRATION_REJECTED'
+                """,
+                Integer.class,
+                registrationId
+        );
+    }
+
+    // =====================================================
+    // CHUAN BI DU LIEU TRUOC MOI TEST
+    // =====================================================
+
     @BeforeEach
     void setUp() {
 
@@ -131,7 +151,7 @@ class DeanRegistrationIntegrationTest {
                 JOIN topics t ON t.id = tr.topic_id
                 WHERE t.code = ?
                 """,
-                (rs, rowNum) -> new Long[] {
+                (rs, rowNum) -> new Long[]{
                         rs.getLong("id"),
                         rs.getLong("group_id")
                 },
@@ -150,34 +170,43 @@ class DeanRegistrationIntegrationTest {
         assertNotNull(registrationId);
         assertNotNull(groupId);
 
-        // Test phai bat dau tu du lieu PENDING/FORMING.
         assertEquals("PENDING", registrationStatus());
         assertEquals("FORMING", groupStatus());
 
         assertEquals(0, approvalAuditCount());
+        assertEquals(0, rejectionAuditCount());
     }
+
+    // =====================================================
+    // DON DU LIEU SAU MOI TEST
+    // =====================================================
 
     @AfterEach
     void tearDown() {
 
         requireTestDatabase();
 
-        // Xoa trigger gia lap loi neu test da tao.
         jdbc.execute(
                 "DROP TRIGGER IF EXISTS " + AUDIT_TRIGGER
+        );
+
+        jdbc.execute(
+                "DROP TRIGGER IF EXISTS " + REJECT_AUDIT_TRIGGER
         );
 
         if (registrationId == null || groupId == null) {
             return;
         }
 
-        // Don du lieu duyet cua ho so thu nghiem.
         jdbc.update(
                 """
                 DELETE FROM audit_logs
                 WHERE entity_type = 'TOPIC_REGISTRATION'
                   AND entity_id = ?
-                  AND action = 'REGISTRATION_APPROVED'
+                  AND action IN (
+                      'REGISTRATION_APPROVED',
+                      'REGISTRATION_REJECTED'
+                  )
                 """,
                 registrationId
         );
@@ -204,29 +233,19 @@ class DeanRegistrationIntegrationTest {
         );
     }
 
-    /*
-     * TEST 1:
-     * Duyet thanh cong.
-     */
+    // =====================================================
+    // C04.2 - INTEGRATION TEST DUYET DANG KY
+    // =====================================================
+
+    // TEST 1: Duyet thanh cong
     @Test
     void approveSuccessfully() {
 
         service.approveRegistration(registrationId);
 
-        assertEquals(
-                "APPROVED",
-                registrationStatus()
-        );
-
-        assertEquals(
-                "LOCKED",
-                groupStatus()
-        );
-
-        assertEquals(
-                1,
-                approvalAuditCount()
-        );
+        assertEquals("APPROVED", registrationStatus());
+        assertEquals("LOCKED", groupStatus());
+        assertEquals(1, approvalAuditCount());
 
         Long decidedBy = jdbc.queryForObject(
                 """
@@ -250,19 +269,11 @@ class DeanRegistrationIntegrationTest {
         assertEquals(deanId, decidedBy);
     }
 
-    /*
-     * TEST 2:
-     * Khong duoc duyet cung ho so hai lan.
-     */
+    // TEST 2: Khong duoc duyet hai lan
     @Test
     void cannotApproveTwice() {
 
         service.approveRegistration(registrationId);
-
-        assertEquals(
-                "APPROVED",
-                registrationStatus()
-        );
 
         assertThrows(
                 IllegalStateException.class,
@@ -271,35 +282,17 @@ class DeanRegistrationIntegrationTest {
                 )
         );
 
-        assertEquals(
-                "APPROVED",
-                registrationStatus()
-        );
-
-        assertEquals(
-                "LOCKED",
-                groupStatus()
-        );
-
-        assertEquals(
-                1,
-                approvalAuditCount()
-        );
+        assertEquals("APPROVED", registrationStatus());
+        assertEquals("LOCKED", groupStatus());
+        assertEquals(1, approvalAuditCount());
     }
 
-    /*
-     * TEST 3:
-     * Gia lap loi MySQL khi ghi audit.
-     *
-     * Trigger chi tao trong database C04_TEST.
-     * Sau test se duoc xoa.
-     */
+    // TEST 3: Rollback khi ghi audit duyet that bai
     @Test
     void rollbackWhenAuditInsertFails() {
 
         requireTestDatabase();
 
-        // Chi chan action duyet dang ky.
         jdbc.execute(
                 """
                 CREATE TRIGGER c04_test_reject_approval_audit
@@ -322,20 +315,141 @@ class DeanRegistrationIntegrationTest {
                 )
         );
 
-        // Hai UPDATE phai duoc rollback.
-        assertEquals(
-                "PENDING",
-                registrationStatus()
+        assertEquals("PENDING", registrationStatus());
+        assertEquals("FORMING", groupStatus());
+        assertEquals(0, approvalAuditCount());
+    }
+
+    // =====================================================
+    // C04.3 - INTEGRATION TEST TU CHOI DANG KY
+    // =====================================================
+
+    // TEST 4: Tu choi thanh cong
+    @Test
+    void rejectSuccessfully() {
+
+        String reason = "De tai chua dap ung yeu cau";
+
+        service.rejectRegistration(
+                registrationId,
+                reason
         );
 
-        assertEquals(
-                "FORMING",
-                groupStatus()
+        assertEquals("REJECTED", registrationStatus());
+        assertEquals("FORMING", groupStatus());
+        assertEquals(1, rejectionAuditCount());
+
+        String decisionNote = jdbc.queryForObject(
+                """
+                SELECT decision_note
+                FROM topic_registrations
+                WHERE id = ?
+                """,
+                String.class,
+                registrationId
         );
 
-        assertEquals(
-                0,
-                approvalAuditCount()
+        assertEquals(reason, decisionNote);
+
+        Long reservedTopicId = jdbc.queryForObject(
+                """
+                SELECT reserved_topic_id
+                FROM topic_registrations
+                WHERE id = ?
+                """,
+                Long.class,
+                registrationId
         );
+
+        assertNull(reservedTopicId);
+
+        Long decidedBy = jdbc.queryForObject(
+                """
+                SELECT decided_by
+                FROM topic_registrations
+                WHERE id = ?
+                """,
+                Long.class,
+                registrationId
+        );
+
+        Long deanId = jdbc.queryForObject(
+                """
+                SELECT id
+                FROM users
+                WHERE username = 'dean.c04.test'
+                """,
+                Long.class
+        );
+
+        assertEquals(deanId, decidedBy);
+    }
+
+    // TEST 5: Khong duoc tu choi hai lan
+    @Test
+    void cannotRejectTwice() {
+
+        service.rejectRegistration(
+                registrationId,
+                "Khong dat yeu cau"
+        );
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.rejectRegistration(
+                        registrationId,
+                        "Tu choi lan hai"
+                )
+        );
+
+        assertEquals("REJECTED", registrationStatus());
+        assertEquals("FORMING", groupStatus());
+        assertEquals(1, rejectionAuditCount());
+    }
+
+    // TEST 6: Rollback khi ghi audit tu choi that bai
+    @Test
+    void rejectRollbackWhenAuditFails() {
+
+        requireTestDatabase();
+
+        jdbc.execute(
+                """
+                CREATE TRIGGER c04_test_reject_audit_failure
+                BEFORE INSERT ON audit_logs
+                FOR EACH ROW
+                BEGIN
+                    IF NEW.action = 'REGISTRATION_REJECTED' THEN
+                        SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT =
+                            'C04_TEST_REJECT_AUDIT_FAILURE';
+                    END IF;
+                END
+                """
+        );
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.rejectRegistration(
+                        registrationId,
+                        "Khong dat yeu cau"
+                )
+        );
+
+        assertEquals("PENDING", registrationStatus());
+        assertEquals("FORMING", groupStatus());
+        assertEquals(0, rejectionAuditCount());
+
+        Long reservedTopicId = jdbc.queryForObject(
+                """
+                SELECT reserved_topic_id
+                FROM topic_registrations
+                WHERE id = ?
+                """,
+                Long.class,
+                registrationId
+        );
+
+        assertNotNull(reservedTopicId);
     }
 }

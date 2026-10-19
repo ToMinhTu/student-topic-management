@@ -59,31 +59,27 @@ public class DeanRegistrationController {
 
     @GetMapping
     public String listRegistrations(
-
             @RequestParam(
                     name = "roundId",
                     required = false
-            )
-            Long roundId,
+            ) Long roundId,
 
             @RequestParam(
                     name = "status",
                     required = false
-            )
-            String status,
+            ) String status,
 
             @RequestParam(
                     name = "page",
                     defaultValue = "0"
-            )
-            int page,
+            ) int page,
 
             Model model) {
 
         // 1. Chuan hoa so trang
         int requestedPage = Math.max(0, page);
 
-        // 2. Chuan hoa trang thai dang ky
+        // 2. Chuan hoa trang thai
         String selectedStatus = null;
 
         if (status != null && !status.isBlank()) {
@@ -93,7 +89,6 @@ public class DeanRegistrationController {
                     .toUpperCase(Locale.ROOT);
 
             if (!VALID_STATUSES.contains(normalized)) {
-
                 throw new IllegalArgumentException(
                         "Trạng thái đăng ký không hợp lệ"
                 );
@@ -108,7 +103,6 @@ public class DeanRegistrationController {
         if (roundId != null) {
 
             if (roundId <= 0) {
-
                 throw new IllegalArgumentException(
                         "Mã đợt đăng ký không hợp lệ"
                 );
@@ -157,7 +151,7 @@ public class DeanRegistrationController {
                         PAGE_SIZE
                 );
 
-        // 9. Dua du lieu sang giao dien Thymeleaf
+        // 9. Dua du lieu sang Thymeleaf
         model.addAttribute(
                 "registrations",
                 registrations
@@ -212,20 +206,17 @@ public class DeanRegistrationController {
 
     @PostMapping("/{registrationId}/approve")
     public String approveRegistration(
-
-            @PathVariable("registrationId")
-            Long registrationId,
-
+            @PathVariable("registrationId") Long registrationId,
             RedirectAttributes redirectAttributes) {
 
         try {
 
-            // 1. Goi Service kiem tra dieu kien va duyet ho so
+            // Goi Service duyet ho so
             deanRegistrationService.approveRegistration(
                     registrationId
             );
 
-            // 2. Thong bao duyet thanh cong
+            // Thong bao thanh cong
             redirectAttributes.addFlashAttribute(
                     "success",
                     "Duyệt đăng ký đề tài thành công"
@@ -233,14 +224,49 @@ public class DeanRegistrationController {
 
         } catch (IllegalArgumentException | IllegalStateException ex) {
 
-            // 3. Thong bao loi nghiep vu
+            // Thong bao loi nghiep vu
             redirectAttributes.addFlashAttribute(
                     "error",
                     ex.getMessage()
             );
         }
 
-        // 4. Quay lai danh sach dang ky
+        return "redirect:/dean/registrations";
+    }
+
+    // =====================================================
+    // C04.3 - DEAN TU CHOI HO SO DANG KY DE TAI
+    // =====================================================
+
+    @PostMapping("/{registrationId}/reject")
+    public String rejectRegistration(
+            @PathVariable("registrationId") Long registrationId,
+            @RequestParam("reason") String reason,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+
+            // Goi Service kiem tra va tu choi ho so
+            deanRegistrationService.rejectRegistration(
+                    registrationId,
+                    reason
+            );
+
+            // Thong bao thanh cong
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Từ chối đăng ký đề tài thành công"
+            );
+
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+
+            // Thong bao loi nghiep vu
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    ex.getMessage()
+            );
+        }
+
         return "redirect:/dean/registrations";
     }
 }

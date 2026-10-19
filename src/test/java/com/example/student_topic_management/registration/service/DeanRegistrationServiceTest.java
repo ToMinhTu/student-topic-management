@@ -565,4 +565,146 @@ class DeanRegistrationServiceTest {
                 any(Object[].class)
         );
     }
+
+    // =====================================================
+    // C04.3 - UNIT TEST TU CHOI DANG KY DE TAI
+    // =====================================================
+
+    // TEST 13: Tu choi dang ky thanh cong
+    @Test
+    void rejectRegistrationSuccessfully() {
+
+        mockValidConditions();
+
+        service.rejectRegistration(
+                1L,
+                "De tai chua dap ung yeu cau"
+        );
+
+        verify(roundAccess).lockRound(1L);
+
+        verify(jdbc).update(
+                argThat(sql ->
+                        sql.contains("UPDATE topic_registrations")
+                        && sql.contains("REJECTED")
+                        && sql.contains("decision_note")
+                ),
+                eq(12L),
+                any(),
+                eq("De tai chua dap ung yeu cau"),
+                eq(1L)
+        );
+
+        verify(jdbc).update(
+                argThat(sql ->
+                        sql.contains("INSERT INTO audit_logs")
+                ),
+                eq(12L),
+                eq("REGISTRATION_REJECTED"),
+                eq("TOPIC_REGISTRATION"),
+                eq(1L),
+                anyString()
+        );
+
+        verify(jdbc, never()).update(
+                argThat(sql ->
+                        sql.contains("UPDATE student_groups")
+                ),
+                any(Object[].class)
+        );
+    }
+
+    // TEST 14: Khong cho phep thieu ly do
+    @Test
+    void rejectRegistrationWithoutReason() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.rejectRegistration(
+                        1L,
+                        "   "
+                )
+        );
+
+        verifyNoInteractions(
+                jdbc,
+                roundAccess,
+                currentUserService
+        );
+    }
+
+    // TEST 15: Khong cho phep tu choi ho so da duyet
+    @Test
+    void cannotRejectApprovedRegistration() {
+
+        registrationStatus = "APPROVED";
+
+        mockValidConditions();
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.rejectRegistration(
+                        1L,
+                        "Khong du dieu kien"
+                )
+        );
+
+        verify(jdbc, never()).update(
+                anyString(),
+                any(Object[].class)
+        );
+    }
+
+    // TEST 16: Khong co quyen DEAN
+    @Test
+    void rejectRegistrationWithoutDeanRole() {
+
+        AppUser user = mock(AppUser.class);
+        Role role = mock(Role.class);
+
+        when(user.getEnabled()).thenReturn(true);
+        when(user.getRoles()).thenReturn(Set.of(role));
+        when(role.getCode()).thenReturn("STUDENT");
+
+        when(currentUserService.getCurrentUser())
+                .thenReturn(user);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.rejectRegistration(
+                        1L,
+                        "Khong du dieu kien"
+                )
+        );
+
+        verifyNoInteractions(jdbc, roundAccess);
+    }
+
+    // TEST 17: Loi ghi audit log
+    @Test
+    void rejectRegistrationFailsWhenAuditFails() {
+
+        mockValidConditions();
+
+        auditResult = 0;
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.rejectRegistration(
+                        1L,
+                        "De tai khong hop le"
+                )
+        );
+
+        verify(jdbc).update(
+                argThat(sql ->
+                        sql.contains("INSERT INTO audit_logs")
+                ),
+                eq(12L),
+                eq("REGISTRATION_REJECTED"),
+                eq("TOPIC_REGISTRATION"),
+                eq(1L),
+                anyString()
+        );
+    }
 }
