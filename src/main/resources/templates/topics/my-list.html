@@ -22,6 +22,7 @@
 <p><a class="btn" th:href="@{/topics/new}">Tạo đề xuất mới</a></p>
 
 <p th:if="${success}" th:text="${success}"></p>
+<p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
 
 <table>
     <thead>

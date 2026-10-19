@@ -16,6 +16,7 @@
 <h1 th:text="${topic.title}">Chi tiết đề tài</h1>
 
 <p th:if="${success}" th:text="${success}"></p>
+<p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
 
 <p><strong>Mã đề tài:</strong>
     <span th:text="${topic.code}"></span></p>

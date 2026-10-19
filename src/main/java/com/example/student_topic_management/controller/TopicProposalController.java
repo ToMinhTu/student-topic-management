@@ -6,6 +6,8 @@ import com.example.student_topic_management.service.TopicProposalService;
 import com.example.student_topic_management.common.exception.BusinessException;
 
 import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Sort;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -34,7 +36,7 @@ public class TopicProposalController {
         model.addAttribute(
                 "topics",
                 service.getMyTopics(
-                        PageRequest.of(safePage, 10)
+                        PageRequest.of(safePage, 10, Sort.by(Sort.Direction.DESC, "id"))
                 )
         );
 
@@ -69,9 +71,9 @@ public class TopicProposalController {
 
             return "redirect:/topics/" + topic.getId();
 
-        } catch (BusinessException ex) {
+        } catch (BusinessException | DataIntegrityViolationException ex) {
             bindingResult.reject(
-                    "businessError", ex.getMessage());
+                    "businessError", friendlyMessage(ex));
             model.addAttribute("editMode", false);
             return "topics/form";
         }
@@ -140,9 +142,9 @@ public class TopicProposalController {
 
             return "redirect:/topics/" + id;
 
-        } catch (BusinessException ex) {
+        } catch (BusinessException | DataIntegrityViolationException ex) {
             bindingResult.reject(
-                    "businessError", ex.getMessage());
+                    "businessError", friendlyMessage(ex));
             model.addAttribute("editMode", true);
             model.addAttribute("topicId", id);
             return "topics/form";
@@ -154,11 +156,27 @@ public class TopicProposalController {
             @PathVariable Long id,
             RedirectAttributes redirectAttributes) {
 
-        service.submitProposal(id);
+        try {
+            service.submitProposal(id);
+        } catch (BusinessException | DataIntegrityViolationException ex) {
+            redirectAttributes.addFlashAttribute("error", friendlyMessage(ex));
+            return "redirect:/topics/" + id;
+        }
 
         redirectAttributes.addFlashAttribute(
                 "success", "Đã gửi đề xuất để xét duyệt");
 
         return "redirect:/topics/" + id;
+    }
+
+    private String friendlyMessage(Exception ex) {
+        return ex instanceof BusinessException ? ex.getMessage()
+                : "Không thể lưu đề xuất. Mã đề tài có thể đã được sử dụng hoặc dữ liệu liên quan đã thay đổi. Vui lòng kiểm tra và thử lại.";
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public String handleBusinessError(BusinessException ex, RedirectAttributes attributes) {
+        attributes.addFlashAttribute("error", ex.getMessage());
+        return "redirect:/topics/my";
     }
 }

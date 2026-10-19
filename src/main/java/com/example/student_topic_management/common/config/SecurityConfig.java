@@ -35,17 +35,23 @@ public class SecurityConfig {
         }
 
         @Bean
+        public DaoAuthenticationProvider daoAuthenticationProvider(
+                        UserDetailsService userDetailsService,
+                        PasswordEncoder encoder) {
+                var provider = new DaoAuthenticationProvider(userDetailsService);
+                provider.setPasswordEncoder(encoder);
+                return provider;
+        }
+
+        @Bean
         public SecurityFilterChain securityFilterChain(
                         HttpSecurity http,
-                        UserDetailsService userDetailsService,
-                        PasswordEncoder encoder) throws Exception {
+                        DaoAuthenticationProvider provider) throws Exception {
                 // Tam thoi cho phep truy cap khong can login
                 // http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 // .csrf(csrf -> csrf.disable());
                 // return http.build();
 
-                var provider = new DaoAuthenticationProvider(userDetailsService);
-                provider.setPasswordEncoder(encoder);
                 http.authenticationProvider(provider);
 
                 http.authorizeHttpRequests(auth -> auth
@@ -53,6 +59,7 @@ public class SecurityConfig {
                                 .requestMatchers("/login", "/error", "/vendor/**", "/css/**").permitAll()
                                 // Phan quyen theo URL
                                 .requestMatchers("/management/announcements/**").hasAnyRole("ADMIN", "DEAN")
+                                .requestMatchers("/topics", "/topics/**").hasAnyRole("LECTURER", "STUDENT")
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/dean/**").hasRole("DEAN")
                                 .requestMatchers("/department/**").hasRole("DEPARTMENT_HEAD")

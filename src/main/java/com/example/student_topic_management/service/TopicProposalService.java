@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 
@@ -50,7 +51,7 @@ public class TopicProposalService {
     private AppUser requireProposer() {
         AppUser user = currentUserService.getCurrentUser();
 
-        boolean allowed = user.getRoles() != null
+        boolean allowed = Boolean.TRUE.equals(user.getEnabled()) && user.getRoles() != null
                 && user.getRoles().stream().anyMatch(role ->
                     "LECTURER".equals(role.getCode())
                     || "STUDENT".equals(role.getCode())
@@ -58,7 +59,7 @@ public class TopicProposalService {
 
         if (!allowed) {
             throw new BusinessException(
-                "Ban khong co quyen de xuat de tai"
+                "Bạn không có quyền đề xuất đề tài"
             );
         }
 
@@ -68,19 +69,19 @@ public class TopicProposalService {
     private RegistrationRound requireProposalRound(Long roundId) {
         if (roundId == null || roundId <= 0) {
             throw new BusinessException(
-                "Dot dang ky khong hop le"
+                "Đợt đăng ký không hợp lệ"
             );
         }
 
-        RegistrationRound round = roundRepository.findById(roundId)
+        RegistrationRound round = roundRepository.findByIdForUpdate(roundId)
                 .orElseThrow(() -> new BusinessException(
-                    "Khong tim thay dot dang ky"
+                    "Không tìm thấy đợt đăng ký"
                 ));
 
         if (!roundPolicy.isProposalOpen(
                 round, Instant.now(clock))) {
             throw new BusinessException(
-                "Dot dang ky khong trong thoi gian de xuat"
+                "Đợt đăng ký không trong thời gian đề xuất"
             );
         }
 
@@ -92,15 +93,15 @@ public class TopicProposalService {
 
         if (value == null || value.isBlank()) {
             throw new BusinessException(
-                field + " khong duoc de trong"
+                field + " không được để trống"
             );
         }
 
         String normalized = value.trim();
 
-        if (normalized.length() > maxLength) {
+        if (normalized.length() > maxLength || normalized.getBytes(StandardCharsets.UTF_8).length > 65535) {
             throw new BusinessException(
-                field + " vuot qua do dai cho phep"
+                field + " vượt quá độ dài cho phép"
             );
         }
 
@@ -110,36 +111,41 @@ public class TopicProposalService {
     private void validateForm(TopicProposalForm form) {
         if (form == null) {
             throw new BusinessException(
-                "Du lieu de tai khong hop le"
+                "Dữ liệu đề tài không hợp lệ"
             );
         }
 
         if (form.getRoundId() == null
                 || form.getRoundId() <= 0) {
             throw new BusinessException(
-                "Vui long chon dot dang ky"
+                "Vui lòng chọn đợt đăng ký"
             );
         }
 
         if (form.getDepartmentId() == null
                 || form.getDepartmentId() <= 0) {
             throw new BusinessException(
-                "Vui long chon bo mon"
+                "Vui lòng chọn bộ môn"
             );
         }
 
-        requireText(form.getCode(), "Ma de tai", 40);
-        requireText(form.getTitle(), "Ten de tai", 255);
+        if (form.getRequirements() != null
+                && form.getRequirements().getBytes(StandardCharsets.UTF_8).length > 65535) {
+            throw new BusinessException("Yêu cầu đề tài vượt quá dung lượng cho phép");
+        }
+
+        requireText(form.getCode(), "Mã đề tài", 40);
+        requireText(form.getTitle(), "Tên đề tài", 255);
         requireText(
                 form.getDescription(),
-                "Mo ta de tai",
+                "Mô tả đề tài",
                 Integer.MAX_VALUE
         );
 
         if (!departmentRepository.existsById(
                 form.getDepartmentId())) {
             throw new BusinessException(
-                "Bo mon khong ton tai"
+                "Bộ môn không tồn tại"
             );
         }
     }
@@ -151,14 +157,14 @@ public class TopicProposalService {
         topic.setDepartmentId(form.getDepartmentId());
 
         topic.setCode(requireText(
-                form.getCode(), "Ma de tai", 40));
+                form.getCode(), "Mã đề tài", 40));
 
         topic.setTitle(requireText(
-                form.getTitle(), "Ten de tai", 255));
+                form.getTitle(), "Tên đề tài", 255));
 
         topic.setDescription(requireText(
                 form.getDescription(),
-                "Mo ta de tai",
+                "Mô tả đề tài",
                 Integer.MAX_VALUE
         ));
 
@@ -181,7 +187,7 @@ public class TopicProposalService {
         if (topicRepository.existsByRoundIdAndCode(
                 form.getRoundId(), code)) {
             throw new BusinessException(
-                "Ma de tai da ton tai trong dot nay"
+                "Mã đề tài đã tồn tại trong đợt này"
             );
         }
 
@@ -192,7 +198,7 @@ public class TopicProposalService {
         topic.setProposedBy(user.getId());
         topic.setStatus(TopicStatus.DRAFT);
 
-        return topicRepository.save(topic);
+        return topicRepository.saveAndFlush(topic);
     }
 
     @Transactional
@@ -203,18 +209,18 @@ public class TopicProposalService {
 
         Topic topic = topicRepository.findByIdForUpdate(topicId)
                 .orElseThrow(() -> new BusinessException(
-                    "Khong tim thay de tai"
+                    "Không tìm thấy đề tài"
                 ));
 
         if (!user.getId().equals(topic.getProposedBy())) {
             throw new BusinessException(
-                "Ban khong phai nguoi de xuat de tai"
+                "Bạn không phải người đề xuất đề tài"
             );
         }
 
         if (topic.getStatus() != TopicStatus.DRAFT) {
             throw new BusinessException(
-                "Chi duoc sua de tai o trang thai DRAFT"
+                "Chỉ được sửa đề tài ở trạng thái nháp"
             );
         }
 
@@ -223,7 +229,7 @@ public class TopicProposalService {
         // Khong cho chuyen de tai sang dot khac.
         if (!topic.getRoundId().equals(form.getRoundId())) {
             throw new BusinessException(
-                "Khong duoc thay doi dot dang ky"
+                "Không được thay đổi đợt đăng ký"
             );
         }
 
@@ -234,13 +240,13 @@ public class TopicProposalService {
         if (topicRepository.existsByRoundIdAndCodeAndIdNot(
                 topic.getRoundId(), code, topicId)) {
             throw new BusinessException(
-                "Ma de tai da ton tai trong dot nay"
+                "Mã đề tài đã tồn tại trong đợt này"
             );
         }
 
         copyFormToTopic(form, topic);
 
-        return topicRepository.save(topic);
+        return topicRepository.saveAndFlush(topic);
     }
 
     @Transactional
@@ -249,18 +255,18 @@ public class TopicProposalService {
 
         Topic topic = topicRepository.findByIdForUpdate(topicId)
                 .orElseThrow(() -> new BusinessException(
-                    "Khong tim thay de tai"
+                    "Không tìm thấy đề tài"
                 ));
 
         if (!user.getId().equals(topic.getProposedBy())) {
             throw new BusinessException(
-                "Ban khong phai nguoi de xuat de tai"
+                "Bạn không phải người đề xuất đề tài"
             );
         }
 
         if (topic.getStatus() != TopicStatus.DRAFT) {
             throw new BusinessException(
-                "Chi de tai DRAFT moi duoc gui"
+                "Chỉ đề tài nháp mới được gửi"
             );
         }
 
@@ -268,7 +274,7 @@ public class TopicProposalService {
 
         topic.setStatus(TopicStatus.SUBMITTED);
 
-        return topicRepository.save(topic);
+        return topicRepository.saveAndFlush(topic);
     }
 
     @Transactional(readOnly = true)
@@ -287,7 +293,7 @@ public class TopicProposalService {
         return topicRepository.findByIdAndProposedBy(
                 topicId, user.getId()
         ).orElseThrow(() -> new BusinessException(
-                "Khong tim thay de tai hoac ban khong co quyen xem"
+                "Không tìm thấy đề tài hoặc bạn không có quyền xem"
         ));
     }
 }
