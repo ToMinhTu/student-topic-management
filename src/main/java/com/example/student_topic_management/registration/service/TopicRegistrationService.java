@@ -4,6 +4,9 @@ package com.example.student_topic_management.registration.service;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,14 +35,21 @@ public class TopicRegistrationService {
         this.clock = clock;
     }
 
+    private record ExistingRegistration(
+            Long id,
+            Long topicId,
+            Long roundId,
+            String status
+    ) {}
+
     // =====================================================
-    // C03 - DANG KY DE TAI SINH VIEN
+    // C03 + C04.3 - DANG KY / DANG KY LAI DE TAI
     // =====================================================
 
     @Transactional
     public void registerTopic(Long groupId, Long topicId) {
 
-        // 1. KIEM TRA THAM SO
+        // 1. Kiem tra tham so
         if (groupId == null || groupId <= 0
                 || topicId == null || topicId <= 0) {
 
@@ -48,12 +58,12 @@ public class TopicRegistrationService {
             );
         }
 
-        // 2. LAY SINH VIEN DANG DANG NHAP
+        // 2. Lay sinh vien dang dang nhap
         Long studentId =
                 studentAccess.requireCurrentStudentId();
 
-        // 3. XAC DINH DOT DANG KY CUA NHOM
-        var groups = jdbc.queryForList(
+        // 3. Xac dinh dot dang ky cua nhom
+        List<Long> groups = jdbc.queryForList(
                 """
                 SELECT round_id
                 FROM student_groups
@@ -71,20 +81,20 @@ public class TopicRegistrationService {
 
         Long roundId = groups.get(0);
 
-        // 4. KHOA DOT DANG KY
+        // 4. Khoa dot dang ky
         roundAccess.lockRound(roundId);
 
-        // 5. KIEM TRA THOI GIAN DANG KY
+        // 5. Kiem tra thoi gian dang ky
         roundAccess.requireStudentWindow(
                 roundId,
                 clock.instant()
         );
 
-        // 6. KHOA SINH VIEN DANG THAO TAC
+        // 6. Khoa sinh vien
         studentAccess.lockEnabledStudent(studentId);
 
-        // 7. KHOA NHOM VA KIEM TRA TRANG THAI
-        var lockedGroups = jdbc.queryForList(
+        // 7. Khoa nhom
+        List<String> lockedGroups = jdbc.queryForList(
                 """
                 SELECT status
                 FROM student_groups
@@ -105,7 +115,7 @@ public class TopicRegistrationService {
             );
         }
 
-        // 8. KIEM TRA QUYEN TRUONG NHOM
+        // 8. Chi truong nhom moi duoc dang ky
         Integer leaderCount = jdbc.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -121,13 +131,12 @@ public class TopicRegistrationService {
         );
 
         if (leaderCount == null || leaderCount != 1) {
-
             throw new IllegalStateException(
                     "Chi truong nhom moi duoc dang ky de tai"
             );
         }
 
-        // 9. KIEM TRA SO LUONG THANH VIEN
+        // 9. Kiem tra so luong thanh vien
         Integer memberCount = jdbc.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -139,15 +148,13 @@ public class TopicRegistrationService {
                 groupId
         );
 
-        var limits = jdbc.query(
+        List<int[]> limits = jdbc.query(
                 """
-                SELECT
-                    group_min_size,
-                    group_max_size
+                SELECT group_min_size, group_max_size
                 FROM registration_rounds
                 WHERE id = ?
                 """,
-                (rs, rowNum) -> new int[] {
+                (rs, rowNum) -> new int[]{
                         rs.getInt("group_min_size"),
                         rs.getInt("group_max_size")
                 },
@@ -155,7 +162,6 @@ public class TopicRegistrationService {
         );
 
         if (limits.isEmpty()) {
-
             throw new IllegalStateException(
                     "Khong tim thay dot dang ky"
             );
@@ -172,7 +178,7 @@ public class TopicRegistrationService {
             );
         }
 
-        // 10. KIEM TRA DE TAI DA CONG BO
+        // 10. Kiem tra de tai da cong bo
         Integer validTopic = jdbc.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -187,32 +193,87 @@ public class TopicRegistrationService {
         );
 
         if (validTopic == null || validTopic != 1) {
-
             throw new IllegalStateException(
                     "De tai khong hop le hoac chua cong bo"
             );
         }
 
-        // 11. KIEM TRA NHOM DA TUNG DANG KY CHUA
-        Integer groupRegistrations = jdbc.queryForObject(
+        // 11. Khoa va tim ho so cu cua nhom
+        List<ExistingRegistration> existingRows = jdbc.query(
                 """
-                SELECT COUNT(*)
+                SELECT id, topic_id, round_id, status
                 FROM topic_registrations
                 WHERE group_id = ?
+                FOR UPDATE
                 """,
-                Integer.class,
+                (rs, rowNum) -> new ExistingRegistration(
+                        rs.getLong("id"),
+                        rs.getLong("topic_id"),
+                        rs.getLong("round_id"),
+                        rs.getString("status")
+                ),
                 groupId
         );
 
-        if (groupRegistrations != null
-                && groupRegistrations > 0) {
-
+        if (existingRows.size() > 1) {
             throw new IllegalStateException(
-                    "Nhom da tung dang ky de tai"
+                    "Du lieu dang ky cua nhom khong hop le"
             );
         }
 
-        // 12. KIEM TRA DE TAI CO BI GIU CHO KHONG
+        ExistingRegistration existing =
+                existingRows.isEmpty()
+                        ? null
+                        : existingRows.get(0);
+
+        boolean reRegister = existing != null;
+
+        if (reRegister) {
+
+            if (!roundId.equals(existing.roundId())) {
+                throw new IllegalStateException(
+                        "Ho so cu khong thuoc dot dang ky cua nhom"
+                );
+            }
+
+            if (!"REJECTED".equals(existing.status())) {
+                throw new IllegalStateException(
+                        "Nhom da tung dang ky de tai"
+                );
+            }
+
+            // Ho so cu khong duoc co du lieu nghiep vu
+            Integer dependentCount = jdbc.queryForObject(
+                    """
+                    SELECT
+                        (SELECT COUNT(*)
+                         FROM reports
+                         WHERE registration_id = ?)
+                      + (SELECT COUNT(*)
+                         FROM defenses
+                         WHERE registration_id = ?)
+                      + (SELECT COUNT(*)
+                         FROM reviewer_assignments
+                         WHERE registration_id = ?)
+                      + (SELECT COUNT(*)
+                         FROM results
+                         WHERE registration_id = ?)
+                    """,
+                    Integer.class,
+                    existing.id(),
+                    existing.id(),
+                    existing.id(),
+                    existing.id()
+            );
+
+            if (dependentCount == null || dependentCount > 0) {
+                throw new IllegalStateException(
+                        "Ho so da co du lieu xu ly, khong the dang ky lai"
+                );
+            }
+        }
+
+        // 12. Kiem tra de tai co bi giu cho khong
         Integer topicRegistrations = jdbc.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -232,67 +293,118 @@ public class TopicRegistrationService {
             );
         }
 
-        // =====================================================
-        // 13. TAO HO SO DANG KY VA LAY ID
-        // =====================================================
+        // 13. Tao moi hoac cap nhat ho so
+        Long registrationId;
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        if (reRegister) {
 
-        try {
+            registrationId = existing.id();
 
-            jdbc.update(connection -> {
-
-                PreparedStatement ps =
-                        connection.prepareStatement(
-                                """
-                                INSERT INTO topic_registrations
-                                    (
-                                        group_id,
-                                        topic_id,
-                                        round_id,
-                                        status,
-                                        submitted_by
-                                    )
-                                VALUES (?, ?, ?, 'PENDING', ?)
-                                """,
-                                Statement.RETURN_GENERATED_KEYS
-                        );
-
-                ps.setLong(1, groupId);
-                ps.setLong(2, topicId);
-                ps.setLong(3, roundId);
-                ps.setLong(4, studentId);
-
-                return ps;
-
-            }, keyHolder);
-
-        } catch (DataIntegrityViolationException ex) {
-
-            throw new IllegalStateException(
-                    "Nhom hoac de tai da duoc dang ky",
-                    ex
+            LocalDateTime now = LocalDateTime.ofInstant(
+                    clock.instant(),
+                    ZoneOffset.UTC
             );
+
+            int updated;
+
+            try {
+                updated = jdbc.update(
+                        """
+                        UPDATE topic_registrations
+                        SET topic_id = ?,
+                            status = 'PENDING',
+                            submitted_by = ?,
+                            submitted_at = ?,
+                            decided_by = NULL,
+                            decided_at = NULL,
+                            decision_note = NULL
+                        WHERE id = ?
+                          AND group_id = ?
+                          AND round_id = ?
+                          AND status = 'REJECTED'
+                        """,
+                        topicId,
+                        studentId,
+                        now,
+                        registrationId,
+                        groupId,
+                        roundId
+                );
+
+            } catch (DataIntegrityViolationException ex) {
+                throw new IllegalStateException(
+                        "De tai da duoc nhom khac dang ky",
+                        ex
+                );
+            }
+
+            if (updated != 1) {
+                throw new IllegalStateException(
+                        "Dang ky lai de tai that bai"
+                );
+            }
+
+            // Lam moi snapshot thanh vien
+            jdbc.update(
+                    """
+                    DELETE FROM registration_members
+                    WHERE registration_id = ?
+                    """,
+                    registrationId
+            );
+
+        } else {
+
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+
+            try {
+
+                jdbc.update(connection -> {
+
+                    PreparedStatement ps =
+                            connection.prepareStatement(
+                                    """
+                                    INSERT INTO topic_registrations
+                                        (
+                                            group_id,
+                                            topic_id,
+                                            round_id,
+                                            status,
+                                            submitted_by
+                                        )
+                                    VALUES (?, ?, ?, 'PENDING', ?)
+                                    """,
+                                    Statement.RETURN_GENERATED_KEYS
+                            );
+
+                    ps.setLong(1, groupId);
+                    ps.setLong(2, topicId);
+                    ps.setLong(3, roundId);
+                    ps.setLong(4, studentId);
+
+                    return ps;
+
+                }, keyHolder);
+
+            } catch (DataIntegrityViolationException ex) {
+                throw new IllegalStateException(
+                        "Nhom hoac de tai da duoc dang ky",
+                        ex
+                );
+            }
+
+            Number generatedId = keyHolder.getKey();
+
+            if (generatedId == null) {
+                throw new IllegalStateException(
+                        "Khong lay duoc ma ho so dang ky"
+                );
+            }
+
+            registrationId = generatedId.longValue();
         }
 
-        Number generatedId = keyHolder.getKey();
-
-        if (generatedId == null) {
-
-            throw new IllegalStateException(
-                    "Khong lay duoc ma ho so dang ky"
-            );
-        }
-
-        Long registrationId = generatedId.longValue();
-
-        // =====================================================
-        // 14. LUU SNAPSHOT THANH VIEN
-        // =====================================================
-
-        // Ghi lai danh sach sinh vien dang hoat dong
-        // tai thoi diem nop dang ky.
-
+        // 14. Luu snapshot thanh vien moi
         int snapshotCount = jdbc.update(
                 """
                 INSERT INTO registration_members
@@ -313,21 +425,18 @@ public class TopicRegistrationService {
                 groupId
         );
 
-        // Neu snapshot khong du so thanh vien,
-        // rollback toan bo giao dich.
-
         if (snapshotCount != memberCount) {
-
             throw new IllegalStateException(
                     "Luu danh sach thanh vien dang ky that bai"
             );
         }
 
-        // =====================================================
-        // 15. GHI NHAT KY DANG KY
-        // =====================================================
+        // 15. Ghi audit
+        String action = reRegister
+                ? "REGISTRATION_RESUBMITTED"
+                : "REGISTRATION_SUBMITTED";
 
-        jdbc.update(
+        int auditCount = jdbc.update(
                 """
                 INSERT INTO audit_logs
                     (
@@ -340,12 +449,20 @@ public class TopicRegistrationService {
                 VALUES (?, ?, ?, ?, ?)
                 """,
                 studentId,
-                "REGISTRATION_SUBMITTED",
+                action,
                 "TOPIC_REGISTRATION",
                 registrationId,
                 "Group ID: " + groupId
                         + ", Topic ID: " + topicId
+                        + (reRegister
+                            ? ", Previous Topic ID: " + existing.topicId()
+                            : "")
         );
 
+        if (auditCount != 1) {
+            throw new IllegalStateException(
+                    "Ghi nhat ky dang ky that bai"
+            );
+        }
     }
 }

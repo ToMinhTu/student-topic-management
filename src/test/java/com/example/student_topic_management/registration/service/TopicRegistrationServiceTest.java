@@ -7,14 +7,18 @@ import static org.mockito.Mockito.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
@@ -27,10 +31,20 @@ class TopicRegistrationServiceTest {
     private RoundAccess roundAccess;
     private TopicRegistrationService service;
 
+    private static final Long GROUP_ID = 3L;
+    private static final Long TOPIC_ID = 1L;
+    private static final Long ROUND_ID = 1L;
+    private static final Long STUDENT_ID = 11L;
+    private static final Long REGISTRATION_ID = 100L;
+
     private final Clock clock = Clock.fixed(
             Instant.parse("2026-10-19T07:00:00Z"),
             ZoneOffset.UTC
     );
+
+    // =====================================================
+    // KHOI TAO MOCK
+    // =====================================================
 
     @BeforeEach
     void setUp() {
@@ -46,82 +60,117 @@ class TopicRegistrationServiceTest {
                 clock
         );
 
-        // Sinh vien 11, nhom 3, dot 1
         when(studentAccess.requireCurrentStudentId())
-                .thenReturn(11L);
+                .thenReturn(STUDENT_ID);
 
+        // Nhom 3 thuoc dot 1
         when(jdbc.queryForList(
                 contains("SELECT round_id"),
                 eq(Long.class),
-                eq(3L)
-        )).thenReturn(List.of(1L));
+                eq(GROUP_ID)
+        )).thenReturn(List.of(ROUND_ID));
 
+        // Nhom dang FORMING
         when(jdbc.queryForList(
                 contains("SELECT status"),
                 eq(String.class),
-                eq(3L),
-                eq(1L)
+                eq(GROUP_ID),
+                eq(ROUND_ID)
         )).thenReturn(List.of("FORMING"));
 
         // Sinh vien 11 la truong nhom
         when(jdbc.queryForObject(
                 contains("slot_no = 1"),
                 eq(Integer.class),
-                eq(3L),
-                eq(11L)
+                eq(GROUP_ID),
+                eq(STUDENT_ID)
         )).thenReturn(1);
 
-        // Nhom co 2 thanh vien dang hoat dong
+        // Nhom co 2 thanh vien
         when(jdbc.queryForObject(
                 contains("FROM group_members"),
                 eq(Integer.class),
-                eq(3L)
+                eq(GROUP_ID)
         )).thenReturn(2);
     }
 
     // =====================================================
-    // DU LIEU MOCK DUNG CHO CAC TRUONG HOP HOP LE
+    // MOCK DIEU KIEN HOP LE
     // =====================================================
 
-    private void mockValidRegistrationConditions() {
+    private void mockValidConditions() {
 
-        // Gioi han so thanh vien: tu 2 den 3
         when(jdbc.query(
                 contains("FROM registration_rounds"),
                 ArgumentMatchers.<RowMapper<int[]>>any(),
-                eq(1L)
-        )).thenReturn(List.<int[]>of(
-                new int[] {2, 3}
-        ));
+                eq(ROUND_ID)
+        )).thenReturn(
+                List.of(new int[]{2, 3})
+        );
 
-        // De tai 1 da duoc cong bo
         when(jdbc.queryForObject(
                 contains("FROM topics"),
                 eq(Integer.class),
-                eq(1L),
-                eq(1L)
+                eq(TOPIC_ID),
+                eq(ROUND_ID)
         )).thenReturn(1);
-    }
-
-    private void mockNoExistingRegistration() {
-
-        // Nhom chua tung dang ky
-        when(jdbc.queryForObject(
-                contains("FROM topic_registrations"),
-                eq(Integer.class),
-                eq(3L)
-        )).thenReturn(0);
 
         // De tai chua bi giu cho
         when(jdbc.queryForObject(
                 contains("status IN ('PENDING', 'APPROVED')"),
                 eq(Integer.class),
-                eq(1L)
+                eq(TOPIC_ID)
         )).thenReturn(0);
     }
 
-    // Gia lap INSERT bang GeneratedKeyHolder.
-    // Service se nhan duoc registrationId = 100.
+    // =====================================================
+    // MOCK NHOM CHUA CO HO SO
+    // =====================================================
+
+    private void mockNoExistingRegistration() {
+
+        when(jdbc.query(
+                contains("FROM topic_registrations"),
+                ArgumentMatchers.<RowMapper<Object>>any(),
+                eq(GROUP_ID)
+        )).thenReturn(List.of());
+    }
+
+    // =====================================================
+    // MOCK HO SO DA TON TAI
+    // =====================================================
+
+    private void mockExistingRegistration(String status) {
+
+        when(jdbc.query(
+                contains("FROM topic_registrations"),
+                ArgumentMatchers.<RowMapper<Object>>any(),
+                eq(GROUP_ID)
+        )).thenAnswer(invocation -> {
+
+            RowMapper<?> mapper = invocation.getArgument(1);
+            ResultSet rs = mock(ResultSet.class);
+
+            when(rs.getLong("id"))
+                    .thenReturn(REGISTRATION_ID);
+
+            when(rs.getLong("topic_id"))
+                    .thenReturn(2L);
+
+            when(rs.getLong("round_id"))
+                    .thenReturn(ROUND_ID);
+
+            when(rs.getString("status"))
+                    .thenReturn(status);
+
+            return List.of(mapper.mapRow(rs, 0));
+        });
+    }
+
+    // =====================================================
+    // MOCK INSERT HO SO MOI
+    // =====================================================
+
     private void mockSuccessfulInsert() {
 
         when(jdbc.update(
@@ -135,7 +184,6 @@ class TopicRegistrationServiceTest {
             KeyHolder keyHolder =
                     invocation.getArgument(1);
 
-            // Gia lap JDBC connection de kiem tra SQL INSERT
             Connection connection = mock(Connection.class);
             PreparedStatement statement =
                     mock(PreparedStatement.class);
@@ -147,37 +195,82 @@ class TopicRegistrationServiceTest {
 
             creator.createPreparedStatement(connection);
 
-            verify(statement).setLong(1, 3L);
-            verify(statement).setLong(2, 1L);
-            verify(statement).setLong(3, 1L);
-            verify(statement).setLong(4, 11L);
+            verify(statement).setLong(1, GROUP_ID);
+            verify(statement).setLong(2, TOPIC_ID);
+            verify(statement).setLong(3, ROUND_ID);
+            verify(statement).setLong(4, STUDENT_ID);
 
-            // Gia lap generated key tu MySQL
             keyHolder.getKeyList().add(
-                    java.util.Map.of(
-                            "GENERATED_KEY", 100L
-                    )
+                    Map.of("GENERATED_KEY", REGISTRATION_ID)
             );
 
             return 1;
         });
+    }
 
-        // Snapshot ghi thanh cong 2 thanh vien
+    // =====================================================
+    // MOCK SNAPSHOT THANH VIEN
+    // =====================================================
+
+    private void mockSnapshot(int count) {
+
         when(jdbc.update(
                 contains("INSERT INTO registration_members"),
-                eq(100L),
-                eq(3L)
-        )).thenReturn(2);
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID)
+        )).thenReturn(count);
+    }
 
-        // Audit ghi thanh cong
+    // =====================================================
+    // MOCK AUDIT LOG
+    // =====================================================
+
+    private void mockAudit(String action, int result) {
+
         when(jdbc.update(
                 contains("INSERT INTO audit_logs"),
-                eq(11L),
-                eq("REGISTRATION_SUBMITTED"),
+                eq(STUDENT_ID),
+                eq(action),
                 eq("TOPIC_REGISTRATION"),
-                eq(100L),
+                eq(REGISTRATION_ID),
                 anyString()
+        )).thenReturn(result);
+    }
+
+    // =====================================================
+    // MOCK DANG KY LAI THANH CONG
+    // =====================================================
+
+    private void mockSuccessfulResubmission() {
+
+        mockExistingRegistration("REJECTED");
+
+        // Khong co du lieu phu thuoc
+        when(jdbc.queryForObject(
+                contains("FROM reports"),
+                eq(Integer.class),
+                eq(REGISTRATION_ID),
+                eq(REGISTRATION_ID),
+                eq(REGISTRATION_ID),
+                eq(REGISTRATION_ID)
+        )).thenReturn(0);
+
+        // Cap nhat ho so REJECTED -> PENDING
+        when(jdbc.update(
+                contains("UPDATE topic_registrations"),
+                eq(TOPIC_ID),
+                eq(STUDENT_ID),
+                any(LocalDateTime.class),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID),
+                eq(ROUND_ID)
         )).thenReturn(1);
+
+        // Xoa snapshot cu
+        when(jdbc.update(
+                contains("DELETE FROM registration_members"),
+                eq(REGISTRATION_ID)
+        )).thenReturn(2);
     }
 
     // =====================================================
@@ -190,13 +283,13 @@ class TopicRegistrationServiceTest {
         when(jdbc.queryForObject(
                 contains("slot_no = 1"),
                 eq(Integer.class),
-                eq(3L),
-                eq(11L)
+                eq(GROUP_ID),
+                eq(STUDENT_ID)
         )).thenReturn(0);
 
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
-                () -> service.registerTopic(3L, 1L)
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
         );
 
         assertEquals(
@@ -219,7 +312,7 @@ class TopicRegistrationServiceTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> service.registerTopic(0L, 1L)
+                () -> service.registerTopic(0L, TOPIC_ID)
         );
 
         verifyNoInteractions(
@@ -230,23 +323,18 @@ class TopicRegistrationServiceTest {
     }
 
     // =====================================================
-    // TEST 3: NHOM DA TUNG DANG KY
+    // TEST 3: NHOM DA CO HO SO PENDING
     // =====================================================
 
     @Test
     void groupCannotRegisterTwice() {
 
-        mockValidRegistrationConditions();
-
-        when(jdbc.queryForObject(
-                contains("FROM topic_registrations"),
-                eq(Integer.class),
-                eq(3L)
-        )).thenReturn(1);
+        mockValidConditions();
+        mockExistingRegistration("PENDING");
 
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
-                () -> service.registerTopic(3L, 1L)
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
         );
 
         assertEquals(
@@ -261,29 +349,24 @@ class TopicRegistrationServiceTest {
     }
 
     // =====================================================
-    // TEST 4: DE TAI DA DUOC GIU CHO
+    // TEST 4: DE TAI DA BI GIU CHO
     // =====================================================
 
     @Test
     void reservedTopicCannotBeRegisteredAgain() {
 
-        mockValidRegistrationConditions();
-
-        when(jdbc.queryForObject(
-                contains("FROM topic_registrations"),
-                eq(Integer.class),
-                eq(3L)
-        )).thenReturn(0);
+        mockValidConditions();
+        mockNoExistingRegistration();
 
         when(jdbc.queryForObject(
                 contains("status IN ('PENDING', 'APPROVED')"),
                 eq(Integer.class),
-                eq(1L)
+                eq(TOPIC_ID)
         )).thenReturn(1);
 
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
-                () -> service.registerTopic(3L, 1L)
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
         );
 
         assertEquals(
@@ -298,77 +381,67 @@ class TopicRegistrationServiceTest {
     }
 
     // =====================================================
-    // TEST 5: DANG KY THANH CONG, LUU SNAPSHOT VA AUDIT
+    // TEST 5: DANG KY MOI THANH CONG
     // =====================================================
 
     @Test
     void validLeaderCanRegisterTopicSuccessfully() {
 
-        mockValidRegistrationConditions();
+        mockValidConditions();
         mockNoExistingRegistration();
         mockSuccessfulInsert();
+        mockSnapshot(2);
+        mockAudit("REGISTRATION_SUBMITTED", 1);
 
         assertDoesNotThrow(
-                () -> service.registerTopic(3L, 1L)
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
         );
 
-        // Kiem tra co INSERT ho so dang ky
-        verify(jdbc, times(1)).update(
+        verify(jdbc).update(
                 any(PreparedStatementCreator.class),
                 any(KeyHolder.class)
         );
 
-        // Kiem tra luu snapshot 2 thanh vien
-        verify(jdbc, times(1)).update(
+        verify(jdbc).update(
                 contains("INSERT INTO registration_members"),
-                eq(100L),
-                eq(3L)
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID)
         );
 
-        // Kiem tra ghi nhat ky
-        verify(jdbc, times(1)).update(
+        verify(jdbc).update(
                 contains("INSERT INTO audit_logs"),
-                eq(11L),
+                eq(STUDENT_ID),
                 eq("REGISTRATION_SUBMITTED"),
                 eq("TOPIC_REGISTRATION"),
-                eq(100L),
-                contains("Group ID: 3")
+                eq(REGISTRATION_ID),
+                anyString()
         );
 
-        // Kiem tra khoa dot dang ky
-        verify(roundAccess).lockRound(1L);
+        verify(roundAccess).lockRound(ROUND_ID);
 
-        // Kiem tra thoi gian dang ky
         verify(roundAccess).requireStudentWindow(
-                eq(1L),
+                eq(ROUND_ID),
                 eq(clock.instant())
         );
 
-        // Kiem tra khoa sinh vien
-        verify(studentAccess).lockEnabledStudent(11L);
+        verify(studentAccess).lockEnabledStudent(STUDENT_ID);
     }
 
     // =====================================================
-    // TEST 6: SNAPSHOT KHONG DU THANH VIEN
+    // TEST 6: SNAPSHOT DANG KY MOI THAT BAI
     // =====================================================
 
     @Test
     void snapshotMemberCountMismatchIsRejected() {
 
-        mockValidRegistrationConditions();
+        mockValidConditions();
         mockNoExistingRegistration();
         mockSuccessfulInsert();
-
-        // DB chi luu 1 nguoi, nhom co 2 nguoi
-        when(jdbc.update(
-                contains("INSERT INTO registration_members"),
-                eq(100L),
-                eq(3L)
-        )).thenReturn(1);
+        mockSnapshot(1);
 
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
-                () -> service.registerTopic(3L, 1L)
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
         );
 
         assertEquals(
@@ -376,7 +449,6 @@ class TopicRegistrationServiceTest {
                 ex.getMessage()
         );
 
-        // Khong duoc ghi audit khi snapshot that bai
         verify(jdbc, never()).update(
                 contains("INSERT INTO audit_logs"),
                 any(),
@@ -384,6 +456,267 @@ class TopicRegistrationServiceTest {
                 any(),
                 any(),
                 any()
+        );
+    }
+
+    // =====================================================
+    // TEST 7: DANG KY LAI THANH CONG
+    // =====================================================
+
+    @Test
+    void rejectedGroupCanRegisterAgain() {
+
+        mockValidConditions();
+        mockSuccessfulResubmission();
+        mockSnapshot(2);
+        mockAudit("REGISTRATION_RESUBMITTED", 1);
+
+        assertDoesNotThrow(
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
+        );
+
+        // Khong INSERT ho so moi
+        verify(jdbc, never()).update(
+                any(PreparedStatementCreator.class),
+                any(KeyHolder.class)
+        );
+
+        // UPDATE ho so REJECTED
+        verify(jdbc).update(
+                contains("UPDATE topic_registrations"),
+                eq(TOPIC_ID),
+                eq(STUDENT_ID),
+                any(LocalDateTime.class),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID),
+                eq(ROUND_ID)
+        );
+
+        // Xoa snapshot cu
+        verify(jdbc).update(
+                contains("DELETE FROM registration_members"),
+                eq(REGISTRATION_ID)
+        );
+
+        // Them snapshot moi
+        verify(jdbc).update(
+                contains("INSERT INTO registration_members"),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID)
+        );
+
+        // Ghi audit dang ky lai
+        verify(jdbc).update(
+                contains("INSERT INTO audit_logs"),
+                eq(STUDENT_ID),
+                eq("REGISTRATION_RESUBMITTED"),
+                eq("TOPIC_REGISTRATION"),
+                eq(REGISTRATION_ID),
+                contains("Previous Topic ID: 2")
+        );
+    }
+
+    // =====================================================
+    // TEST 8: KHONG DANG KY LAI KHI APPROVED
+    // =====================================================
+
+    @Test
+    void approvedGroupCannotRegisterAgain() {
+
+        mockValidConditions();
+        mockExistingRegistration("APPROVED");
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
+        );
+
+        assertEquals(
+                "Nhom da tung dang ky de tai",
+                ex.getMessage()
+        );
+
+        verify(jdbc, never()).update(
+                contains("UPDATE topic_registrations"),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+        );
+
+        // Dung eq(Long) de tranh loi ambiguous
+        verify(jdbc, never()).update(
+                contains("DELETE FROM registration_members"),
+                eq(REGISTRATION_ID)
+        );
+
+        verify(jdbc, never()).update(
+                contains("INSERT INTO audit_logs"),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+        );
+    }
+
+    // =====================================================
+    // TEST 9: KHONG DANG KY LAI KHI CANCELLED
+    // =====================================================
+
+    @Test
+    void cancelledGroupCannotRegisterAgain() {
+
+        mockValidConditions();
+        mockExistingRegistration("CANCELLED");
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
+        );
+
+        verify(jdbc, never()).update(
+                contains("UPDATE topic_registrations"),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+        );
+    }
+
+    // =====================================================
+    // TEST 10: DANG KY LAI DE TAI DA BI GIU CHO
+    // =====================================================
+
+    @Test
+    void reRegisterReservedTopicFails() {
+
+        mockValidConditions();
+        mockSuccessfulResubmission();
+
+        when(jdbc.queryForObject(
+                contains("status IN ('PENDING', 'APPROVED')"),
+                eq(Integer.class),
+                eq(TOPIC_ID)
+        )).thenReturn(1);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
+        );
+
+        assertEquals(
+                "De tai da duoc nhom khac dang ky",
+                ex.getMessage()
+        );
+
+        verify(jdbc, never()).update(
+                contains("UPDATE topic_registrations"),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+        );
+    }
+
+    // =====================================================
+    // TEST 11: SNAPSHOT DANG KY LAI THAT BAI
+    // =====================================================
+
+    @Test
+    void reRegisterSnapshotFailure() {
+
+        mockValidConditions();
+        mockSuccessfulResubmission();
+        mockSnapshot(1);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
+        );
+
+        assertEquals(
+                "Luu danh sach thanh vien dang ky that bai",
+                ex.getMessage()
+        );
+
+        verify(jdbc, never()).update(
+                contains("INSERT INTO audit_logs"),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+        );
+    }
+
+    // =====================================================
+    // TEST 12: HO SO CO DU LIEU PHU THUOC
+    // =====================================================
+
+    @Test
+    void reRegisterWithDependentDataFails() {
+
+        mockValidConditions();
+        mockSuccessfulResubmission();
+
+        when(jdbc.queryForObject(
+                contains("FROM reports"),
+                eq(Integer.class),
+                eq(REGISTRATION_ID),
+                eq(REGISTRATION_ID),
+                eq(REGISTRATION_ID),
+                eq(REGISTRATION_ID)
+        )).thenReturn(1);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
+        );
+
+        assertEquals(
+                "Ho so da co du lieu xu ly, khong the dang ky lai",
+                ex.getMessage()
+        );
+
+        verify(jdbc, never()).update(
+                contains("UPDATE topic_registrations"),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+        );
+    }
+
+    // =====================================================
+    // TEST 13: AUDIT DANG KY LAI THAT BAI
+    // =====================================================
+
+    @Test
+    void reRegisterAuditFailure() {
+
+        mockValidConditions();
+        mockSuccessfulResubmission();
+        mockSnapshot(2);
+        mockAudit("REGISTRATION_RESUBMITTED", 0);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.registerTopic(GROUP_ID, TOPIC_ID)
+        );
+
+        assertEquals(
+                "Ghi nhat ky dang ky that bai",
+                ex.getMessage()
         );
     }
 }

@@ -56,7 +56,7 @@ public class TopicRegistrationController {
     }
 
     // =====================================================
-    // C03.1 - XEM DANH SACH DE TAI THEO DOT DANG KY
+    // C03.1 - XEM DANH SACH DE TAI THEO DOT
     // =====================================================
 
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
@@ -68,7 +68,7 @@ public class TopicRegistrationController {
             ) Long roundId,
             Model model) {
 
-        // Danh sach cac dot dang ky
+        // 1. Lay danh sach dot dang ky
         List<RegistrationRound> rounds = roundRepository
                 .findAllByOrderByCreatedAtDescIdDesc(
                         Pageable.unpaged()
@@ -77,36 +77,41 @@ public class TopicRegistrationController {
 
         model.addAttribute("rounds", rounds);
 
-        // Gia tri mac dinh
+        // 2. Gia tri mac dinh
         List<TopicView> topics = List.of();
         Long leaderGroupId = null;
-        boolean canRegister = false;
 
-        // Chi lay de tai khi da chon dot hop le
+        boolean canRegister = false;
+        boolean canReRegister = false;
+
+        // 3. Chi xu ly khi co roundId hop le
         if (roundId != null && roundId > 0) {
 
-            // Lay de tai da cong bo
+            // Lay cac de tai da duoc cong bo
             topics = topicRepository.findPublishedTopics(roundId);
 
             Authentication auth = SecurityContextHolder
                     .getContext()
                     .getAuthentication();
 
+            // Kiem tra quyen sinh vien
             boolean isStudent = auth != null
-                    && auth.getAuthorities().stream()
-                    .anyMatch(a ->
-                            "ROLE_STUDENT".equals(
-                                    a.getAuthority()
-                            )
-                    );
+                    && auth.isAuthenticated()
+                    && auth.getAuthorities()
+                            .stream()
+                            .anyMatch(authority ->
+                                    "ROLE_STUDENT".equals(
+                                            authority.getAuthority()
+                                    )
+                            );
 
             if (isStudent) {
 
-                // Xac dinh sinh vien dang dang nhap
+                // 4. Xac dinh sinh vien hien tai
                 Long studentId =
                         studentAccess.requireCurrentStudentId();
 
-                // Tim nhom sinh vien dang lam truong nhom
+                // 5. Tim nhom ma sinh vien la truong nhom
                 List<Long> leaderGroups = jdbc.queryForList(
                         """
                         SELECT sg.id
@@ -128,14 +133,14 @@ public class TopicRegistrationController {
 
                     leaderGroupId = leaderGroups.get(0);
 
-                    // Thoi gian hien tai theo UTC
+                    // 6. Lay thoi gian UTC
                     LocalDateTime now =
                             LocalDateTime.ofInstant(
                                     clock.instant(),
                                     ZoneOffset.UTC
                             );
 
-                    // Kiem tra dot dang ky dang mo
+                    // 7. Kiem tra dot dang ky OPEN
                     Integer validRound = jdbc.queryForObject(
                             """
                             SELECT COUNT(*)
@@ -151,7 +156,7 @@ public class TopicRegistrationController {
                             now
                     );
 
-                    // Kiem tra so luong thanh vien
+                    // 8. Kiem tra so thanh vien trong nhom
                     Integer validGroup = jdbc.queryForObject(
                             """
                             SELECT COUNT(*)
@@ -171,39 +176,64 @@ public class TopicRegistrationController {
                             leaderGroupId
                     );
 
-                    // Kiem tra nhom chua tung dang ky de tai
-                    Integer registrations = jdbc.queryForObject(
-                            """
-                            SELECT COUNT(*)
-                            FROM topic_registrations
-                            WHERE group_id = ?
-                            """,
-                            Integer.class,
-                            leaderGroupId
-                    );
+                    // 9. Lay trang thai ho so dang ky
+                    List<String> registrationStatuses =
+                            jdbc.queryForList(
+                                    """
+                                    SELECT status
+                                    FROM topic_registrations
+                                    WHERE group_id = ?
+                                    """,
+                                    String.class,
+                                    leaderGroupId
+                            );
 
-                    canRegister =
+                    // Nhom chua co ho so
+                    boolean noRegistration =
+                            registrationStatuses.isEmpty();
+
+                    // Nhom co ho so da bi tu choi
+                    boolean rejectedRegistration =
+                            registrationStatuses.size() == 1
+                            && "REJECTED".equals(
+                                    registrationStatuses.get(0)
+                            );
+
+                    // 10. Kiem tra dieu kien chung
+                    boolean validConditions =
                             validRound != null
                             && validRound > 0
                             && validGroup != null
-                            && validGroup > 0
-                            && registrations != null
-                            && registrations == 0;
+                            && validGroup > 0;
+
+                    // 11. Cho phep dang ky moi hoac dang ky lai
+                    canRegister =
+                            validConditions
+                            && (
+                                noRegistration
+                                || rejectedRegistration
+                            );
+
+                    // 12. Xac dinh hien nut Dang ky lai
+                    canReRegister =
+                            validConditions
+                            && rejectedRegistration;
                 }
             }
         }
 
-        // Truyen du lieu sang giao dien Thymeleaf
+        // 13. Truyen du lieu sang Thymeleaf
         model.addAttribute("topics", topics);
         model.addAttribute("roundId", roundId);
         model.addAttribute("leaderGroupId", leaderGroupId);
         model.addAttribute("canRegister", canRegister);
+        model.addAttribute("canReRegister", canReRegister);
 
         return "topics/list";
     }
 
     // =====================================================
-    // C03.2 - TRUONG NHOM DANG KY DE TAI
+    // C03.2 + C04.3 - DANG KY / DANG KY LAI DE TAI
     // =====================================================
 
     @PreAuthorize("hasRole('STUDENT')")
@@ -216,7 +246,7 @@ public class TopicRegistrationController {
 
         try {
 
-            // Xu ly dang ky trong Service
+            // Service tu quyet dinh INSERT hay UPDATE
             registrationService.registerTopic(
                     groupId,
                     topicId
@@ -224,7 +254,8 @@ public class TopicRegistrationController {
 
             redirect.addFlashAttribute(
                     "successMessage",
-                    "Dang ky de tai thanh cong! Dang cho duyet."
+                    "Dang ky de tai thanh cong! "
+                            + "Ho so dang cho truong khoa duyet."
             );
 
         } catch (
@@ -233,15 +264,19 @@ public class TopicRegistrationController {
                 DataIntegrityViolationException ex
         ) {
 
+            String errorMessage =
+                    ex instanceof DataIntegrityViolationException
+                            ? "Khong the dang ky do vi pham "
+                                    + "rang buoc du lieu."
+                            : ex.getMessage();
+
             redirect.addFlashAttribute(
                     "errorMessage",
-                    ex instanceof DataIntegrityViolationException
-                            ? "Khong the dang ky do vi pham rang buoc du lieu."
-                            : ex.getMessage()
+                    errorMessage
             );
         }
 
-        // Quay lai danh sach de tai cua dot da chon
+        // Tro ve danh sach de tai cua dot dang ky
         return "redirect:/topics?roundId=" + roundId;
     }
 }
