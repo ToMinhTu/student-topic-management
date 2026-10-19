@@ -3,61 +3,92 @@
     layout:decorate="~{layout}">
 
 <head>
-    <title>Danh sách Thông báo</title>
+    <title>Thông Báo</title>
     <!-- css rieng -->
     <th:block layout:fragment="css">
         <!-- link, style, etc -->
         <style>
+            /* hover */
+            .table-hover tbody tr {
+                transition: background-color 0.2s;
+                cursor: pointer;
+            }
 
+            /* format tab */
+            .nav-tabs .nav-link {
+                border: none;
+                border-bottom: 2px solid transparent;
+                color: #6c757d;
+                font-weight: 500;
+            }
+
+            .nav-tabs .nav-link.active {
+                color: var(--theme-color) !important;
+                border-bottom: 3px solid var(--theme-color) !important;
+                background: transparent;
+            }
+
+            .nav-tabs .nav-link:hover {
+                border-bottom: 2px solid #dee2e6;
+            }
         </style>
     </th:block>
 </head>
 
 <body>
     <div layout:fragment="content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Thông báo chính thức</h2>
-            <a th:href="@{/}" class="btn btn-outline-secondary">Quay lại Trang chủ</a>
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div class="page-title-tab mb-0">THÔNG BÁO</div>
+            <a th:href="@{/}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Về Trang
+                chủ</a>
         </div>
 
-        <div class="alert alert-info text-center py-4" th:if="${#lists.isEmpty(announcements)}">
-            Hiện tại chưa có thông báo mới nào được công bố
-        </div>
+        <div class="content-card">
+            <!-- navigation tab -->
+            <ul class="nav nav-tabs mb-4 border-bottom">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">THÔNG BÁO CHUNG</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">THÔNG BÁO CÁ NHÂN</a>
+                </li>
+            </ul>
 
-        <div class="card shadow-sm" th:if="${!#lists.isEmpty(announcements)}">
-            <div class="card-body p-0">
-                <table class="table table-hover table-striped mb-0">
-                    <thead class="table-dark">
+            <!-- Tim kiem -->
+            <div class="mb-4">
+                <div class="input-group shadow-sm" style="max-width: 500px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Tìm kiếm thông báo...">
+                </div>
+            </div>
+
+            <!-- alert -->
+            <div class="alert alert-info text-center py-4" th:if="${#lists.isEmpty(announcements)}">
+                <i class="bi bi-info-circle me-2"></i> Hiện tại chưa có thông báo mới nào được công bố
+            </div>
+
+            <div th:if="${!#lists.isEmpty(announcements)}" class="table-responsive">
+                <table class="table table-hover align-middle border mb-0">
+                    <thead class="bg-theme">
                         <tr>
-                            <th style="width: 80px;" class="text-center">STT</th>
-                            <th>Tiêu đề thông báo</th>
-                            <th>Người đăng</th>
-                            <th>Thời gian công bố (UTC)</th>
-                            <th style="width: 140px;" class="text-center">Thao tác</th>
+                            <th class="bg-theme py-3 px-3" style="width: 60%;">Tiêu đề</th>
+                            <th class="bg-theme py-3" style="width: 20%;">Người gửi</th>
+                            <th class="bg-theme py-3" style="width: 20%;">Thời gian gửi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="ann, stat : ${announcements}">
-                            <td th:text="${stat.count}" class="text-center"></td>
-                            <td>
-                                <a th:href="@{/announcements/{id}(id=${ann.id})}"
-                                    class="fw-bold text-decoration-none text-primary" th:text="${ann.title}">Tiêu đề
-                                    thông báo</a>
-                            </td>
-                            <td th:text="${ann.author.fullname}">Tên người đăng</td>
-                            <td th:text="${ann.publishedAt}">2026-10-16 10:00:00</td>
-                            <td class="text-center">
-                                <a th:action="@{announcements/{id}(id=${ann.id})}"
-                                    class="btn btn-sm btn-outline-primary">
-                                    Xem chi tiết
-                                </a>
-                            </td>
+                        <tr th:each="ann : ${announcements}"
+                            th:onclick="|window.location.href='@{/announcements/{id}(id=${ann.id})}'|">
+                            <td class="px-3"><a th:href="@{announcements/{id}(id=${ann.id})}"
+                                    class="text-decoration-none text-theme fw-bold" th:text="${ann.title}"></a></td>
+                            <td class="text-muted small" th:text="${ann.author.fullname}"></td>
+                            <td class="text-muted small"
+                                th:text="${#temporals.format(ann.publishedAt, 'dd/MM/yyyy HH:mm')}"></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
     </div>
 
     <!-- Js rieng -->

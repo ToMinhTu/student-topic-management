@@ -33,11 +33,11 @@
                     <td class="text-center">
                         <!-- Sua -->
                         <a th:href="@{/admin/departments/{id}/edit(id=${dept.id})}"
-                            class="btn btn-sm btn-warning">Sửa</a>
+                            class="btn btn-sm btn-warning" title="Sửa"><i class="bi bi-pencil-square"></i></a>
                         <!-- Xoa -->
                         <form th:action="@{/admin/departments/{id}/delete(id=${dept.id})}" method="post"
                             onsubmit="return confirm('Bạn có chắc chắn muốn xoá bộ môn này?');">
-                            <button type="submit" class="btn btn-sm btn-danger">Xoá</button>
+                            <button type="submit" class="btn btn-sm btn-danger" title="Xoá"><i class="bi bi-x"></i></button>
                         </form>
                     </td>
                 </tr>

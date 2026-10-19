@@ -1,0 +1,47 @@
+<!-- toan-D2 -->
+<!-- toan-D2 - thêm chức năng quản lý lịch bảo vệ -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết lịch bảo vệ</title>
+</head>
+
+<body>
+
+    <h1>Chi tiết lịch bảo vệ</h1>
+
+    <p>ID lịch bảo vệ:
+        <span th:text="${defense.id}"></span>
+    </p>
+
+    <p>Mã hồ sơ:
+        <span th:text="${defense.registrationId}"></span>
+    </p>
+
+    <p>Mã đợt:
+        <span th:text="${defense.roundId}"></span>
+    </p>
+
+    <p>Mã hội đồng:
+        <span th:text="${defense.councilId}"></span>
+    </p>
+
+    <p>Thời gian:
+        <span th:text="${defense.scheduledAt}"></span>
+    </p>
+
+    <p>Địa điểm:
+        <span th:text="${defense.location}"></span>
+    </p>
+
+    <p>Trạng thái:
+        <span th:text="${defense.status}"></span>
+    </p>
+
+    <a href="/defenses">Quay lại danh sách</a>
+
+</body>
+
+</html>

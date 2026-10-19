@@ -19,6 +19,7 @@ public class DepartmentService {
         this.repository = repository;
     }
 
+    @Transactional(readOnly = true)
     public List<Department> findAll() {
         return repository.findAll();
     }

@@ -27,20 +27,20 @@ public class Department {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Spring run ham nay truoc khi insert vao db de set gio utc
-    @PrePersist
-    void initializeTime() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now(ZoneOffset.UTC);
-        }
-    }
-
     public Department() {
     }
 
     public Department(String name, String description) {
         this.name = name;
         this.description = description;
+    }
+
+    // Spring run ham nay truoc khi insert vao db de set gio utc
+    @PrePersist
+    void initializeTime() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now(ZoneOffset.UTC);
+        }
     }
 
     public Department(Long id, String name, String description, LocalDateTime createdAt) {

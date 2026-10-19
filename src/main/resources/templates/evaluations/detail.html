@@ -1,0 +1,46 @@
+<!-- toan-D3 -->
+<!-- toan-D3 - thêm chức năng nhập điểm -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết phiếu chấm</title>
+</head>
+
+<body>
+
+    <h1>Chi tiết phiếu chấm</h1>
+
+    <p>
+        ID phiếu chấm:
+        <span th:text="${evaluation.id}"></span>
+    </p>
+
+    <p>
+        Mã phân công:
+        <span th:text="${evaluation.assignmentId}"></span>
+    </p>
+
+    <p>
+        Điểm:
+        <span th:text="${evaluation.score}"></span>
+    </p>
+
+    <p>
+        Nhận xét:
+        <span th:text="${evaluation.comments}"></span>
+    </p>
+
+    <p>
+        Thời gian nộp:
+        <span th:text="${evaluation.submittedAt}"></span>
+    </p>
+
+    <a href="/evaluations">
+        Quay lại danh sách
+    </a>
+
+</body>
+
+</html>

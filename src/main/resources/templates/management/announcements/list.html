@@ -3,7 +3,7 @@
     layout:decorate="~{layout}">
 
 <head>
-    <title>Quản lý Thông báo</title>
+    <title>Quản lý Bản Nháp</title>
     <!-- css rieng -->
     <th:block layout:fragment="css">
         <!-- link, style, etc -->
@@ -15,30 +15,40 @@
 
 <body>
     <div layout:fragment="content">
-        <h2>Danh sách Bản Nháp</h2>
+        <h2>Quản lý Bản Nháp Thông Báo</h2>
         <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
         <a th:href="@{/management/announcements/new}" class="btn btn-primary mb-3">+ Soạn thông báo mới</a>
 
-        <table class="table table-bordered bg-white">
+        <table class="table table-bordered bg-white shadow-sm align-middle">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
-                    <th>Tiêu đề</th>
+                    <th style="width: 50px;">ID</th>
+                    <th>Tiêu đề (Nháp)</th>
                     <th>Người tạo</th>
                     <th>Ngày tạo (UTC)</th>
-                    <th>Hành động</th>
+                    <th class="text-center" style="width: 220px;">Hành động</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="draft : ${drafts}">
                     <td th:text="${draft.id}"></td>
-                    <td th:text="${draft.title}"></td>
+                    <td th:text="${draft.title}" class="fw-bold"></td>
                     <td th:text="${draft.author.fullname}"></td>
                     <td th:text="${draft.createdAt}"></td>
-                    <td>
-                        <form th:action="@{management/announcements/{id}/publish(id=${draft.id})}" method="post">
-                            <button type="submit" class="btn btn-success btn-sm">Công bố ngay</button>
-                        </form>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a th:href="@{/management/announcements/{id}/edit(id=${draft.id})}"
+                                class="btn btn-sm btn-warning">Sửa</a>
+                            <form th:action="@{/management/announcements/{id}/delete(id=${draft.id})}" method="post"
+                                onsubmit="return confirm('Xóa bản nháp này?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                            </form>
+                            <form th:action="@{/management/announcements/{id}/publish(id=${draft.id})}" method="post"
+                                onsubmit="return confirm('Xác nhận Công bố toàn trường? Sau khi công bố sẽ không thể Sửa/Xóa nữa.');">
+                                <button type="submit" class="btn btn-success btn-sm">Công bố</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             </tbody>
