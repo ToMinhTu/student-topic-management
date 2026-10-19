@@ -39,6 +39,8 @@
 
             <th:block sec:authorize="hasRole('DEAN')">
                 <div class="menu-header">Nghiệp vụ khoa</div>
+                <li class="nav-item"><a th:href="@{/dean/topics/supervisors}" class="nav-link"><i
+                            class="bi bi-person-workspace me-2"></i>Phân công GVHD</a></li>
                 <li class="nav-item"><a th:href="@{/dean/rounds}" class="nav-link"><i
                             class="bi bi-calendar-check me-2"></i>QL Đăng ký</a></li>
                 <li class="nav-item"><a th:href="@{/councils}" class="nav-link"><i
