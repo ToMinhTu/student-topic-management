@@ -1,22 +1,23 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đề xuất đề tài</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 750px;
+    <style layout:fragment="css">
+        .topic-page { font-family: Arial, sans-serif; max-width: 750px;
                margin: 30px auto; }
-        label { display: block; margin-top: 16px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 10px;
+        .topic-page label { display: block; margin-top: 16px; font-weight: bold; }
+        .topic-page input, .topic-page textarea, .topic-page select { width: 100%; padding: 10px;
                           box-sizing: border-box; }
-        textarea { min-height: 100px; }
-        .error { color: #b91c1c; }
-        button { margin-top: 20px; padding: 12px 20px;
+        .topic-page textarea { min-height: 100px; }
+        .topic-page .error { color: #b91c1c; }
+        .topic-page button { margin-top: 20px; padding: 12px 20px;
                  cursor: pointer; }
     </style>
 </head>
 <body>
+<main layout:fragment="content" class="topic-page">
 
 <h1 th:text="${editMode} ? 'Chỉnh sửa đề xuất' : 'Tạo đề xuất mới'"></h1>
 
@@ -31,14 +32,19 @@
            th:text="${err}"></p>
     </div>
 
-    <label for="roundId">ID đợt đăng ký</label>
-    <input id="roundId" type="number" min="1"
-           th:field="*{roundId}" required>
+        <label for="roundId">Đợt đăng ký</label>
+    <select id="roundId" th:field="*{roundId}" th:disabled="${editMode}" required>
+        <option value="">-- Chọn đợt đăng ký --</option>
+        <option th:each="round : ${roundOptions}" th:value="${round.id}" th:text="${round.name}"></option>
+    </select>
+    <input th:if="${editMode}" type="hidden" th:field="*{roundId}">
     <p class="error" th:errors="*{roundId}"></p>
 
-    <label for="departmentId">ID bộ môn</label>
-    <input id="departmentId" type="number" min="1"
-           th:field="*{departmentId}" required>
+        <label for="departmentId">Bộ môn</label>
+    <select id="departmentId" th:field="*{departmentId}" required>
+        <option value="">-- Chọn bộ môn --</option>
+        <option th:each="department : ${departmentOptions}" th:value="${department.id}" th:text="${department.name}"></option>
+    </select>
     <p class="error" th:errors="*{departmentId}"></p>
 
     <label for="code">Mã đề tài</label>
@@ -64,5 +70,6 @@
     <a th:href="@{/topics/my}">Quay lại</a>
 </form>
 
+</main>
 </body>
 </html>

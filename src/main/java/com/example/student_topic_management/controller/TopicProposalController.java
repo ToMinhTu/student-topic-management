@@ -47,7 +47,7 @@ public class TopicProposalController {
     public String newForm(Model model) {
         model.addAttribute("topicForm", new TopicProposalForm());
         model.addAttribute("editMode", false);
-        return "topics/form";
+        return prepareForm(model);
     }
 
     @PostMapping
@@ -60,7 +60,7 @@ public class TopicProposalController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("editMode", false);
-            return "topics/form";
+            return prepareForm(model);
         }
 
         try {
@@ -75,7 +75,7 @@ public class TopicProposalController {
             bindingResult.reject(
                     "businessError", friendlyMessage(ex));
             model.addAttribute("editMode", false);
-            return "topics/form";
+            return prepareForm(model);
         }
     }
 
@@ -116,7 +116,7 @@ public class TopicProposalController {
         model.addAttribute("editMode", true);
         model.addAttribute("topicId", id);
 
-        return "topics/form";
+        return prepareForm(model);
     }
 
     @PostMapping("/{id}")
@@ -131,7 +131,7 @@ public class TopicProposalController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("editMode", true);
             model.addAttribute("topicId", id);
-            return "topics/form";
+            return prepareForm(model);
         }
 
         try {
@@ -147,7 +147,7 @@ public class TopicProposalController {
                     "businessError", friendlyMessage(ex));
             model.addAttribute("editMode", true);
             model.addAttribute("topicId", id);
-            return "topics/form";
+            return prepareForm(model);
         }
     }
 
@@ -167,6 +167,13 @@ public class TopicProposalController {
                 "success", "Đã gửi đề xuất để xét duyệt");
 
         return "redirect:/topics/" + id;
+    }
+
+    private String prepareForm(Model model) {
+        TopicProposalForm form = (TopicProposalForm) model.getAttribute("topicForm");
+        model.addAttribute("roundOptions", service.getProposalRounds(form == null ? null : form.getRoundId()));
+        model.addAttribute("departmentOptions", service.getDepartments());
+        return "topics/form";
     }
 
     private String friendlyMessage(Exception ex) {

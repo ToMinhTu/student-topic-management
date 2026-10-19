@@ -48,6 +48,23 @@ public class TopicProposalService {
         this.clock = clock;
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<RegistrationRound> getProposalRounds(Long selectedRoundId) {
+        requireProposer();
+        Instant now = Instant.now(clock);
+        return roundRepository.findAll(org.springframework.data.domain.Sort.by("id").descending())
+                .stream()
+                .filter(round -> roundPolicy.isProposalOpen(round, now)
+                        || round.getId().equals(selectedRoundId))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<com.example.student_topic_management.identity.entity.Department> getDepartments() {
+        requireProposer();
+        return departmentRepository.findAll(org.springframework.data.domain.Sort.by("name"));
+    }
+
     private AppUser requireProposer() {
         AppUser user = currentUserService.getCurrentUser();
 

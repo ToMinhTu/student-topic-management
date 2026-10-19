@@ -53,6 +53,20 @@ class TopicProposalServiceTest {
         when(topics.saveAndFlush(any())).thenAnswer(call -> call.getArgument(0));
     }
 
+    @Test
+    void roundOptionsExcludeUnavailableRoundsButKeepSelectedRoundForEditing() {
+        org.springframework.test.util.ReflectionTestUtils.setField(round, "id", 1L);
+        RegistrationRound closed = new RegistrationRound();
+        org.springframework.test.util.ReflectionTestUtils.setField(closed, "id", 2L);
+        closed.setStatus(RoundStatus.CLOSED);
+        RegistrationRound draft = new RegistrationRound();
+        org.springframework.test.util.ReflectionTestUtils.setField(draft, "id", 3L);
+        draft.setStatus(RoundStatus.DRAFT);
+        when(rounds.findAll(any(Sort.class))).thenReturn(List.of(round, closed, draft));
+        assertEquals(List.of(round), service.getProposalRounds(null));
+        assertEquals(List.of(round, closed), service.getProposalRounds(2L));
+    }
+
     private TopicProposalForm form() {
         TopicProposalForm form = new TopicProposalForm();
         form.setRoundId(1L);

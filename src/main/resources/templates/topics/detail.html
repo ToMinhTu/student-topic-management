@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chi tiết đề tài</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 850px;
+    <style layout:fragment="css">
+        .topic-page { font-family: Arial, sans-serif; max-width: 850px;
                margin: 30px auto; line-height: 1.6; }
-        .actions { margin-top: 24px; display: flex; gap: 12px; }
-        button, .btn { padding: 10px 15px; cursor: pointer; }
+        .topic-page .actions { margin-top: 24px; display: flex; gap: 12px; }
+        .topic-page button, .topic-page .btn { padding: 10px 15px; cursor: pointer; }
     </style>
 </head>
 <body>
+<main layout:fragment="content" class="topic-page">
 
 <h1 th:text="${topic.title}">Chi tiết đề tài</h1>
 
@@ -54,5 +55,6 @@
 
 <p><a th:href="@{/topics/my}">Quay lại danh sách</a></p>
 
+</main>
 </body>
 </html>

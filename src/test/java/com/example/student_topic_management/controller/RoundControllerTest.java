@@ -34,6 +34,7 @@ class RoundControllerTest {
         templates.setCharacterEncoding("UTF-8");
         SpringTemplateEngine engine = new SpringTemplateEngine();
         engine.setTemplateResolver(templates);
+        engine.addDialect(new nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect());
         ThymeleafViewResolver views = new ThymeleafViewResolver();
         views.setTemplateEngine(engine);
         views.setCharacterEncoding("UTF-8");

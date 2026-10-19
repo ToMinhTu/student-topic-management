@@ -103,6 +103,7 @@ class TopicProposalControllerTest {
         jdbc.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE code=?", ownerId, role);
         MockHttpSession session = login();
         mvc.perform(get("/topics/new").session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-sidebar\"")))
                 .andExpect(content().string(containsString("name=\"_csrf\"")));
         String url = mvc.perform(validPost("/topics").session(session)
                         .param("proposedBy", otherId.toString()).param("status", "PUBLISHED"))
@@ -111,9 +112,11 @@ class TopicProposalControllerTest {
         assertEquals(ownerId, jdbc.queryForObject("SELECT proposed_by FROM topics WHERE id=?", Long.class, id));
         assertEquals("DRAFT", jdbc.queryForObject("SELECT status FROM topics WHERE id=?", String.class, id));
         mvc.perform(get(url).session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-sidebar\"")))
                 .andExpect(content().string(containsString("Đề xuất kiểm thử")))
                 .andExpect(content().string(containsString("name=\"_csrf\"")));
-        mvc.perform(get(url + "/edit").session(session)).andExpect(status().isOk());
+        mvc.perform(get(url + "/edit").session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-sidebar\"")));
         mvc.perform(validPost(url, "Tên đã sửa").session(session))
                 .andExpect(status().is3xxRedirection()).andExpect(flash().attributeExists("success"));
         assertEquals("Tên đã sửa", jdbc.queryForObject("SELECT title FROM topics WHERE id=?", String.class, id));
@@ -121,10 +124,13 @@ class TopicProposalControllerTest {
                 .andExpect(redirectedUrl(url)).andExpect(flash().attributeExists("success"));
         assertEquals("SUBMITTED", jdbc.queryForObject("SELECT status FROM topics WHERE id=?", String.class, id));
         mvc.perform(get("/topics/my").session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-sidebar\"")))
                 .andExpect(content().string(containsString("Tên đã sửa")));
         mvc.perform(get(url).session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-sidebar\"")))
                 .andExpect(content().string(not(containsString("Gửi đề xuất"))));
         mvc.perform(validPost(url).session(session)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-sidebar\"")))
                 .andExpect(model().attributeHasErrors("topicForm"));
         assertEquals("Tên đã sửa", jdbc.queryForObject("SELECT title FROM topics WHERE id=?", String.class, id));
         mvc.perform(get(url + "/edit").session(session)).andExpect(redirectedUrl("/topics/my"))
@@ -137,6 +143,35 @@ class TopicProposalControllerTest {
         assertTrue(topics.findByIdAndProposedBy(id, otherId).isEmpty());
         assertEquals(1, topics.findByProposedBy(ownerId,
                 org.springframework.data.domain.PageRequest.of(0, 10)).getTotalElements());
+    }
+
+    @Test
+    void rendersSelectionsAndPreservesOptionsAfterValidationError() throws Exception {
+        MockHttpSession session = login();
+        mvc.perform(get("/topics/new").session(session))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("roundOptions", hasItem(hasProperty("id", is(roundId)))))
+                .andExpect(model().attribute("departmentOptions", hasItem(hasProperty("id", is(departmentId)))))
+                .andExpect(content().string(containsString("<select")));
+        mvc.perform(validPost("/topics", "").session(session))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasFieldErrors("topicForm", "title"))
+                .andExpect(model().attribute("roundOptions", hasItem(hasProperty("id", is(roundId)))))
+                .andExpect(model().attribute("departmentOptions", hasItem(hasProperty("id", is(departmentId)))));
+    }
+
+    @Test
+    void deanCanRenderRoundPagesAndMutationsRequireCsrf() throws Exception {
+        jdbc.update("DELETE FROM user_roles WHERE user_id=?", ownerId);
+        jdbc.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE code='DEAN'", ownerId);
+        MockHttpSession session = login();
+        mvc.perform(get("/dean/rounds").session(session)).andExpect(status().isOk());
+        mvc.perform(get("/dean/rounds/new").session(session)).andExpect(status().isOk());
+        mvc.perform(get("/dean/rounds/" + roundId).session(session)).andExpect(status().isOk());
+        mvc.perform(post("/dean/rounds/" + roundId + "/close").session(session))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/dean/rounds").with(user("student").roles("STUDENT")))
+                .andExpect(status().isForbidden());
     }
 
     @Test void requiresLogin() throws Exception {

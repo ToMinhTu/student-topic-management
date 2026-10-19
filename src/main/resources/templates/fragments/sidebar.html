@@ -52,6 +52,10 @@
                 <li class="nav-item"><a th:href="@{/groups}" class="nav-link"><i class="bi bi-collection me-2"></i>Nhóm
                         sinh viên</a></li>
             </th:block>
+            <th:block sec:authorize="hasAnyRole('LECTURER', 'STUDENT')">
+                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i
+                    class="bi bi-lightbulb me-2"></i>Đề xuất đề tài</a></li>
+            </th:block>
         </ul>
     </nav>
 </body>
