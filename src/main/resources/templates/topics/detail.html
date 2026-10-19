@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chi tiết đề tài</title>
+    <style layout:fragment="css">
+        .topic-page { font-family: Arial, sans-serif; max-width: 850px;
+               margin: 30px auto; line-height: 1.6; }
+        .topic-page .actions { margin-top: 24px; display: flex; gap: 12px; }
+        .topic-page button, .topic-page .btn { padding: 10px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<main layout:fragment="content" class="topic-page">
+
+<h1 th:text="${topic.title}">Chi tiết đề tài</h1>
+
+<p th:if="${success}" th:text="${success}"></p>
+<p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
+
+<p><strong>Mã đề tài:</strong>
+    <span th:text="${topic.code}"></span></p>
+
+<p><strong>Đợt đăng ký:</strong>
+    <span th:text="${topic.roundId}"></span></p>
+
+<p><strong>Bộ môn:</strong>
+    <span th:text="${topic.departmentId}"></span></p>
+
+<p><strong>Trạng thái:</strong>
+    <span th:text="${topic.status}"></span></p>
+
+<p th:if="${topic.rejectionReason}" role="alert"><strong>Lý do từ chối:</strong> <span th:text="${topic.rejectionReason}"></span></p>
+<h3>Mô tả</h3>
+<p th:text="${topic.description}"></p>
+
+<h3>Yêu cầu</h3>
+<p th:text="${topic.requirements}"></p>
+
+<div class="actions"
+     th:if="${topic.status.name() == 'DRAFT' or topic.status.name() == 'REJECTED'}">
+
+    <a class="btn"
+       th:href="@{/topics/{id}/edit(id=${topic.id})}">
+        Chỉnh sửa
+    </a>
+
+    <form th:action="@{/topics/{id}/submit(id=${topic.id})}"
+          method="post">
+        <button type="submit">
+            Gửi đề xuất
+        </button>
+    </form>
+</div>
+
+<form th:if="${topic.status.name() == 'DRAFT'}"
+      th:action="@{/topics/{id}/delete(id=${topic.id})}" method="post"
+      onsubmit="return confirm('Bạn có chắc muốn xóa đề xuất nháp này?');">
+    <button type="submit" class="btn btn-danger">Xóa đề xuất nháp</button>
+</form>
+<p><a th:href="@{/topics/my}">Quay lại danh sách</a></p>
+
+</main>
+</body>
+</html>
