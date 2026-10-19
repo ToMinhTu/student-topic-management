@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.student_topic_management.registration.dto.TopicView;
 
-@Repository
+@Repository("registrationTopicRepository")
 public class TopicRepository {
 
     private final JdbcTemplate jdbc;
