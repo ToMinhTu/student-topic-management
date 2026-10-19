@@ -33,11 +33,13 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
             Long proposedBy
     );
 
+    @Query("SELECT (count(t) > 0) FROM Topic t WHERE t.roundId = :roundId AND upper(trim(t.code)) = :code")
     boolean existsByRoundIdAndCode(
             Long roundId,
             String code
     );
 
+    @Query("SELECT (count(t) > 0) FROM Topic t WHERE t.roundId = :roundId AND upper(trim(t.code)) = :code AND t.id <> :id")
     boolean existsByRoundIdAndCodeAndIdNot(
             Long roundId,
             String code,

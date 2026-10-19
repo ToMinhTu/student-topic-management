@@ -20,6 +20,21 @@ class TopicProposalErrorTest {
         mvc = MockMvcBuilders.standaloneSetup(new TopicProposalController(service)).build();
     }
 
+    @Test void deleteConstraintFailureHasSafeMessage() throws Exception {
+        doThrow(new DataIntegrityViolationException("SECRET SQL")) .when(service).deleteDraft(1L);
+        mvc.perform(post("/topics/1/delete"))
+                .andExpect(redirectedUrl("/topics/my"))
+                .andExpect(flash().attribute("error", allOf(containsString("dữ liệu liên quan"),
+                        not(containsString("SECRET SQL")))));
+    }
+
+    @Test void deleteMissingTopicReturnsFriendlyError() throws Exception {
+        doThrow(new BusinessException("Không tìm thấy đề tài")).when(service).deleteDraft(1L);
+        mvc.perform(post("/topics/1/delete"))
+                .andExpect(redirectedUrl("/topics/my"))
+                .andExpect(flash().attributeExists("error"));
+    }
+
     private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder form(String path) {
         return post(path).param("roundId", "1").param("departmentId", "2")
                 .param("code", "CODE").param("title", "Title").param("description", "Description");

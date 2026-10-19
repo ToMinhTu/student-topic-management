@@ -31,6 +31,7 @@ public class TopicProposalService {
     private final CurrentUserService currentUserService;
     private final RoundPolicy roundPolicy;
     private final Clock clock;
+    private final TopicAuditService audit;
 
     public TopicProposalService(
             TopicRepository topicRepository,
@@ -38,7 +39,7 @@ public class TopicProposalService {
             DepartmentRepository departmentRepository,
             CurrentUserService currentUserService,
             RoundPolicy roundPolicy,
-            Clock clock) {
+            Clock clock, TopicAuditService audit) {
 
         this.topicRepository = topicRepository;
         this.roundRepository = roundRepository;
@@ -46,6 +47,7 @@ public class TopicProposalService {
         this.currentUserService = currentUserService;
         this.roundPolicy = roundPolicy;
         this.clock = clock;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -63,6 +65,54 @@ public class TopicProposalService {
     public java.util.List<com.example.student_topic_management.identity.entity.Department> getDepartments() {
         requireProposer();
         return departmentRepository.findAll(org.springframework.data.domain.Sort.by("name"));
+    }
+
+    private void validateTopicId(Long topicId) {
+        if (topicId == null || topicId <= 0) throw new BusinessException("ID đề tài không hợp lệ");
+    }
+
+    private String normalizeCode(String code) {
+        if (code == null) throw new BusinessException("Mã đề tài không được để trống");
+        String normalized = code.strip().toUpperCase(java.util.Locale.ROOT);
+        requireText(normalized, "Mã đề tài", 40);
+        if (normalized.codePoints().anyMatch(ch -> Character.isWhitespace(ch) || Character.isSpaceChar(ch)
+                || Character.isISOControl(ch))) {
+            throw new BusinessException("Mã đề tài không được chứa khoảng trắng hoặc ký tự điều khiển");
+        }
+        return normalized;
+    }
+
+    private void reopenRejected(Topic topic, Long actorId) {
+        if (topic.getStatus() != TopicStatus.REJECTED) return;
+        audit.record(topic, actorId, "TOPIC_REOPEN");
+        audit.snapshotReview(topic, actorId);
+        topic.setDepartmentDecision(null);
+        topic.setDepartmentReviewedBy(null);
+        topic.setDepartmentReviewedAt(null);
+        topic.setDepartmentComment(null);
+        topic.setApprovedBy(null);
+        topic.setApprovedAt(null);
+        topic.setRejectionReason(null);
+        topic.setPublishedAt(null);
+        topic.setStatus(TopicStatus.DRAFT);
+    }
+
+    @Transactional
+    public void deleteDraft(Long topicId) {
+        AppUser user = requireProposer();
+        validateTopicId(topicId);
+        Topic topic = topicRepository.findByIdForUpdate(topicId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy đề tài"));
+        if (!user.getId().equals(topic.getProposedBy())) {
+            throw new BusinessException("Bạn không phải người đề xuất đề tài");
+        }
+        if (topic.getStatus() != TopicStatus.DRAFT) {
+            throw new BusinessException("Chỉ được xóa đề tài nháp");
+        }
+        requireProposalRound(topic.getRoundId());
+        audit.record(topic, user.getId(), "TOPIC_DELETE");
+        topicRepository.delete(topic);
+        topicRepository.flush();
     }
 
     private AppUser requireProposer() {
@@ -151,7 +201,7 @@ public class TopicProposalService {
             throw new BusinessException("Yêu cầu đề tài vượt quá dung lượng cho phép");
         }
 
-        requireText(form.getCode(), "Mã đề tài", 40);
+        normalizeCode(form.getCode());
         requireText(form.getTitle(), "Tên đề tài", 255);
         requireText(
                 form.getDescription(),
@@ -173,8 +223,7 @@ public class TopicProposalService {
         topic.setRoundId(form.getRoundId());
         topic.setDepartmentId(form.getDepartmentId());
 
-        topic.setCode(requireText(
-                form.getCode(), "Mã đề tài", 40));
+        topic.setCode(normalizeCode(form.getCode()));
 
         topic.setTitle(requireText(
                 form.getTitle(), "Tên đề tài", 255));
@@ -199,7 +248,7 @@ public class TopicProposalService {
         validateForm(form);
         requireProposalRound(form.getRoundId());
 
-        String code = form.getCode().trim();
+        String code = normalizeCode(form.getCode());
 
         if (topicRepository.existsByRoundIdAndCode(
                 form.getRoundId(), code)) {
@@ -215,7 +264,9 @@ public class TopicProposalService {
         topic.setProposedBy(user.getId());
         topic.setStatus(TopicStatus.DRAFT);
 
-        return topicRepository.saveAndFlush(topic);
+        Topic saved = topicRepository.saveAndFlush(topic);
+        audit.record(saved, user.getId(), "TOPIC_CREATE");
+        return saved;
     }
 
     @Transactional
@@ -224,6 +275,7 @@ public class TopicProposalService {
 
         AppUser user = requireProposer();
 
+        validateTopicId(topicId);
         Topic topic = topicRepository.findByIdForUpdate(topicId)
                 .orElseThrow(() -> new BusinessException(
                     "Không tìm thấy đề tài"
@@ -235,9 +287,9 @@ public class TopicProposalService {
             );
         }
 
-        if (topic.getStatus() != TopicStatus.DRAFT) {
+        if (topic.getStatus() != TopicStatus.DRAFT && topic.getStatus() != TopicStatus.REJECTED) {
             throw new BusinessException(
-                "Chỉ được sửa đề tài ở trạng thái nháp"
+                "Chỉ được sửa đề tài nháp hoặc bị từ chối"
             );
         }
 
@@ -252,7 +304,7 @@ public class TopicProposalService {
 
         requireProposalRound(topic.getRoundId());
 
-        String code = form.getCode().trim();
+        String code = normalizeCode(form.getCode());
 
         if (topicRepository.existsByRoundIdAndCodeAndIdNot(
                 topic.getRoundId(), code, topicId)) {
@@ -261,15 +313,18 @@ public class TopicProposalService {
             );
         }
 
+        reopenRejected(topic, user.getId());
         copyFormToTopic(form, topic);
-
-        return topicRepository.saveAndFlush(topic);
+        Topic saved = topicRepository.saveAndFlush(topic);
+        audit.record(saved, user.getId(), "TOPIC_UPDATE");
+        return saved;
     }
 
     @Transactional
     public Topic submitProposal(Long topicId) {
         AppUser user = requireProposer();
 
+        validateTopicId(topicId);
         Topic topic = topicRepository.findByIdForUpdate(topicId)
                 .orElseThrow(() -> new BusinessException(
                     "Không tìm thấy đề tài"
@@ -281,17 +336,25 @@ public class TopicProposalService {
             );
         }
 
-        if (topic.getStatus() != TopicStatus.DRAFT) {
+        if (topic.getStatus() != TopicStatus.DRAFT && topic.getStatus() != TopicStatus.REJECTED) {
             throw new BusinessException(
-                "Chỉ đề tài nháp mới được gửi"
+                "Chỉ đề tài nháp hoặc bị từ chối mới được gửi"
             );
         }
 
         requireProposalRound(topic.getRoundId());
 
+        String code = normalizeCode(topic.getCode());
+        if (topicRepository.existsByRoundIdAndCodeAndIdNot(topic.getRoundId(), code, topicId)) {
+            throw new BusinessException("Mã đề tài đã tồn tại trong đợt này");
+        }
+        reopenRejected(topic, user.getId());
+        topic.setCode(code);
         topic.setStatus(TopicStatus.SUBMITTED);
 
-        return topicRepository.saveAndFlush(topic);
+        Topic saved = topicRepository.saveAndFlush(topic);
+        audit.record(saved, user.getId(), "TOPIC_SUBMIT");
+        return saved;
     }
 
     @Transactional(readOnly = true)

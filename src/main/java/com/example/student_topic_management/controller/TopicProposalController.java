@@ -98,9 +98,10 @@ public class TopicProposalController {
         Topic topic = service.getMyTopicDetail(id);
 
         if (topic.getStatus()
-                != com.example.student_topic_management.enums.TopicStatus.DRAFT) {
+                != com.example.student_topic_management.enums.TopicStatus.DRAFT
+                && topic.getStatus() != com.example.student_topic_management.enums.TopicStatus.REJECTED) {
             throw new BusinessException(
-                    "Chỉ được sửa đề xuất ở trạng thái nháp");
+                    "Chỉ được sửa đề xuất nháp hoặc bị từ chối");
         }
 
         TopicProposalForm form = new TopicProposalForm();
@@ -167,6 +168,19 @@ public class TopicProposalController {
                 "success", "Đã gửi đề xuất để xét duyệt");
 
         return "redirect:/topics/" + id;
+    }
+
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes attributes) {
+        try {
+            service.deleteDraft(id);
+            attributes.addFlashAttribute("success", "Đã xóa đề xuất nháp");
+        } catch (BusinessException ex) {
+            attributes.addFlashAttribute("error", ex.getMessage());
+        } catch (DataIntegrityViolationException ex) {
+            attributes.addFlashAttribute("error", "Không thể xóa đề tài vì còn dữ liệu liên quan (GVHD hoặc đăng ký).");
+        }
+        return "redirect:/topics/my";
     }
 
     private String prepareForm(Model model) {

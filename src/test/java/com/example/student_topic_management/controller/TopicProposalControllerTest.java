@@ -174,6 +174,151 @@ class TopicProposalControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test void deletesDraftAndRetainsAuditHistory() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        mvc.perform(post("/topics/" + id + "/delete").session(session).with(csrf()))
+                .andExpect(redirectedUrl("/topics/my")).andExpect(flash().attributeExists("success"));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM topics WHERE id=?", Integer.class, id));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM audit_logs WHERE entity_type='TOPIC' "
+                + "AND entity_id=? AND actor_id=? AND action='TOPIC_DELETE'", Integer.class, id, ownerId));
+        mvc.perform(post("/topics/" + id + "/delete").session(session).with(csrf()))
+                .andExpect(redirectedUrl("/topics/my")).andExpect(flash().attributeExists("error"));
+    }
+
+    @Test void deleteRequiresOwnerAndDraft() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        mvc.perform(post("/topics/" + id + "/delete").with(user(otherUsername).roles("STUDENT")).with(csrf()))
+                .andExpect(redirectedUrl("/topics/my")).andExpect(flash().attributeExists("error"));
+        mvc.perform(post("/topics/" + id + "/submit").session(session).with(csrf()))
+                .andExpect(flash().attributeExists("success"));
+        mvc.perform(post("/topics/" + id + "/delete").session(session).with(csrf()))
+                .andExpect(flash().attributeExists("error"));
+        assertEquals("SUBMITTED", jdbc.queryForObject("SELECT status FROM topics WHERE id=?", String.class, id));
+    }
+
+    @Test void deleteRejectsSupervisorForeignKeyWithoutDeletingRelatedData() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        jdbc.update("INSERT INTO lecturers(user_id,lecturer_code,department_id) VALUES (?,?,?)",
+                ownerId, "B02-" + ownerId, departmentId);
+        jdbc.update("INSERT INTO topic_supervisors(topic_id,lecturer_id,slot_no) VALUES (?,?,1)", id, ownerId);
+        mvc.perform(post("/topics/" + id + "/delete").session(session).with(csrf()))
+                .andExpect(redirectedUrl("/topics/my"))
+                .andExpect(flash().attribute("error", containsString("dữ liệu liên quan")));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM topics WHERE id=?", Integer.class, id));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM topic_supervisors WHERE topic_id=?", Integer.class, id));
+    }
+
+    private void reject(Long id) {
+        jdbc.update("UPDATE topics SET status='REJECTED',department_decision='REJECTED',"
+                + "department_reviewed_by=?,department_reviewed_at=UTC_TIMESTAMP(),department_comment=?,"
+                + "approved_by=?,approved_at=UTC_TIMESTAMP(),rejection_reason=?,published_at=UTC_TIMESTAMP() WHERE id=?",
+                ownerId, "Old department review", ownerId, "Old rejection reason", id);
+        em.clear();
+    }
+
+    private void assertOldReviewCleared(Long id) {
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM topics WHERE id=? AND department_decision IS NULL "
+                + "AND department_reviewed_by IS NULL AND department_reviewed_at IS NULL AND department_comment IS NULL "
+                + "AND approved_by IS NULL AND approved_at IS NULL AND rejection_reason IS NULL AND published_at IS NULL",
+                Integer.class, id));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM audit_logs WHERE entity_type='TOPIC' AND entity_id=? "
+                + "AND action='TOPIC_REVIEW_SNAPSHOT' AND details LIKE '%Old rejection reason%'", Integer.class, id));
+    }
+
+    @Test void editsRejectedAndResubmitsWithReviewHistory() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        reject(id);
+        mvc.perform(get("/topics/" + id).session(session))
+                .andExpect(content().string(containsString("Old rejection reason")));
+        mvc.perform(get("/topics/" + id + "/edit").session(session)).andExpect(status().isOk());
+        mvc.perform(validPost("/topics/" + id, "Revised title").session(session))
+                .andExpect(redirectedUrl("/topics/" + id));
+        assertEquals("DRAFT", jdbc.queryForObject("SELECT status FROM topics WHERE id=?", String.class, id));
+        assertOldReviewCleared(id);
+        mvc.perform(post("/topics/" + id + "/submit").session(session).with(csrf()))
+                .andExpect(flash().attributeExists("success"));
+        assertEquals("SUBMITTED", jdbc.queryForObject("SELECT status FROM topics WHERE id=?", String.class, id));
+    }
+
+    @Test void directlyResubmitsRejectedWithHistory() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        reject(id);
+        mvc.perform(post("/topics/" + id + "/submit").session(session).with(csrf()))
+                .andExpect(flash().attributeExists("success"));
+        assertEquals("SUBMITTED", jdbc.queryForObject("SELECT status FROM topics WHERE id=?", String.class, id));
+        assertOldReviewCleared(id);
+    }
+
+    @Test void normalizedDuplicateAndSelfUpdateAreHandled() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        mvc.perform(post("/topics").session(session).with(csrf())
+                        .param("roundId", roundId.toString()).param("departmentId", departmentId.toString())
+                        .param("code", "  b02-code  ").param("title", "Duplicate").param("description", "Test"))
+                .andExpect(status().isOk()).andExpect(model().attributeHasErrors("topicForm"));
+        mvc.perform(post("/topics/" + id).session(session).with(csrf())
+                        .param("roundId", roundId.toString()).param("departmentId", departmentId.toString())
+                        .param("code", "  b02-code  ").param("title", "Normalized").param("description", "Test"))
+                .andExpect(redirectedUrl("/topics/" + id));
+        assertEquals("B02-CODE", jdbc.queryForObject("SELECT code FROM topics WHERE id=?", String.class, id));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM topics WHERE round_id=?", Integer.class, roundId));
+    }
+
+    @Test void deleteRejectsRegistrationForeignKeyEvenForDraft() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        jdbc.update("INSERT INTO students(user_id,student_code,department_id) VALUES (?,?,?)",
+                otherId, "B02-" + otherId, departmentId);
+        jdbc.update("INSERT INTO student_groups(round_id,name) VALUES (?,?)", roundId, username);
+        Long groupId = jdbc.queryForObject("SELECT id FROM student_groups WHERE round_id=? AND name=?",
+                Long.class, roundId, username);
+        jdbc.update("INSERT INTO topic_registrations(group_id,topic_id,round_id,status,submitted_by) VALUES (?,?,?,'CANCELLED',?)",
+                groupId, id, roundId, otherId);
+        mvc.perform(post("/topics/" + id + "/delete").session(session).with(csrf()))
+                .andExpect(redirectedUrl("/topics/my"))
+                .andExpect(flash().attribute("error", containsString("dữ liệu liên quan")));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM topics WHERE id=?", Integer.class, id));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM topic_registrations WHERE topic_id=?", Integer.class, id));
+    }
+
+    @Test void sameNormalizedCodeIsAllowedInAnotherRound() throws Exception {
+        MockHttpSession session = login();
+        create(session);
+        String name = "Another-" + username;
+        jdbc.update("INSERT INTO registration_rounds(name,round_type,proposal_starts_at,proposal_ends_at,"
+                + "student_starts_at,student_ends_at,status,created_by) SELECT ?,round_type,proposal_starts_at,"
+                + "proposal_ends_at,student_starts_at,student_ends_at,status,created_by FROM registration_rounds WHERE id=?",
+                name, roundId);
+        Long secondRound = jdbc.queryForObject("SELECT id FROM registration_rounds WHERE name=?", Long.class, name);
+        mvc.perform(post("/topics").session(session).with(csrf())
+                        .param("roundId", secondRound.toString()).param("departmentId", departmentId.toString())
+                        .param("code", " b02-code ").param("title", "Second round").param("description", "Test"))
+                .andExpect(status().is3xxRedirection()).andExpect(flash().attributeExists("success"));
+        assertEquals("B02-CODE", jdbc.queryForObject("SELECT code FROM topics WHERE round_id=?", String.class, secondRound));
+    }
+
+    @Test void longReviewSnapshotPreservesUnicodeWithoutTruncation() throws Exception {
+        MockHttpSession session = login();
+        Long id = create(session);
+        reject(id);
+        String reason = "😀".repeat(16000);
+        jdbc.update("UPDATE topics SET rejection_reason=? WHERE id=?", reason, id);
+        em.clear();
+        mvc.perform(post("/topics/" + id + "/submit").session(session).with(csrf()))
+                .andExpect(flash().attributeExists("success"));
+        java.util.List<String> chunks = jdbc.queryForList("SELECT details FROM audit_logs WHERE entity_type='TOPIC' "
+                + "AND entity_id=? AND action='TOPIC_REVIEW_SNAPSHOT' AND details LIKE 'rejectionReason part=%' ORDER BY id",
+                String.class, id);
+        assertTrue(chunks.size() > 1);
+        assertEquals(reason, chunks.stream().map(chunk -> chunk.substring(chunk.indexOf('\n') + 1))
+                .collect(java.util.stream.Collectors.joining()));
+    }
+
     @Test void requiresLogin() throws Exception {
         mvc.perform(get("/topics/my")).andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
@@ -183,7 +328,7 @@ class TopicProposalControllerTest {
         for (String path : new String[]{"/topics/my", "/topics/new", "/topics/1", "/topics/1/edit"}) {
             mvc.perform(get(path).with(user("admin").roles("ADMIN"))).andExpect(status().isForbidden());
         }
-        for (String path : new String[]{"/topics", "/topics/1", "/topics/1/submit"}) {
+        for (String path : new String[]{"/topics", "/topics/1", "/topics/1/submit", "/topics/1/delete"}) {
             mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()))
                     .andExpect(status().isForbidden());
         }
@@ -191,7 +336,7 @@ class TopicProposalControllerTest {
 
     @Test void csrfIsRequiredForEveryMutation() throws Exception {
         MockHttpSession session = login();
-        for (String path : new String[]{"/topics", "/topics/1", "/topics/1/submit"}) {
+        for (String path : new String[]{"/topics", "/topics/1", "/topics/1/submit", "/topics/1/delete"}) {
             mvc.perform(post(path).session(session)).andExpect(status().isForbidden());
             mvc.perform(post(path).session(session).with(csrf().useInvalidToken()))
                     .andExpect(status().isForbidden());

@@ -23,6 +23,7 @@ class TopicProposalServiceTest {
     private final RegistrationRoundRepository rounds = mock(RegistrationRoundRepository.class);
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
     private final CurrentUserService current = mock(CurrentUserService.class);
+    private final TopicAuditService audit = mock(TopicAuditService.class);
     private final Instant now = Instant.parse("2026-10-22T05:00:00Z");
     private TopicProposalService service;
     private AppUser user;
@@ -32,7 +33,7 @@ class TopicProposalServiceTest {
     @BeforeEach
     void setup() {
         service = new TopicProposalService(topics, rounds, departments, current,
-                new RoundPolicy(), Clock.fixed(now, ZoneOffset.UTC));
+                new RoundPolicy(), Clock.fixed(now, ZoneOffset.UTC), audit);
         user = new AppUser();
         user.setId(7L);
         user.setRoles(Set.of(new Role(1L, "LECTURER")));
@@ -65,6 +66,132 @@ class TopicProposalServiceTest {
         when(rounds.findAll(any(Sort.class))).thenReturn(List.of(round, closed, draft));
         assertEquals(List.of(round), service.getProposalRounds(null));
         assertEquals(List.of(round, closed), service.getProposalRounds(2L));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"LECTURER", "STUDENT"})
+    void deletesOwnedDraftWithAudit(String role) {
+        user.setRoles(Set.of(new Role(1L, role)));
+        service.deleteDraft(9L);
+        verify(topics).delete(topic);
+        verify(topics).flush();
+        verify(audit).record(topic, 7L, "TOPIC_DELETE");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"SUBMITTED", "REJECTED", "APPROVED", "PUBLISHED"})
+    void deletionRejectsEveryNonDraftStatus(String status) {
+        topic.setStatus(TopicStatus.valueOf(status));
+        assertThrows(BusinessException.class, () -> service.deleteDraft(9L));
+        verify(topics, never()).delete(any());
+        verifyNoInteractions(audit);
+    }
+
+    @Test void deletionRejectsOtherOwnerInvalidIdsAndMissingTopic() {
+        assertThrows(BusinessException.class, () -> service.deleteDraft(null));
+        assertThrows(BusinessException.class, () -> service.deleteDraft(0L));
+        assertThrows(BusinessException.class, () -> service.deleteDraft(-1L));
+        assertThrows(BusinessException.class, () -> service.deleteDraft(999L));
+        topic.setProposedBy(8L);
+        assertThrows(BusinessException.class, () -> service.deleteDraft(9L));
+        verify(topics, never()).delete(any());
+    }
+
+    @Test void deletionRequiresActiveProposer() {
+        user.setEnabled(false);
+        assertThrows(BusinessException.class, () -> service.deleteDraft(9L));
+        user.setEnabled(true);
+        user.setRoles(Set.of(new Role(1L, "ADMIN")));
+        assertThrows(BusinessException.class, () -> service.deleteDraft(9L));
+        verifyNoInteractions(topics);
+    }
+
+    @Test void deletionUsesProposalWindowAndPropagatesForeignKeyFailure() {
+        round.setProposalStartsAt(LocalDateTime.ofInstant(now.plusSeconds(1), ZoneOffset.UTC));
+        assertThrows(BusinessException.class, () -> service.deleteDraft(9L));
+        round.setProposalStartsAt(LocalDateTime.ofInstant(now.minusSeconds(1), ZoneOffset.UTC));
+        round.setProposalEndsAt(LocalDateTime.ofInstant(now, ZoneOffset.UTC));
+        assertThrows(BusinessException.class, () -> service.deleteDraft(9L));
+        round.setProposalEndsAt(LocalDateTime.ofInstant(now.plusSeconds(1), ZoneOffset.UTC));
+        round.setStatus(RoundStatus.CLOSED);
+        assertThrows(BusinessException.class, () -> service.deleteDraft(9L));
+        round.setStatus(RoundStatus.OPEN);
+        doThrow(new org.springframework.dao.DataIntegrityViolationException("FK"))
+                .when(topics).flush();
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> service.deleteDraft(9L));
+    }
+
+    private void rejectedTopic() {
+        topic.setStatus(TopicStatus.REJECTED);
+        topic.setDepartmentDecision("REJECTED");
+        topic.setDepartmentReviewedBy(10L);
+        topic.setDepartmentReviewedAt(LocalDateTime.ofInstant(now.minusSeconds(10), ZoneOffset.UTC));
+        topic.setDepartmentComment("Old department comment");
+        topic.setApprovedBy(11L);
+        topic.setApprovedAt(LocalDateTime.ofInstant(now.minusSeconds(5), ZoneOffset.UTC));
+        topic.setRejectionReason("Old rejection reason");
+        topic.setPublishedAt(LocalDateTime.ofInstant(now.minusSeconds(2), ZoneOffset.UTC));
+    }
+
+    private void assertReviewReset() {
+        assertNull(topic.getDepartmentDecision());
+        assertNull(topic.getDepartmentReviewedBy());
+        assertNull(topic.getDepartmentReviewedAt());
+        assertNull(topic.getDepartmentComment());
+        assertNull(topic.getApprovedBy());
+        assertNull(topic.getApprovedAt());
+        assertNull(topic.getRejectionReason());
+        assertNull(topic.getPublishedAt());
+    }
+
+    @Test void editingRejectedSnapshotsBeforeResetAndReturnsDraft() {
+        rejectedTopic();
+        doAnswer(call -> {
+            assertEquals("Old rejection reason", topic.getRejectionReason());
+            assertEquals("REJECTED", topic.getDepartmentDecision());
+            return null;
+        }).when(audit).snapshotReview(topic, 7L);
+        service.updateDraft(9L, form());
+        assertEquals(TopicStatus.DRAFT, topic.getStatus());
+        assertEquals("New title", topic.getTitle());
+        assertReviewReset();
+        verify(audit).snapshotReview(topic, 7L);
+        verify(audit).record(topic, 7L, "TOPIC_UPDATE");
+    }
+
+    @Test void rejectedCanBeResubmittedOnceWithReviewReset() {
+        rejectedTopic();
+        service.submitProposal(9L);
+        assertEquals(TopicStatus.SUBMITTED, topic.getStatus());
+        assertReviewReset();
+        verify(audit).snapshotReview(topic, 7L);
+        verify(audit).record(topic, 7L, "TOPIC_SUBMIT");
+        assertThrows(BusinessException.class, () -> service.submitProposal(9L));
+    }
+
+    @Test void failedRejectedEditOrSubmitPreservesReview() {
+        rejectedTopic();
+        topic.setProposedBy(8L);
+        assertThrows(BusinessException.class, () -> service.updateDraft(9L, form()));
+        assertThrows(BusinessException.class, () -> service.submitProposal(9L));
+        topic.setProposedBy(7L);
+        round.setProposalEndsAt(LocalDateTime.ofInstant(now, ZoneOffset.UTC));
+        assertThrows(BusinessException.class, () -> service.updateDraft(9L, form()));
+        assertThrows(BusinessException.class, () -> service.submitProposal(9L));
+        assertEquals(TopicStatus.REJECTED, topic.getStatus());
+        assertEquals("Old rejection reason", topic.getRejectionReason());
+        verifyNoInteractions(audit);
+    }
+
+    @Test void normalizesCodeBeforeDuplicateCheckAndRejectsInternalWhitespace() {
+        TopicProposalForm f = form();
+        f.setCode("\u2003dt-abc\u2003");
+        assertEquals("DT-ABC", service.createDraft(f).getCode());
+        verify(topics).existsByRoundIdAndCode(1L, "DT-ABC");
+        f.setCode("DT ABC");
+        assertThrows(BusinessException.class, () -> service.createDraft(f));
+        f.setCode("ß".repeat(21));
+        assertThrows(BusinessException.class, () -> service.createDraft(f));
     }
 
     private TopicProposalForm form() {

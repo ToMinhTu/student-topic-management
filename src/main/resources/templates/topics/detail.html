@@ -31,6 +31,7 @@
 <p><strong>Trạng thái:</strong>
     <span th:text="${topic.status}"></span></p>
 
+<p th:if="${topic.rejectionReason}" role="alert"><strong>Lý do từ chối:</strong> <span th:text="${topic.rejectionReason}"></span></p>
 <h3>Mô tả</h3>
 <p th:text="${topic.description}"></p>
 
@@ -38,7 +39,7 @@
 <p th:text="${topic.requirements}"></p>
 
 <div class="actions"
-     th:if="${topic.status.name() == 'DRAFT'}">
+     th:if="${topic.status.name() == 'DRAFT' or topic.status.name() == 'REJECTED'}">
 
     <a class="btn"
        th:href="@{/topics/{id}/edit(id=${topic.id})}">
@@ -53,6 +54,11 @@
     </form>
 </div>
 
+<form th:if="${topic.status.name() == 'DRAFT'}"
+      th:action="@{/topics/{id}/delete(id=${topic.id})}" method="post"
+      onsubmit="return confirm('Bạn có chắc muốn xóa đề xuất nháp này?');">
+    <button type="submit" class="btn btn-danger">Xóa đề xuất nháp</button>
+</form>
 <p><a th:href="@{/topics/my}">Quay lại danh sách</a></p>
 
 </main>
