@@ -72,7 +72,7 @@ class TopicRegistrationServiceTest {
 
         // Nhom dang FORMING
         when(jdbc.queryForList(
-                contains("SELECT status"),
+                contains("FROM student_groups"),
                 eq(String.class),
                 eq(GROUP_ID),
                 eq(ROUND_ID)
@@ -95,7 +95,7 @@ class TopicRegistrationServiceTest {
     }
 
     // =====================================================
-    // MOCK DIEU KIEN HOP LE
+    // CAC HAM HO TRO MOCK
     // =====================================================
 
     private void mockValidConditions() {
@@ -123,10 +123,6 @@ class TopicRegistrationServiceTest {
         )).thenReturn(0);
     }
 
-    // =====================================================
-    // MOCK NHOM CHUA CO HO SO
-    // =====================================================
-
     private void mockNoExistingRegistration() {
 
         when(jdbc.query(
@@ -135,10 +131,6 @@ class TopicRegistrationServiceTest {
                 eq(GROUP_ID)
         )).thenReturn(List.of());
     }
-
-    // =====================================================
-    // MOCK HO SO DA TON TAI
-    // =====================================================
 
     private void mockExistingRegistration(String status) {
 
@@ -149,6 +141,7 @@ class TopicRegistrationServiceTest {
         )).thenAnswer(invocation -> {
 
             RowMapper<?> mapper = invocation.getArgument(1);
+
             ResultSet rs = mock(ResultSet.class);
 
             when(rs.getLong("id"))
@@ -167,10 +160,6 @@ class TopicRegistrationServiceTest {
         });
     }
 
-    // =====================================================
-    // MOCK INSERT HO SO MOI
-    // =====================================================
-
     private void mockSuccessfulInsert() {
 
         when(jdbc.update(
@@ -185,6 +174,7 @@ class TopicRegistrationServiceTest {
                     invocation.getArgument(1);
 
             Connection connection = mock(Connection.class);
+
             PreparedStatement statement =
                     mock(PreparedStatement.class);
 
@@ -208,10 +198,6 @@ class TopicRegistrationServiceTest {
         });
     }
 
-    // =====================================================
-    // MOCK SNAPSHOT THANH VIEN
-    // =====================================================
-
     private void mockSnapshot(int count) {
 
         when(jdbc.update(
@@ -220,10 +206,6 @@ class TopicRegistrationServiceTest {
                 eq(GROUP_ID)
         )).thenReturn(count);
     }
-
-    // =====================================================
-    // MOCK AUDIT LOG
-    // =====================================================
 
     private void mockAudit(String action, int result) {
 
@@ -237,15 +219,11 @@ class TopicRegistrationServiceTest {
         )).thenReturn(result);
     }
 
-    // =====================================================
-    // MOCK DANG KY LAI THANH CONG
-    // =====================================================
+    private void mockSuccessfulResubmission(String status) {
 
-    private void mockSuccessfulResubmission() {
+        mockExistingRegistration(status);
 
-        mockExistingRegistration("REJECTED");
-
-        // Khong co du lieu phu thuoc
+        // Ho so khong co du lieu phu thuoc
         when(jdbc.queryForObject(
                 contains("FROM reports"),
                 eq(Integer.class),
@@ -255,7 +233,7 @@ class TopicRegistrationServiceTest {
                 eq(REGISTRATION_ID)
         )).thenReturn(0);
 
-        // Cap nhat ho so REJECTED -> PENDING
+        // Cap nhat ho so cu thanh PENDING
         when(jdbc.update(
                 contains("UPDATE topic_registrations"),
                 eq(TOPIC_ID),
@@ -274,7 +252,46 @@ class TopicRegistrationServiceTest {
     }
 
     // =====================================================
-    // TEST 1: KHONG PHAI TRUONG NHOM
+    // CAC HAM MOCK CHO C04.4 - HUY DANG KY
+    // =====================================================
+
+    private void mockCancellation(String status) {
+
+        // Tim nhom va dot dang ky cua ho so
+        when(jdbc.query(
+                contains("SELECT group_id, round_id"),
+                ArgumentMatchers.<RowMapper<long[]>>any(),
+                eq(REGISTRATION_ID)
+        )).thenReturn(
+                List.of(new long[]{GROUP_ID, ROUND_ID})
+        );
+
+        // Kiem tra trang thai ho so duoc khoa
+        when(jdbc.queryForList(
+                contains("FROM topic_registrations"),
+                eq(String.class),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID),
+                eq(ROUND_ID)
+        )).thenReturn(List.of(status));
+    }
+
+    private void mockSuccessfulCancellation() {
+
+        mockCancellation("PENDING");
+
+        when(jdbc.update(
+                contains("SET status = 'CANCELLED'"),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID),
+                eq(ROUND_ID)
+        )).thenReturn(1);
+
+        mockAudit("REGISTRATION_CANCELLED", 1);
+    }
+
+    // =====================================================
+    // TEST 1: KHONG PHAI TRUONG NHOM KHONG DUOC DANG KY
     // =====================================================
 
     @Test
@@ -338,7 +355,7 @@ class TopicRegistrationServiceTest {
         );
 
         assertEquals(
-                "Nhom da tung dang ky de tai",
+                "Ho so hien tai khong cho phep dang ky lai",
                 ex.getMessage()
         );
 
@@ -428,7 +445,7 @@ class TopicRegistrationServiceTest {
     }
 
     // =====================================================
-    // TEST 6: SNAPSHOT DANG KY MOI THAT BAI
+    // TEST 6: LUU SNAPSHOT THAT BAI
     // =====================================================
 
     @Test
@@ -451,23 +468,19 @@ class TopicRegistrationServiceTest {
 
         verify(jdbc, never()).update(
                 contains("INSERT INTO audit_logs"),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any()
         );
     }
 
     // =====================================================
-    // TEST 7: DANG KY LAI THANH CONG
+    // TEST 7: DANG KY LAI SAU KHI BI TU CHOI
     // =====================================================
 
     @Test
     void rejectedGroupCanRegisterAgain() {
 
         mockValidConditions();
-        mockSuccessfulResubmission();
+        mockSuccessfulResubmission("REJECTED");
         mockSnapshot(2);
         mockAudit("REGISTRATION_RESUBMITTED", 1);
 
@@ -475,13 +488,11 @@ class TopicRegistrationServiceTest {
                 () -> service.registerTopic(GROUP_ID, TOPIC_ID)
         );
 
-        // Khong INSERT ho so moi
         verify(jdbc, never()).update(
                 any(PreparedStatementCreator.class),
                 any(KeyHolder.class)
         );
 
-        // UPDATE ho so REJECTED
         verify(jdbc).update(
                 contains("UPDATE topic_registrations"),
                 eq(TOPIC_ID),
@@ -492,20 +503,17 @@ class TopicRegistrationServiceTest {
                 eq(ROUND_ID)
         );
 
-        // Xoa snapshot cu
         verify(jdbc).update(
                 contains("DELETE FROM registration_members"),
                 eq(REGISTRATION_ID)
         );
 
-        // Them snapshot moi
         verify(jdbc).update(
                 contains("INSERT INTO registration_members"),
                 eq(REGISTRATION_ID),
                 eq(GROUP_ID)
         );
 
-        // Ghi audit dang ky lai
         verify(jdbc).update(
                 contains("INSERT INTO audit_logs"),
                 eq(STUDENT_ID),
@@ -532,59 +540,74 @@ class TopicRegistrationServiceTest {
         );
 
         assertEquals(
-                "Nhom da tung dang ky de tai",
+                "Ho so hien tai khong cho phep dang ky lai",
                 ex.getMessage()
         );
 
         verify(jdbc, never()).update(
                 contains("UPDATE topic_registrations"),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any(), any()
         );
 
-        // Dung eq(Long) de tranh loi ambiguous
         verify(jdbc, never()).update(
                 contains("DELETE FROM registration_members"),
                 eq(REGISTRATION_ID)
         );
-
-        verify(jdbc, never()).update(
-                contains("INSERT INTO audit_logs"),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
-        );
     }
 
     // =====================================================
-    // TEST 9: KHONG DANG KY LAI KHI CANCELLED
+    // TEST 9: DANG KY LAI SAU KHI HUY
     // =====================================================
 
     @Test
-    void cancelledGroupCannotRegisterAgain() {
+    void cancelledGroupCanRegisterAgain() {
 
         mockValidConditions();
-        mockExistingRegistration("CANCELLED");
+        mockSuccessfulResubmission("CANCELLED");
+        mockSnapshot(2);
+        mockAudit("REGISTRATION_RESUBMITTED", 1);
 
-        assertThrows(
-                IllegalStateException.class,
+        assertDoesNotThrow(
                 () -> service.registerTopic(GROUP_ID, TOPIC_ID)
         );
 
-        verify(jdbc, never()).update(
+        // Phai su dung lai ho so cu
+        verify(jdbc).update(
                 contains("UPDATE topic_registrations"),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                eq(TOPIC_ID),
+                eq(STUDENT_ID),
+                any(LocalDateTime.class),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID),
+                eq(ROUND_ID)
+        );
+
+        // Khong INSERT ho so moi
+        verify(jdbc, never()).update(
+                any(PreparedStatementCreator.class),
+                any(KeyHolder.class)
+        );
+
+        // Lam moi snapshot
+        verify(jdbc).update(
+                contains("DELETE FROM registration_members"),
+                eq(REGISTRATION_ID)
+        );
+
+        verify(jdbc).update(
+                contains("INSERT INTO registration_members"),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID)
+        );
+
+        // Ghi nhat ky dang ky lai
+        verify(jdbc).update(
+                contains("INSERT INTO audit_logs"),
+                eq(STUDENT_ID),
+                eq("REGISTRATION_RESUBMITTED"),
+                eq("TOPIC_REGISTRATION"),
+                eq(REGISTRATION_ID),
+                anyString()
         );
     }
 
@@ -596,7 +619,7 @@ class TopicRegistrationServiceTest {
     void reRegisterReservedTopicFails() {
 
         mockValidConditions();
-        mockSuccessfulResubmission();
+        mockSuccessfulResubmission("REJECTED");
 
         when(jdbc.queryForObject(
                 contains("status IN ('PENDING', 'APPROVED')"),
@@ -616,12 +639,7 @@ class TopicRegistrationServiceTest {
 
         verify(jdbc, never()).update(
                 contains("UPDATE topic_registrations"),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any(), any()
         );
     }
 
@@ -633,7 +651,7 @@ class TopicRegistrationServiceTest {
     void reRegisterSnapshotFailure() {
 
         mockValidConditions();
-        mockSuccessfulResubmission();
+        mockSuccessfulResubmission("REJECTED");
         mockSnapshot(1);
 
         IllegalStateException ex = assertThrows(
@@ -648,12 +666,7 @@ class TopicRegistrationServiceTest {
 
         verify(jdbc, never()).update(
                 contains("INSERT INTO audit_logs"),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any()
         );
     }
 
@@ -665,7 +678,7 @@ class TopicRegistrationServiceTest {
     void reRegisterWithDependentDataFails() {
 
         mockValidConditions();
-        mockSuccessfulResubmission();
+        mockSuccessfulResubmission("REJECTED");
 
         when(jdbc.queryForObject(
                 contains("FROM reports"),
@@ -688,12 +701,7 @@ class TopicRegistrationServiceTest {
 
         verify(jdbc, never()).update(
                 contains("UPDATE topic_registrations"),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                any(), any(), any(), any(), any(), any()
         );
     }
 
@@ -705,7 +713,7 @@ class TopicRegistrationServiceTest {
     void reRegisterAuditFailure() {
 
         mockValidConditions();
-        mockSuccessfulResubmission();
+        mockSuccessfulResubmission("REJECTED");
         mockSnapshot(2);
         mockAudit("REGISTRATION_RESUBMITTED", 0);
 
@@ -717,6 +725,221 @@ class TopicRegistrationServiceTest {
         assertEquals(
                 "Ghi nhat ky dang ky that bai",
                 ex.getMessage()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 14: HUY HO SO PENDING THANH CONG
+    // =====================================================
+
+    @Test
+    void leaderCanCancelPendingRegistration() {
+
+        mockSuccessfulCancellation();
+
+        assertDoesNotThrow(
+                () -> service.cancelRegistration(REGISTRATION_ID)
+        );
+
+        verify(roundAccess).lockRound(ROUND_ID);
+
+        verify(roundAccess).requireStudentWindow(
+                ROUND_ID,
+                clock.instant()
+        );
+
+        verify(studentAccess).lockEnabledStudent(STUDENT_ID);
+
+        verify(jdbc).update(
+                contains("SET status = 'CANCELLED'"),
+                eq(REGISTRATION_ID),
+                eq(GROUP_ID),
+                eq(ROUND_ID)
+        );
+
+        verify(jdbc).update(
+                contains("INSERT INTO audit_logs"),
+                eq(STUDENT_ID),
+                eq("REGISTRATION_CANCELLED"),
+                eq("TOPIC_REGISTRATION"),
+                eq(REGISTRATION_ID),
+                anyString()
+        );
+
+        // Khong xoa ho so hay snapshot
+        verify(jdbc, never()).update(
+                contains("DELETE FROM registration_members"),
+                anyLong()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 15: THANH VIEN THUONG KHONG DUOC HUY
+    // =====================================================
+
+    @Test
+    void nonLeaderCannotCancelRegistration() {
+
+        mockCancellation("PENDING");
+
+        when(jdbc.queryForObject(
+                contains("slot_no = 1"),
+                eq(Integer.class),
+                eq(GROUP_ID),
+                eq(STUDENT_ID)
+        )).thenReturn(0);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.cancelRegistration(REGISTRATION_ID)
+        );
+
+        assertEquals(
+                "Chi truong nhom moi duoc huy dang ky",
+                ex.getMessage()
+        );
+
+        verify(jdbc, never()).update(
+                contains("SET status = 'CANCELLED'"),
+                anyLong(), anyLong(), anyLong()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 16: KHONG HUY HO SO APPROVED
+    // =====================================================
+
+    @Test
+    void approvedRegistrationCannotBeCancelled() {
+
+        mockCancellation("APPROVED");
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.cancelRegistration(REGISTRATION_ID)
+        );
+
+        assertEquals(
+                "Chi duoc huy ho so dang cho duyet",
+                ex.getMessage()
+        );
+
+        verify(jdbc, never()).update(
+                contains("SET status = 'CANCELLED'"),
+                anyLong(), anyLong(), anyLong()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 17: KHONG HUY HO SO REJECTED
+    // =====================================================
+
+    @Test
+    void rejectedRegistrationCannotBeCancelled() {
+
+        mockCancellation("REJECTED");
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.cancelRegistration(REGISTRATION_ID)
+        );
+
+        verify(jdbc, never()).update(
+                contains("SET status = 'CANCELLED'"),
+                anyLong(), anyLong(), anyLong()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 18: KHONG HUY LAN HAI
+    // =====================================================
+
+    @Test
+    void cancelledRegistrationCannotBeCancelledAgain() {
+
+        mockCancellation("CANCELLED");
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.cancelRegistration(REGISTRATION_ID)
+        );
+
+        verify(jdbc, never()).update(
+                contains("SET status = 'CANCELLED'"),
+                anyLong(), anyLong(), anyLong()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 19: KHONG HUY NGOAI THOI HAN
+    // =====================================================
+
+    @Test
+    void cannotCancelOutsideStudentWindow() {
+
+        mockCancellation("PENDING");
+
+        doThrow(new IllegalStateException(
+                "Ngoai thoi gian dang ky sinh vien"
+        )).when(roundAccess).requireStudentWindow(
+                eq(ROUND_ID),
+                eq(clock.instant())
+        );
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.cancelRegistration(REGISTRATION_ID)
+        );
+
+        assertEquals(
+                "Ngoai thoi gian dang ky sinh vien",
+                ex.getMessage()
+        );
+
+        verify(jdbc, never()).update(
+                contains("SET status = 'CANCELLED'"),
+                anyLong(), anyLong(), anyLong()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 20: AUDIT HUY THAT BAI
+    // =====================================================
+
+    @Test
+    void cancelAuditFailure() {
+
+        mockSuccessfulCancellation();
+
+        mockAudit("REGISTRATION_CANCELLED", 0);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.cancelRegistration(REGISTRATION_ID)
+        );
+
+        assertEquals(
+                "Ghi nhat ky huy dang ky that bai",
+                ex.getMessage()
+        );
+    }
+
+    // =====================================================
+    // C04.4 - TEST 21: MA HO SO KHONG HOP LE
+    // =====================================================
+
+    @Test
+    void invalidRegistrationIdCannotBeCancelled() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.cancelRegistration(0L)
+        );
+
+        verifyNoInteractions(
+                jdbc,
+                studentAccess,
+                roundAccess
         );
     }
 }

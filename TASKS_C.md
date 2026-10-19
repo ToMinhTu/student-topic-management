@@ -154,10 +154,20 @@ Vấn đề cần rà soát
 - decided_at và audit_logs.created_at lệch khoảng 7 giờ; cần thống nhất quy ước múi giờ UTC/Asia/Ho_Chi_Minh.
 - Sidebar hiển thị nhãn vai trò “Sinh viên” với tài khoản dean.c04.test; cần kiểm tra logic trình bày vai trò, dù chức năng DEAN đã truy cập được.
 C04.4 – Hủy đăng ký
-- [ ] Xây dựng chức năng hủy đăng ký.
-- [ ] Kiểm tra trạng thái và quyền hủy.
-- [ ] Ghi audit log khi hủy.
-- [ ] Kiểm thử các trường hợp không được hủy.
+- [x] Xây dựng chức năng hủy đăng ký đề tài.
+- [x] Chỉ trưởng nhóm được phép hủy.
+- [x] Chỉ cho phép hủy hồ sơ PENDING.
+- [x] Kiểm tra nhóm FORMING và thời hạn đăng ký.
+- [x] Chuyển trạng thái PENDING → CANCELLED.
+- [x] Giải phóng đề tài khi hủy (reserved_topic_id = NULL).
+- [x] Ghi audit REGISTRATION_CANCELLED.
+- [x] Giữ nguyên hồ sơ và snapshot thành viên.
+- [x] Cho phép đăng ký lại sau hủy (CANCELLED → PENDING).
+- [x] Unit Test: 21/21 PASS (toàn bộ TopicRegistrationServiceTest).
+- [x] Integration Test C04.4: 3/3 PASS.
+- [x] Kiểm thử hủy đăng ký qua giao diện.
+- [x] Kiểm tra trạng thái CANCELLED và audit trên MySQL.
+- [ ] Xác nhận lần cuối luồng đăng ký lại sau hủy trên giao diện.
 7. C05 – Nộp và tải báo cáo
 - [ ] Upload báo cáo PDF.
 - [ ] Kiểm tra định dạng và dung lượng file.

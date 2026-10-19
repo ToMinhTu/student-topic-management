@@ -55,8 +55,14 @@ public class TopicRegistrationController {
         this.roundRepository = roundRepository;
     }
 
+    private record RegistrationInfo(
+            Long id,
+            String status,
+            Long topicId
+    ) {}
+
     // =====================================================
-    // C03.1 - XEM DANH SACH DE TAI THEO DOT
+    // C03 - DANH SACH DE TAI
     // =====================================================
 
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
@@ -68,7 +74,6 @@ public class TopicRegistrationController {
             ) Long roundId,
             Model model) {
 
-        // 1. Lay danh sach dot dang ky
         List<RegistrationRound> rounds = roundRepository
                 .findAllByOrderByCreatedAtDescIdDesc(
                         Pageable.unpaged()
@@ -77,24 +82,26 @@ public class TopicRegistrationController {
 
         model.addAttribute("rounds", rounds);
 
-        // 2. Gia tri mac dinh
         List<TopicView> topics = List.of();
+
         Long leaderGroupId = null;
+        Long registrationId = null;
+        Long registeredTopicId = null;
+
+        String registrationStatus = null;
 
         boolean canRegister = false;
         boolean canReRegister = false;
+        boolean canCancel = false;
 
-        // 3. Chi xu ly khi co roundId hop le
         if (roundId != null && roundId > 0) {
 
-            // Lay cac de tai da duoc cong bo
             topics = topicRepository.findPublishedTopics(roundId);
 
             Authentication auth = SecurityContextHolder
                     .getContext()
                     .getAuthentication();
 
-            // Kiem tra quyen sinh vien
             boolean isStudent = auth != null
                     && auth.isAuthenticated()
                     && auth.getAuthorities()
@@ -107,11 +114,9 @@ public class TopicRegistrationController {
 
             if (isStudent) {
 
-                // 4. Xac dinh sinh vien hien tai
                 Long studentId =
                         studentAccess.requireCurrentStudentId();
 
-                // 5. Tim nhom ma sinh vien la truong nhom
                 List<Long> leaderGroups = jdbc.queryForList(
                         """
                         SELECT sg.id
@@ -133,14 +138,12 @@ public class TopicRegistrationController {
 
                     leaderGroupId = leaderGroups.get(0);
 
-                    // 6. Lay thoi gian UTC
                     LocalDateTime now =
                             LocalDateTime.ofInstant(
                                     clock.instant(),
                                     ZoneOffset.UTC
                             );
 
-                    // 7. Kiem tra dot dang ky OPEN
                     Integer validRound = jdbc.queryForObject(
                             """
                             SELECT COUNT(*)
@@ -156,7 +159,6 @@ public class TopicRegistrationController {
                             now
                     );
 
-                    // 8. Kiem tra so thanh vien trong nhom
                     Integer validGroup = jdbc.queryForObject(
                             """
                             SELECT COUNT(*)
@@ -176,64 +178,94 @@ public class TopicRegistrationController {
                             leaderGroupId
                     );
 
-                    // 9. Lay trang thai ho so dang ky
-                    List<String> registrationStatuses =
-                            jdbc.queryForList(
+                    List<RegistrationInfo> registrations =
+                            jdbc.query(
                                     """
-                                    SELECT status
+                                    SELECT id, status, topic_id
                                     FROM topic_registrations
                                     WHERE group_id = ?
                                     """,
-                                    String.class,
+                                    (rs, rowNum) ->
+                                            new RegistrationInfo(
+                                                    rs.getLong("id"),
+                                                    rs.getString("status"),
+                                                    rs.getLong("topic_id")
+                                            ),
                                     leaderGroupId
                             );
 
-                    // Nhom chua co ho so
-                    boolean noRegistration =
-                            registrationStatuses.isEmpty();
-
-                    // Nhom co ho so da bi tu choi
-                    boolean rejectedRegistration =
-                            registrationStatuses.size() == 1
-                            && "REJECTED".equals(
-                                    registrationStatuses.get(0)
-                            );
-
-                    // 10. Kiem tra dieu kien chung
-                    boolean validConditions =
+                    boolean validWindow =
                             validRound != null
-                            && validRound > 0
-                            && validGroup != null
+                            && validRound > 0;
+
+                    boolean validMembers =
+                            validGroup != null
                             && validGroup > 0;
 
-                    // 11. Cho phep dang ky moi hoac dang ky lai
-                    canRegister =
-                            validConditions
+                    boolean noRegistration =
+                            registrations.isEmpty();
+
+                    boolean reRegistration =
+                            registrations.size() == 1
                             && (
-                                noRegistration
-                                || rejectedRegistration
+                                "REJECTED".equals(
+                                        registrations.get(0).status()
+                                )
+                                || "CANCELLED".equals(
+                                        registrations.get(0).status()
+                                )
                             );
 
-                    // 12. Xac dinh hien nut Dang ky lai
+                    if (registrations.size() == 1) {
+
+                        RegistrationInfo current =
+                                registrations.get(0);
+
+                        registrationId = current.id();
+                        registrationStatus = current.status();
+                        registeredTopicId = current.topicId();
+
+                        canCancel =
+                                validWindow
+                                && "PENDING".equals(
+                                        current.status()
+                                );
+                    }
+
+                    canRegister =
+                            validWindow
+                            && validMembers
+                            && (
+                                noRegistration
+                                || reRegistration
+                            );
+
                     canReRegister =
-                            validConditions
-                            && rejectedRegistration;
+                            validWindow
+                            && validMembers
+                            && reRegistration;
                 }
             }
         }
 
-        // 13. Truyen du lieu sang Thymeleaf
         model.addAttribute("topics", topics);
         model.addAttribute("roundId", roundId);
         model.addAttribute("leaderGroupId", leaderGroupId);
+
+        model.addAttribute("registrationId", registrationId);
+        model.addAttribute("registrationStatus", registrationStatus);
+        model.addAttribute("registeredTopicId", registeredTopicId);
+
         model.addAttribute("canRegister", canRegister);
         model.addAttribute("canReRegister", canReRegister);
+        model.addAttribute("canCancel", canCancel);
 
         return "topics/list";
     }
 
     // =====================================================
-    // C03.2 + C04.3 - DANG KY / DANG KY LAI DE TAI
+    // C03 + C04.3 + C04.4
+    // DANG KY MOI / DANG KY LAI
     // =====================================================
 
     @PreAuthorize("hasRole('STUDENT')")
@@ -246,7 +278,6 @@ public class TopicRegistrationController {
 
         try {
 
-            // Service tu quyet dinh INSERT hay UPDATE
             registrationService.registerTopic(
                     groupId,
                     topicId
@@ -276,7 +307,50 @@ public class TopicRegistrationController {
             );
         }
 
-        // Tro ve danh sach de tai cua dot dang ky
+        return "redirect:/topics?roundId=" + roundId;
+    }
+
+    // =====================================================
+    // C04.4 - HUY DANG KY DE TAI
+    // =====================================================
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @PostMapping("/registrations/{registrationId:\\d+}/cancel")
+    public String cancelRegistration(
+            @PathVariable("registrationId") Long registrationId,
+            @RequestParam("roundId") Long roundId,
+            RedirectAttributes redirect) {
+
+        try {
+
+            registrationService.cancelRegistration(
+                    registrationId
+            );
+
+            redirect.addFlashAttribute(
+                    "successMessage",
+                    "Huy dang ky de tai thanh cong! "
+                            + "Ban co the dang ky lai trong thoi han."
+            );
+
+        } catch (
+                IllegalArgumentException |
+                IllegalStateException |
+                DataIntegrityViolationException ex
+        ) {
+
+            String errorMessage =
+                    ex instanceof DataIntegrityViolationException
+                            ? "Khong the huy do vi pham "
+                                    + "rang buoc du lieu."
+                            : ex.getMessage();
+
+            redirect.addFlashAttribute(
+                    "errorMessage",
+                    errorMessage
+            );
+        }
+
         return "redirect:/topics?roundId=" + roundId;
     }
 }

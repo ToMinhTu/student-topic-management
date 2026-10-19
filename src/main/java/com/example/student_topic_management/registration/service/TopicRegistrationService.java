@@ -43,7 +43,8 @@ public class TopicRegistrationService {
     ) {}
 
     // =====================================================
-    // C03 + C04.3 - DANG KY / DANG KY LAI DE TAI
+    // C03 + C04.3 + C04.4
+    // DANG KY MOI / DANG KY LAI SAU TU CHOI HOAC HUY
     // =====================================================
 
     @Transactional
@@ -58,11 +59,11 @@ public class TopicRegistrationService {
             );
         }
 
-        // 2. Lay sinh vien dang dang nhap
+        // 2. Xac dinh sinh vien dang dang nhap
         Long studentId =
                 studentAccess.requireCurrentStudentId();
 
-        // 3. Xac dinh dot dang ky cua nhom
+        // 3. Tim dot dang ky cua nhom
         List<Long> groups = jdbc.queryForList(
                 """
                 SELECT round_id
@@ -107,7 +108,7 @@ public class TopicRegistrationService {
                 roundId
         );
 
-        if (lockedGroups.isEmpty()
+        if (lockedGroups.size() != 1
                 || !"FORMING".equals(lockedGroups.get(0))) {
 
             throw new IllegalStateException(
@@ -115,7 +116,7 @@ public class TopicRegistrationService {
             );
         }
 
-        // 8. Chi truong nhom moi duoc dang ky
+        // 8. Chi truong nhom duoc dang ky
         Integer leaderCount = jdbc.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -199,21 +200,23 @@ public class TopicRegistrationService {
         }
 
         // 11. Khoa va tim ho so cu cua nhom
-        List<ExistingRegistration> existingRows = jdbc.query(
-                """
-                SELECT id, topic_id, round_id, status
-                FROM topic_registrations
-                WHERE group_id = ?
-                FOR UPDATE
-                """,
-                (rs, rowNum) -> new ExistingRegistration(
-                        rs.getLong("id"),
-                        rs.getLong("topic_id"),
-                        rs.getLong("round_id"),
-                        rs.getString("status")
-                ),
-                groupId
-        );
+        List<ExistingRegistration> existingRows =
+                jdbc.query(
+                        """
+                        SELECT id, topic_id, round_id, status
+                        FROM topic_registrations
+                        WHERE group_id = ?
+                        FOR UPDATE
+                        """,
+                        (rs, rowNum) ->
+                                new ExistingRegistration(
+                                        rs.getLong("id"),
+                                        rs.getLong("topic_id"),
+                                        rs.getLong("round_id"),
+                                        rs.getString("status")
+                                ),
+                        groupId
+                );
 
         if (existingRows.size() > 1) {
             throw new IllegalStateException(
@@ -236,13 +239,19 @@ public class TopicRegistrationService {
                 );
             }
 
-            if (!"REJECTED".equals(existing.status())) {
+            // C04.3 + C04.4:
+            // Chi cho dang ky lai neu da bi tu choi
+            // hoac truong nhom da huy dang ky.
+            if (!"REJECTED".equals(existing.status())
+                    && !"CANCELLED".equals(existing.status())) {
+
                 throw new IllegalStateException(
-                        "Nhom da tung dang ky de tai"
+                        "Ho so hien tai khong cho phep dang ky lai"
                 );
             }
 
-            // Ho so cu khong duoc co du lieu nghiep vu
+            // Khong cho dang ky lai neu ho so cu
+            // da phat sinh du lieu nghiep vu.
             Integer dependentCount = jdbc.queryForObject(
                     """
                     SELECT
@@ -266,9 +275,12 @@ public class TopicRegistrationService {
                     existing.id()
             );
 
-            if (dependentCount == null || dependentCount > 0) {
+            if (dependentCount == null
+                    || dependentCount > 0) {
+
                 throw new IllegalStateException(
-                        "Ho so da co du lieu xu ly, khong the dang ky lai"
+                        "Ho so da co du lieu xu ly, "
+                                + "khong the dang ky lai"
                 );
             }
         }
@@ -300,10 +312,11 @@ public class TopicRegistrationService {
 
             registrationId = existing.id();
 
-            LocalDateTime now = LocalDateTime.ofInstant(
-                    clock.instant(),
-                    ZoneOffset.UTC
-            );
+            LocalDateTime now =
+                    LocalDateTime.ofInstant(
+                            clock.instant(),
+                            ZoneOffset.UTC
+                    );
 
             int updated;
 
@@ -321,7 +334,7 @@ public class TopicRegistrationService {
                         WHERE id = ?
                           AND group_id = ?
                           AND round_id = ?
-                          AND status = 'REJECTED'
+                          AND status IN ('REJECTED', 'CANCELLED')
                         """,
                         topicId,
                         studentId,
@@ -355,10 +368,11 @@ public class TopicRegistrationService {
 
         } else {
 
-            KeyHolder keyHolder = new GeneratedKeyHolder();
+            // Tao ho so moi
+            KeyHolder keyHolder =
+                    new GeneratedKeyHolder();
 
             try {
-
                 jdbc.update(connection -> {
 
                     PreparedStatement ps =
@@ -404,7 +418,7 @@ public class TopicRegistrationService {
             registrationId = generatedId.longValue();
         }
 
-        // 14. Luu snapshot thanh vien moi
+        // 14. Luu snapshot thanh vien
         int snapshotCount = jdbc.update(
                 """
                 INSERT INTO registration_members
@@ -455,13 +469,188 @@ public class TopicRegistrationService {
                 "Group ID: " + groupId
                         + ", Topic ID: " + topicId
                         + (reRegister
-                            ? ", Previous Topic ID: " + existing.topicId()
+                            ? ", Previous Topic ID: "
+                                    + existing.topicId()
                             : "")
         );
 
         if (auditCount != 1) {
             throw new IllegalStateException(
                     "Ghi nhat ky dang ky that bai"
+            );
+        }
+    }
+
+    // =====================================================
+    // C04.4 - HUY DANG KY DE TAI
+    // =====================================================
+
+    @Transactional
+    public void cancelRegistration(Long registrationId) {
+
+        // 1. Kiem tra tham so
+        if (registrationId == null
+                || registrationId <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Ma ho so dang ky khong hop le"
+            );
+        }
+
+        // 2. Lay sinh vien dang dang nhap
+        Long studentId =
+                studentAccess.requireCurrentStudentId();
+
+        // 3. Tim nhom va dot dang ky cua ho so
+        List<long[]> registrations = jdbc.query(
+                """
+                SELECT group_id, round_id
+                FROM topic_registrations
+                WHERE id = ?
+                """,
+                (rs, rowNum) -> new long[]{
+                        rs.getLong("group_id"),
+                        rs.getLong("round_id")
+                },
+                registrationId
+        );
+
+        if (registrations.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Ho so dang ky khong ton tai"
+            );
+        }
+
+        Long groupId = registrations.get(0)[0];
+        Long roundId = registrations.get(0)[1];
+
+        // 4. Khoa dot dang ky
+        roundAccess.lockRound(roundId);
+
+        // 5. Kiem tra trang thai OPEN va thoi han
+        roundAccess.requireStudentWindow(
+                roundId,
+                clock.instant()
+        );
+
+        // 6. Khoa sinh vien
+        studentAccess.lockEnabledStudent(studentId);
+
+        // 7. Khoa nhom
+        List<String> groups = jdbc.queryForList(
+                """
+                SELECT status
+                FROM student_groups
+                WHERE id = ?
+                  AND round_id = ?
+                FOR UPDATE
+                """,
+                String.class,
+                groupId,
+                roundId
+        );
+
+        if (groups.size() != 1
+                || !"FORMING".equals(groups.get(0))) {
+
+            throw new IllegalStateException(
+                    "Nhom khong o trang thai cho phep huy"
+            );
+        }
+
+        // 8. Chi truong nhom duoc huy
+        Integer leaderCount = jdbc.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM group_members
+                WHERE group_id = ?
+                  AND student_id = ?
+                  AND slot_no = 1
+                  AND left_at IS NULL
+                """,
+                Integer.class,
+                groupId,
+                studentId
+        );
+
+        if (leaderCount == null
+                || leaderCount != 1) {
+
+            throw new IllegalStateException(
+                    "Chi truong nhom moi duoc huy dang ky"
+            );
+        }
+
+        // 9. Khoa ho so va kiem tra trang thai
+        List<String> statuses = jdbc.queryForList(
+                """
+                SELECT status
+                FROM topic_registrations
+                WHERE id = ?
+                  AND group_id = ?
+                  AND round_id = ?
+                FOR UPDATE
+                """,
+                String.class,
+                registrationId,
+                groupId,
+                roundId
+        );
+
+        if (statuses.size() != 1
+                || !"PENDING".equals(statuses.get(0))) {
+
+            throw new IllegalStateException(
+                    "Chi duoc huy ho so dang cho duyet"
+            );
+        }
+
+        // 10. Chuyen PENDING -> CANCELLED
+        // reserved_topic_id tu dong thanh NULL
+        int updated = jdbc.update(
+                """
+                UPDATE topic_registrations
+                SET status = 'CANCELLED'
+                WHERE id = ?
+                  AND group_id = ?
+                  AND round_id = ?
+                  AND status = 'PENDING'
+                """,
+                registrationId,
+                groupId,
+                roundId
+        );
+
+        if (updated != 1) {
+            throw new IllegalStateException(
+                    "Huy dang ky de tai that bai"
+            );
+        }
+
+        // 11. Ghi audit trong cung transaction
+        int auditCount = jdbc.update(
+                """
+                INSERT INTO audit_logs
+                    (
+                        actor_id,
+                        action,
+                        entity_type,
+                        entity_id,
+                        details
+                    )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                studentId,
+                "REGISTRATION_CANCELLED",
+                "TOPIC_REGISTRATION",
+                registrationId,
+                "Group ID: " + groupId
+                        + ", Registration ID: " + registrationId
+        );
+
+        if (auditCount != 1) {
+            throw new IllegalStateException(
+                    "Ghi nhat ky huy dang ky that bai"
             );
         }
     }
