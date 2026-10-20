@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.student_topic_management.audit.service.AuditLogService;
 import com.example.student_topic_management.common.exception.BusinessException;
 import com.example.student_topic_management.identity.dto.AnnouncementForm;
 import com.example.student_topic_management.identity.entity.Announcement;
@@ -20,10 +21,13 @@ import com.example.student_topic_management.identity.repository.AnnouncementRepo
 public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final CurrentUserService currentUserService;
+    private final AuditLogService auditLogService;
 
-    public AnnouncementService(AnnouncementRepository announcementRepository, CurrentUserService currentUserService) {
+    public AnnouncementService(AnnouncementRepository announcementRepository, CurrentUserService currentUserService,
+            AuditLogService auditLogService) {
         this.announcementRepository = announcementRepository;
         this.currentUserService = currentUserService;
+        this.auditLogService = auditLogService;
     }
 
     // =========================== ADMIN VA DEAN ===========================
@@ -97,6 +101,13 @@ public class AnnouncementService {
         // Set thoi gian he thong server (UTC)
         announcement.publish(LocalDateTime.now(ZoneOffset.UTC));
         announcementRepository.save(announcement);
+
+        // Ghi Audit Log
+        auditLogService.log(
+                "ANNOUNCEMENT_PUBLISHED",
+                "ANNOUNCEMENT",
+                announcement.getId(),
+                "Đã công bố thông báo: " + announcement.getTitle());
     }
 
     // =========================== TAT CA USER ===========================
