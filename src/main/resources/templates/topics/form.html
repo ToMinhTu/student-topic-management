@@ -1,78 +1,204 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
 <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Đề xuất đề tài</title>
+    <title th:text="${editMode} ? 'Chỉnh sửa đề tài' : 'Đề xuất đề tài'">Đề xuất đề tài</title>
     <style layout:fragment="css">
-        .topic-page { font-family: Arial, sans-serif; max-width: 750px;
-               margin: 30px auto; }
-        .topic-page label { display: block; margin-top: 16px; font-weight: bold; }
-        .topic-page input, .topic-page textarea, .topic-page select { width: 100%; padding: 10px;
-                          box-sizing: border-box; }
-        .topic-page textarea { min-height: 100px; }
-        .topic-page .error { color: #b91c1c; }
-        .topic-page button { margin-top: 20px; padding: 12px 20px;
-                 cursor: pointer; }
+        .topic-form-page {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .topic-card {
+            border: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+        }
+
+        .topic-header {
+            padding: 28px 32px;
+            color: #fff;
+            background: linear-gradient(135deg, #173B34, #1c3c36);
+        }
+
+        .topic-header h1 {
+            margin: 0 0 6px;
+            font-size: 1.65rem;
+            font-weight: 700;
+        }
+
+        .topic-header p {
+            margin: 0;
+            color: rgba(255, 255, 255, .82);
+        }
+
+        .topic-body {
+            padding: 30px 32px;
+        }
+
+        .topic-section {
+            padding: 22px;
+            margin-bottom: 22px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .topic-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .topic-section-title i {
+            color: #173B34;
+            font-size: 1.2rem;
+        }
+
+        .form-label {
+            color: #334155;
+            font-size: .9rem;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            padding: 10px 13px;
+            border-color: #dbe3ef;
+            border-radius: 9px;
+        }
+
+        textarea.form-control {
+            min-height: 125px;
+            resize: vertical;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #173B34;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+        }
+
+        .field-error {
+            margin-top: 5px;
+            color: #dc2626;
+            font-size: .82rem;
+        }
+
+        .required {
+            color: #dc2626;
+        }
+
+        @media (max-width:576px) {
+
+            .topic-header,
+            .topic-body {
+                padding: 22px 18px;
+            }
+
+            .topic-section {
+                padding: 17px;
+            }
+        }
     </style>
 </head>
+
 <body>
-<main layout:fragment="content" class="topic-page">
+    <main layout:fragment="content" class="topic-form-page px-3 py-4">
+        <div class="topic-card card">
+            <div class="topic-header" style="background-color: #173B34;">
+                <h1 th:text="${editMode} ? 'Chỉnh sửa đề xuất đề tài' : 'Đề xuất đề tài mới'">Đề xuất đề tài mới</h1>
+                <p>Nhập đầy đủ thông tin để gửi đề tài cho bộ môn xem xét.</p>
+            </div>
+            <div class="topic-body">
+                <form th:action="${editMode} ? @{/topics/{id}(id=${topicId})} : @{/topics}" th:object="${topicForm}"
+                    method="post">
+                    <div class="alert alert-danger d-flex gap-2 align-items-start rounded-3"
+                        th:if="${#fields.hasGlobalErrors()}" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                        <div>
+                            <div class="fw-semibold">Không thể lưu đề tài</div>
+                            <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+                        </div>
+                    </div>
 
-<h1 th:text="${editMode} ? 'Chỉnh sửa đề xuất' : 'Tạo đề xuất mới'"></h1>
+                    <section class="topic-section">
+                        <div class="topic-section-title"><i class="bi bi-info-circle-fill"></i>Thông tin cơ bản</div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="roundId" class="form-label">Đợt đăng ký <span
+                                        class="required">*</span></label>
+                                <select id="roundId" class="form-select" th:field="*{roundId}" th:disabled="${editMode}"
+                                    required>
+                                    <option value="">-- Chọn đợt đăng ký --</option>
+                                    <option th:each="round : ${roundOptions}" th:value="${round.id}"
+                                        th:text="${round.name}"></option>
+                                </select>
+                                <input th:if="${editMode}" type="hidden" th:field="*{roundId}">
+                                <div class="field-error" th:errors="*{roundId}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="departmentId" class="form-label">Bộ môn <span
+                                        class="required">*</span></label>
+                                <select id="departmentId" class="form-select" th:field="*{departmentId}" required>
+                                    <option value="">-- Chọn bộ môn --</option>
+                                    <option th:each="department : ${departmentOptions}" th:value="${department.id}"
+                                        th:text="${department.name}"></option>
+                                </select>
+                                <div class="field-error" th:errors="*{departmentId}"></div>
+                            </div>
+                            <div class="col-md-5">
+                                <label for="code" class="form-label">Mã đề tài <span class="required">*</span></label>
+                                <input id="code" class="form-control" type="text" maxlength="40"
+                                    placeholder="Ví dụ: DT-CNTT-001" th:field="*{code}" required>
+                                <div class="field-error" th:errors="*{code}"></div>
+                            </div>
+                            <div class="col-md-7">
+                                <label for="title" class="form-label">Tên đề tài <span class="required">*</span></label>
+                                <input id="title" class="form-control" type="text" maxlength="255"
+                                    placeholder="Nhập tên đề tài" th:field="*{title}" required>
+                                <div class="field-error" th:errors="*{title}"></div>
+                            </div>
+                        </div>
+                    </section>
 
-<form th:action="${editMode}
-        ? @{/topics/{id}(id=${topicId})}
-        : @{/topics}"
-      th:object="${topicForm}"
-      method="post">
+                    <section class="topic-section">
+                        <div class="topic-section-title"><i class="bi bi-file-earmark-text-fill"></i>Nội dung đề tài
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Mô tả đề tài <span
+                                    class="required">*</span></label>
+                            <textarea id="description" class="form-control" th:field="*{description}"
+                                placeholder="Mô tả mục tiêu, phạm vi và nội dung chính của đề tài..."
+                                required></textarea>
+                            <div class="field-error" th:errors="*{description}"></div>
+                        </div>
+                        <div>
+                            <label for="requirements" class="form-label">Yêu cầu thực hiện</label>
+                            <textarea id="requirements" class="form-control" th:field="*{requirements}"
+                                placeholder="Các yêu cầu về kiến thức, kỹ năng hoặc công nghệ cần thiết..."></textarea>
+                        </div>
+                    </section>
 
-    <div class="error" th:if="${#fields.hasGlobalErrors()}">
-        <p th:each="err : ${#fields.globalErrors()}"
-           th:text="${err}"></p>
-    </div>
-
-        <label for="roundId">Đợt đăng ký</label>
-    <select id="roundId" th:field="*{roundId}" th:disabled="${editMode}" required>
-        <option value="">-- Chọn đợt đăng ký --</option>
-        <option th:each="round : ${roundOptions}" th:value="${round.id}" th:text="${round.name}"></option>
-    </select>
-    <input th:if="${editMode}" type="hidden" th:field="*{roundId}">
-    <p class="error" th:errors="*{roundId}"></p>
-
-        <label for="departmentId">Bộ môn</label>
-    <select id="departmentId" th:field="*{departmentId}" required>
-        <option value="">-- Chọn bộ môn --</option>
-        <option th:each="department : ${departmentOptions}" th:value="${department.id}" th:text="${department.name}"></option>
-    </select>
-    <p class="error" th:errors="*{departmentId}"></p>
-
-    <label for="code">Mã đề tài</label>
-    <input id="code" type="text" maxlength="40"
-           th:field="*{code}" required>
-    <p class="error" th:errors="*{code}"></p>
-
-    <label for="title">Tên đề tài</label>
-    <input id="title" type="text" maxlength="255"
-           th:field="*{title}" required>
-    <p class="error" th:errors="*{title}"></p>
-
-    <label for="description">Mô tả đề tài</label>
-    <textarea id="description"
-              th:field="*{description}" required></textarea>
-    <p class="error" th:errors="*{description}"></p>
-
-    <label for="requirements">Yêu cầu</label>
-    <textarea id="requirements"
-              th:field="*{requirements}"></textarea>
-
-    <button type="submit">Lưu đề xuất nháp</button>
-    <a th:href="@{/topics/my}">Quay lại</a>
-</form>
-
-</main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <a th:href="@{/topics/my}" class="btn btn-outline-secondary px-4"><i
+                                class="bi bi-arrow-left me-1"></i>Quay lại</a>
+                        <button type="submit" class="btn btn-primary " style="background-color: #173B34; border-color: #173B34;"><i class="bi bi-save me-1"></i><span
+                                th:text="${editMode} ? 'Lưu thay đổi' : 'Lưu đề xuất nháp'">Lưu đề xuất
+                                nháp</span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
 </body>
+
 </html>

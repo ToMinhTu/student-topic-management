@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
 <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -7,69 +9,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đề tài của tôi</title>
     <style layout:fragment="css">
-        .topic-page { font-family: Arial, sans-serif; margin: 30px; }
-        .topic-page table { width: 100%; border-collapse: collapse; }
-        .topic-page th, .topic-page td { border: 1px solid #ddd; padding: 12px; }
-        .topic-page th { background: #f3f4f6; }
-        .topic-page a { color: #2563eb; }
-        .topic-page .btn { display: inline-block; padding: 10px 14px;
-               background: #2563eb; color: white;
-               text-decoration: none; border-radius: 5px; }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 35px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .topic-page {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        .topic-page table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .topic-page th,
+        .topic-page td {
+            border: 1px solid #ddd;
+            padding: 12px;
+        }
+
+        .topic-page th {
+            background: #f3f4f6;
+        }
+
+        .topic-page a {
+            color: #2563eb;
+        }
+
+        .topic-page .btn {
+            display: inline-block;
+            padding: 10px 14px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
     </style>
 </head>
+
 <body>
-<main layout:fragment="content" class="topic-page">
+    <main layout:fragment="content" class="topic-page">
 
-<h1>Đề tài của tôi</h1>
+        <div class="container">
+            <h1>Đề tài của tôi</h1>
 
-<p><a class="btn" th:href="@{/topics/new}">Tạo đề xuất mới</a></p>
+            <p><a class="btn" th:href="@{/topics/new}" style="background-color: #173B34;">Tạo đề xuất mới</a></p>
 
-<p th:if="${success}" th:text="${success}"></p>
-<p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
+            <p th:if="${success}" th:text="${success}"></p>
+            <p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
 
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Mã đề tài</th>
-        <th>Tên đề tài</th>
-        <th>Trạng thái</th>
-        <th>Thao tác</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="topic : ${topics.content}">
-        <td th:text="${topic.id}"></td>
-        <td th:text="${topic.code}"></td>
-        <td th:text="${topic.title}"></td>
-        <td th:text="${topic.status}"></td>
-        <td>
-            <a th:href="@{/topics/{id}(id=${topic.id})}">Chi tiết</a>
-        </td>
-    </tr>
-    <tr th:if="${topics.empty}">
-        <td colspan="5">Bạn chưa có đề xuất nào.</td>
-    </tr>
-    </tbody>
-</table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mã đề tài</th>
+                        <th>Tên đề tài</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="topic : ${topics.content}">
+                        <td th:text="${topic.id}"></td>
+                        <td th:text="${topic.code}"></td>
+                        <td th:text="${topic.title}"></td>
+                        <td th:text="${topic.status}"></td>
+                        <td>
+                            <a th:href="@{/topics/{id}(id=${topic.id})}">Chi tiết</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${topics.empty}">
+                        <td colspan="5">Bạn chưa có đề xuất nào.</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<p th:if="${topics.totalPages > 1}">
-    <a th:if="${topics.hasPrevious()}"
-       th:href="@{/topics/my(page=${topics.number - 1})}">
-        Trang trước
-    </a>
+            <p th:if="${topics.totalPages > 1}">
+                <a th:if="${topics.hasPrevious()}" th:href="@{/topics/my(page=${topics.number - 1})}">
+                    Trang trước
+                </a>
 
-    <span th:text="${topics.number + 1}"></span>
-    /
-    <span th:text="${topics.totalPages}"></span>
+                <span th:text="${topics.number + 1}"></span>
+                /
+                <span th:text="${topics.totalPages}"></span>
 
-    <a th:if="${topics.hasNext()}"
-       th:href="@{/topics/my(page=${topics.number + 1})}">
-        Trang sau
-    </a>
-</p>
+                <a th:if="${topics.hasNext()}" th:href="@{/topics/my(page=${topics.number + 1})}">
+                    Trang sau
+                </a>
+            </p>
+        </div>
 
-</main>
+    </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

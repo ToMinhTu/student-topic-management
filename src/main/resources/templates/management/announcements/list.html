@@ -20,7 +20,8 @@
         <h2>Quản lý Bản Nháp Thông Báo</h2>
         <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
         <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
-        <a th:href="@{/management/announcements/new}" class="btn btn-primary mb-3">+ Soạn thông báo mới</a>
+        <a th:href="@{/management/announcements/new}" class="btn btn-primary mb-3" style="background-color: #173B34;">+
+            Soạn thông báo mới</a>
 
         <table class="table table-bordered bg-white shadow-sm align-middle">
             <thead class="table-dark">

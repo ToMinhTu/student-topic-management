@@ -80,8 +80,16 @@ public class CouncilController {
         model.addAttribute(
                 "members",
                 councilService.findMembers(id));
+        model.addAttribute("canActivate", councilService.canActivate(id));
 
         return "councils/members";
+    }
+
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('DEAN','DEPARTMENT_HEAD')")
+    @PostMapping("/councils/{id}/activate")
+    public String activateCouncil(@PathVariable Long id) {
+        councilService.activate(id);
+        return "redirect:/councils/{id}/members";
     }
 
     @GetMapping("/councils/{id}/members/new")

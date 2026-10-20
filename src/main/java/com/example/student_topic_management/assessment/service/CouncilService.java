@@ -113,4 +113,24 @@ public class CouncilService {
         return councilMemberRepository.findByIdCouncilId(councilId);
     }
 
+    public boolean canActivate(Long councilId) {
+        var members = findMembers(councilId);
+        boolean chairman = members.stream().anyMatch(m -> m.getSlotNo() == 1);
+        boolean secretary = members.stream().anyMatch(m -> m.getSlotNo() == 2);
+        long commissioners = members.stream().filter(m -> m.getSlotNo() >= 3 && m.getSlotNo() <= 5).count();
+        return chairman && secretary && commissioners >= 1 && commissioners <= 3;
+    }
+
+    public void activate(Long councilId) {
+        Council council = findById(councilId);
+        if (council.getStatus() != CouncilStatus.DRAFT) {
+            throw new RuntimeException("Chỉ hội đồng DRAFT mới được kích hoạt");
+        }
+        if (!canActivate(councilId)) {
+            throw new RuntimeException("Cần đủ 1 Chủ tịch, 1 Thư ký và từ 1 đến 3 Ủy viên");
+        }
+        council.setStatus(CouncilStatus.ACTIVE);
+        councilRepository.save(council);
+    }
+
 }
