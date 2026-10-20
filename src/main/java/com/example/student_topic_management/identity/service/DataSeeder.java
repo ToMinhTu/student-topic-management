@@ -11,12 +11,12 @@ import com.example.student_topic_management.identity.repository.AppUserRepositor
 import com.example.student_topic_management.identity.repository.RoleRepository;
 
 @Component
-public class AdminSeeder implements CommandLineRunner {
+public class DataSeeder implements CommandLineRunner {
     private final AppUserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminSeeder(AppUserRepository userRepository, RoleRepository roleRepository,
+    public DataSeeder(AppUserRepository userRepository, RoleRepository roleRepository,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -26,7 +26,16 @@ public class AdminSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        // Chi tao tok neu chua co user nao ten admin
+        // Khoi tao cac roles trong db
+        // String[] roleCodes = {"ADMIN", "DEAN", "DEPARTMENT_HEAD", "LECTURER",
+        // "STUDENT"};
+        // for (String code : roleCodes) {
+        // if (roleRepository.findByCode(code).isEmpty()) {
+        // roleRepository.save(new Role(null, code));
+        // }
+        // }
+
+        // Chi tao tk neu chua co user nao ten admin
         if (!userRepository.existsByUsername("admin")) {
             AppUser admin = new AppUser();
             admin.setUsername("admin");

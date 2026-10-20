@@ -46,7 +46,7 @@ public class UserManagementService {
     @PreAuthorize("hasRole('ADMIN')")
     public void toggleUserLock(Long userId) {
         AppUser user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("Tài khoảng không tồn tại"));
+                .orElseThrow(() -> new BusinessException("Tài khoản không tồn tại"));
 
         // check tai khoan bi khoa co phai la ADMIN
         boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getCode().equals("ADMIN"));

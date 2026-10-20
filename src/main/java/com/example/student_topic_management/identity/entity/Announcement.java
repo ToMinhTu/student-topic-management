@@ -28,7 +28,7 @@ public class Announcement {
     private String content;
 
     // lien ket vs bang Users de biet ai la tac gia
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "author_id", nullable = false)
     private AppUser author;
 
@@ -37,12 +37,6 @@ public class Announcement {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    void initializeTime() {
-        if (createdAt == null)
-            createdAt = LocalDateTime.now(ZoneOffset.UTC);
-    }
 
     public Announcement() {
     }
@@ -55,6 +49,12 @@ public class Announcement {
         this.author = author;
         this.publishedAt = publishedAt;
         this.createdAt = createdAt;
+    }
+
+    @PrePersist
+    void initializeTime() {
+        if (createdAt == null)
+            createdAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public Long getId() {
@@ -103,6 +103,17 @@ public class Announcement {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void updateDraft(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
+    public void publish(LocalDateTime publishTime) {
+        if (this.publishedAt == null) {
+            this.publishedAt = publishTime;
+        }
     }
 
 }

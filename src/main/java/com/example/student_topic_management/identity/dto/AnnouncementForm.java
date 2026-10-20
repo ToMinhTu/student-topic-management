@@ -6,19 +6,19 @@ import jakarta.validation.constraints.Size;
 public class AnnouncementForm {
     private Long id;
 
-    @NotBlank(message = "Tiêu đề không được để trống")
-    @Size(max = 255, message = "Tiêu đề không quá 255 ký tự")
+    @NotBlank(message = "Vui lòng nhập tiêu đề thông báo")
+    @Size(max = 255, message = "Tiêu đề không được vượt quá 255 ký tự")
     private String title;
 
-    @NotBlank(message = "Nội dung không được để trống")
+    @NotBlank(message = "Vui lòng nhập nội dung thông báo")
     private String content;
 
     public AnnouncementForm() {
     }
 
     public AnnouncementForm(Long id,
-            @NotBlank(message = "Tiêu đề không được để trống") @Size(max = 255, message = "Tiêu đề không quá 255 ký tự") String title,
-            @NotBlank(message = "Nội dung không được để trống") String content) {
+            @NotBlank(message = "Vui lòng nhập tiêu đề thông báo") @Size(max = 255, message = "Tiêu đề không được vượt quá 255 ký tự") String title,
+            @NotBlank(message = "Vui lòng nhập nội dung thông báo") String content) {
         this.id = id;
         this.title = title;
         this.content = content;

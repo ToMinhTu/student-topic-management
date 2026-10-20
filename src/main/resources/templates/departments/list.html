@@ -47,7 +47,8 @@
                                     <form th:action="@{/admin/departments/{id}/delete(id=${dept.id})}" method="post">
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Xoá"
                                             th:data-msg="|Bạn có chắc chắn muốn xoá bộ môn [${dept.name}] này không?|"
-                                            onclick="window.confirmDelete(this.closest('form'), this.getAttribute('data-msg'))">
+                                            data-title="Xác nhận xoá bộ môn" data-btn="Đồng ý xoá"
+                                            onclick="window.confirmAction(this.closest('form'), this.getAttribute('data-msg'), this.getAttribute('data-title'), this.getAttribute('data-btn'))">
                                             <i class="bi bi-trash"></i></button>
                                     </form>
                                     <!-- <form th:action="@{/admin/departments/{id}/delete(id=${dept.id})}" method="post"

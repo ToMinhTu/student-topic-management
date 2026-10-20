@@ -19,41 +19,59 @@ import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/management/announcements")
-public class AnnouncementManagementController {
+public class ManagementAnnouncementController {
     private final AnnouncementService service;
 
-    public AnnouncementManagementController(AnnouncementService service) {
+    public ManagementAnnouncementController(AnnouncementService service) {
         this.service = service;
     }
 
     // Xem danh sach Nhap
     @GetMapping
-    public String listDrafts(Model model) {
-        model.addAttribute("drafts", service.getDrafts());
-        return "management/announcements/list";
+    public String listManagementAnnouncements(Model model) {
+        model.addAttribute("announcements", service.getManagementList());
+        return "announcements/management-list";
     }
 
     // Mo form soan Nhap
     @GetMapping("/new")
     public String showCreateForm(Model model) {
         model.addAttribute("form", new AnnouncementForm());
-        return "management/announcements/form";
+        return "announcements/form";
+    }
+
+    @PostMapping("/new")
+    public String createDraft(@Valid @ModelAttribute("form") AnnouncementForm form,
+            BindingResult errors, RedirectAttributes redirect) {
+        if (errors.hasErrors()) {
+            return "announcements/form";
+        }
+        try {
+            service.createDraft(form);
+            redirect.addFlashAttribute("success", "Đã tạo bản nháp thành công");
+            return "redirect:/management/announcements";
+        } catch (BusinessException ex) {
+            errors.reject("business", ex.getMessage());
+            return "announcements/form";
+        }
     }
 
     //
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirect) {
+    public String showEditForm(@PathVariable Long id, Model model, RedirectAttributes redirect) {
         try {
-            Announcement ann = service.getById(id);
-            if (ann.getPublishedAt() != null)
-                throw new BusinessException("Không thể sửa bản đã công bố");
+            Announcement ann = service.getForManagementById(id);
+            if (ann.getPublishedAt() != null) {
+                redirect.addFlashAttribute("error", "Không thể sửa thông báo đã công bố");
+                return "redirect:/management/announcements";
+            }
 
             AnnouncementForm form = new AnnouncementForm();
             form.setId(ann.getId());
             form.setTitle(ann.getTitle());
             form.setContent(ann.getContent());
             model.addAttribute("form", form);
-            return "management/announcements/form";
+            return "announcements/form";
         } catch (BusinessException ex) {
             redirect.addFlashAttribute("error", ex.getMessage());
             return "redirect:/management/announcements";
@@ -61,24 +79,26 @@ public class AnnouncementManagementController {
     }
 
     // Luu ban nhap
-    @PostMapping("/save")
-    public String saveDraft(@Valid @ModelAttribute("form") AnnouncementForm form, BindingResult errors,
+    @PostMapping("/{id}/edit")
+    public String updateDraft(@PathVariable Long id, @Valid @ModelAttribute("form") AnnouncementForm form,
+            BindingResult errors,
             RedirectAttributes redirect) {
         if (errors.hasErrors()) {
-            return "management/announcements/form";
+            return "announcements/form";
         }
         try {
-            service.saveDraft(form);
-            redirect.addFlashAttribute("success", "Lưu bản nháp thành công!");
+            service.updateDraft(id, form);
+            redirect.addFlashAttribute("success", "Đã cập nhật bản nháp thành công!");
+            return "redirect:/management/announcements";
         } catch (BusinessException ex) {
-            redirect.addFlashAttribute("error", ex.getMessage());
+            errors.reject("business", ex.getMessage());
+            return "announcements/form";
         }
-        return "redirect:/management/announcements";
     }
 
     // Xoa ban nhap
     @PostMapping("/{id}/delete")
-    public String deleteDraft(@PathVariable("id") Long id,
+    public String deleteDraft(@PathVariable Long id,
             RedirectAttributes redirect) {
         try {
             service.deleteDraft(id);
@@ -91,9 +111,16 @@ public class AnnouncementManagementController {
 
     // Cong bo thong bao
     @PostMapping("/{id}/publish")
-    public String publish(@PathVariable("id") Long id, RedirectAttributes redirect) {
-        service.publish(id);
-        redirect.addFlashAttribute("success", "Đã công bố thông báo lên hệ thống!");
+    public String publishAnnouncement(@PathVariable Long id, RedirectAttributes redirect) {
+        try {
+            service.publish(id);
+            redirect.addFlashAttribute("success", "Thông báo đã được công bố chính thức!");
+
+        } catch (BusinessException ex) {
+            redirect.addFlashAttribute("error", ex.getMessage());
+
+        }
         return "redirect:/management/announcements";
+
     }
 }

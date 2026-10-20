@@ -54,12 +54,14 @@
     </div>
 
     <!-- Model xac nhan xoa -->
-    <div class="modal fade" id="globalDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="globalModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Xác
-                        nhận xoá</h5>
+                    <h5 class="modal-title fw-bold text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span id="modalActionTitle">Xác nhận</span>
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
                 </div>
                 <div class="modal-body text-center fs-5 text-muted py-4">
@@ -67,7 +69,7 @@
                 </div>
                 <div class="modal-footer border-top-0 d-flex justify-content-center bg-light">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Huỷ bỏ</button>
-                    <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Xoá dữ liệu</button>
+                    <button type="button" class="btn btn-danger px-4" id="confirmBtn"></button>
                 </div>
             </div>
         </div>
@@ -124,19 +126,27 @@
             });
 
             // Modal logic
-            const deleteModalEl = document.getElementById('globalDeleteModal');
-            if (deleteModalEl) {
+            const modalEl = document.getElementById('globalModal');
+            if (modalEl) {
                 let currentFormToSubmit = null;
 
-                // global from bat ky nut xoa nao
-                window.confirmDelete = function (formElement, message) {
+                // global from bat ky nut nao
+                window.confirmAction = function (formElement, message, title, btnText) {
                     currentFormToSubmit = formElement;
-                    if (message) deleteModalEl.querySelector('.modal-body').textContent = message;
-                    new bootstrap.Modal(deleteModalEl).show();
+                    // set noi dung
+                    if (message) modalEl.querySelector('.modal-body').textContent = message;
+                    // set tieu de
+                    const modalTitle = document.getElementById('modalActionTitle');
+                    if (modalTitle) modalTitle.textContent = title ? title : 'Xác nhận';
+                    // set button text
+                    const confirmBtn = document.getElementById('confirmBtn');
+                    if (confirmBtn) confirmBtn.textContent = title ? title : 'Đồng ý';
+
+                    new bootstrap.Modal(modalEl).show();
                 };
 
-                // Nhan xoa
-                document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                // Nhan
+                document.getElementById('confirmBtn').addEventListener('click', function () {
                     if (currentFormToSubmit) {
                         if (contentLoader) contentLoader.classList.remove("hidden");
                         currentFormToSubmit.submit();
