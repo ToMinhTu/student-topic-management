@@ -41,6 +41,9 @@
                 <div class="menu-header">Nghiệp vụ khoa</div>
                 <li class="nav-item"><a th:href="@{/dean/rounds}" class="nav-link"><i
                             class="bi bi-calendar-check me-2"></i>QL Đăng ký</a></li>
+                <!-- C04 - Duyet dang ky de tai -->
+                <li class="nav-item"><a th:href="@{/dean/registrations}" class="nav-link"><i
+                            class="bi bi-clipboard-check me-2"></i>Duyệt đăng ký đề tài</a></li>
                 <li class="nav-item"><a th:href="@{/councils}" class="nav-link"><i
                             class="bi bi-journal-bookmark me-2"></i>Hội đồng</a></li>
                 <li class="nav-item"><a th:href="@{/management/announcements}" class="nav-link"><i
@@ -51,6 +54,9 @@
                 <div class="menu-header">Đào tạo</div>
                 <li class="nav-item"><a th:href="@{/groups}" class="nav-link"><i class="bi bi-collection me-2"></i>Nhóm
                         sinh viên</a></li>
+                <!-- C03 - Dang ky de tai -->
+                <li class="nav-item"><a th:href="@{/topics}" class="nav-link"><i
+                            class="bi bi-journal-text me-2"></i>Đăng ký đề tài</a></li>
             </th:block>
             <th:block sec:authorize="hasAnyRole('LECTURER', 'STUDENT')">
                 <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i

@@ -1,0 +1,559 @@
+
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đề tài</title>
+</head>
+
+<body>
+
+<div layout:fragment="content">
+
+    <!-- TIEU DE -->
+    <div class="d-flex justify-content-between align-items-center
+                mb-4 border-bottom pb-2">
+
+        <div class="page-title-tab mb-0">
+            DANH SÁCH ĐỀ TÀI
+        </div>
+
+        <a th:href="@{/groups}"
+           class="btn btn-sm btn-outline-secondary">
+
+            <i class="bi bi-arrow-left me-1"></i>
+            Quay lại nhóm
+        </a>
+    </div>
+
+    <!-- THONG BAO THANH CONG -->
+    <div class="alert alert-success alert-dismissible fade show"
+         role="alert"
+         th:if="${successMessage != null}">
+
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${successMessage}"></span>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Đóng">
+        </button>
+    </div>
+
+    <!-- THONG BAO LOI -->
+    <div class="alert alert-danger alert-dismissible fade show"
+         role="alert"
+         th:if="${errorMessage != null}">
+
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${errorMessage}"></span>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Đóng">
+        </button>
+    </div>
+
+    <div class="content-card">
+
+        <!-- CHON DOT DANG KY -->
+        <div class="mb-4">
+
+            <h5 class="mb-3">
+                <i class="bi bi-calendar-check me-2"></i>
+                Chọn đợt đăng ký
+            </h5>
+
+            <form th:action="@{/topics}"
+                  method="get"
+                  class="row g-3 align-items-end">
+
+                <div class="col-md-8">
+
+                    <label for="roundId" class="form-label">
+                        Đợt đăng ký
+                    </label>
+
+                    <select id="roundId"
+                            name="roundId"
+                            class="form-select"
+                            required>
+
+                        <option value="">
+                            -- Chọn đợt đăng ký --
+                        </option>
+
+                        <option th:each="round : ${rounds}"
+                                th:value="${round.id}"
+                                th:text="${round.name + ' (' + round.status + ')'}"
+                                th:selected="${roundId != null and round.id == roundId}">
+                            Đợt đăng ký
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+
+                        <i class="bi bi-search me-1"></i>
+                        Xem đề tài
+                    </button>
+
+                </div>
+            </form>
+
+            <div class="alert alert-info mt-3"
+                 th:if="${#lists.isEmpty(rounds)}">
+
+                Hiện chưa có đợt đăng ký nào.
+            </div>
+
+        </div>
+
+        <hr class="my-4">
+
+        <!-- ========================================= -->
+        <!-- C04.4 - HO SO DANG KY HIEN TAI CUA NHOM -->
+        <!-- ========================================= -->
+
+        <div class="card border-primary mb-4"
+             th:if="${registrationId != null}">
+
+            <div class="card-header bg-light">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Hồ sơ đăng ký của nhóm
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+
+                        <strong>Mã hồ sơ:</strong>
+
+                        <span th:text="${registrationId}">
+                            1
+                        </span>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <strong>Mã nhóm:</strong>
+
+                        <span th:text="${leaderGroupId}">
+                            1
+                        </span>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <strong>Trạng thái:</strong>
+
+                        <!-- PENDING -->
+                        <span class="badge bg-warning text-dark"
+                              th:if="${registrationStatus == 'PENDING'}">
+                            Chờ trưởng khoa duyệt
+                        </span>
+
+                        <!-- APPROVED -->
+                        <span class="badge bg-success"
+                              th:if="${registrationStatus == 'APPROVED'}">
+                            Đã duyệt
+                        </span>
+
+                        <!-- REJECTED -->
+                        <span class="badge bg-danger"
+                              th:if="${registrationStatus == 'REJECTED'}">
+                            Đã bị từ chối
+                        </span>
+
+                        <!-- CANCELLED -->
+                        <span class="badge bg-secondary"
+                              th:if="${registrationStatus == 'CANCELLED'}">
+                            Đã hủy
+                        </span>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <strong>Mã đề tài đã đăng ký:</strong>
+
+                        <span th:text="${registeredTopicId}">
+                            1
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <!-- HO SO DANG CHO DUYET -->
+                <div class="alert alert-warning mt-3 mb-3"
+                     th:if="${registrationStatus == 'PENDING'}">
+
+                    <i class="bi bi-hourglass-split me-2"></i>
+
+                    Hồ sơ của nhóm đang chờ trưởng khoa xét duyệt.
+
+                    <div class="mt-1">
+                        Trưởng nhóm có thể hủy khi đợt đăng ký
+                        còn mở và trong thời hạn cho phép.
+                    </div>
+
+                </div>
+
+                <!-- NUT HUY DANG KY -->
+                <form th:if="${canCancel == true and registrationId != null}"
+                      th:action="@{/topics/registrations/{id}/cancel(id=${registrationId})}"
+                      method="post"
+                      onsubmit="return confirm('Bạn chắc chắn muốn hủy đăng ký đề tài? Đề tài sẽ được giải phóng và nhóm có thể đăng ký lại nếu còn thời hạn.');">
+
+                    <input type="hidden"
+                           name="roundId"
+                           th:value="${roundId}">
+
+                    <!-- CSRF -->
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <button type="submit"
+                            class="btn btn-danger">
+
+                        <i class="bi bi-x-circle me-1"></i>
+                        Hủy đăng ký đề tài
+
+                    </button>
+
+                </form>
+
+                <!-- KHONG CON DUOC HUY -->
+                <div class="text-muted small mt-2"
+                     th:if="${registrationStatus == 'PENDING'
+                               and canCancel != true}">
+
+                    Hiện không đủ điều kiện hủy đăng ký.
+                </div>
+
+                <!-- DA BI TU CHOI -->
+                <div class="alert alert-danger mt-3 mb-0"
+                     th:if="${registrationStatus == 'REJECTED'}">
+
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+
+                    Hồ sơ trước đó đã bị từ chối.
+
+                    <div class="mt-1"
+                         th:if="${canReRegister == true}">
+
+                        Bạn có thể chọn đề tài còn trống bên dưới
+                        để đăng ký lại.
+                    </div>
+
+                </div>
+
+                <!-- DA HUY DANG KY -->
+                <div class="alert alert-info mt-3 mb-0"
+                     th:if="${registrationStatus == 'CANCELLED'}">
+
+                    <i class="bi bi-info-circle me-2"></i>
+
+                    Nhóm đã hủy đăng ký đề tài.
+
+                    <div class="mt-1"
+                         th:if="${canReRegister == true}">
+
+                        Bạn có thể chọn đề tài còn trống bên dưới
+                        để đăng ký lại trong thời hạn cho phép.
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================= -->
+        <!-- DANH SACH DE TAI DA CONG BO -->
+        <!-- ========================================= -->
+
+        <h5 class="mb-3">
+            <i class="bi bi-journal-text me-2"></i>
+            Đề tài đã công bố
+        </h5>
+
+        <p class="text-muted">
+
+            Chọn đợt đăng ký để xem danh sách đề tài đã công bố.
+
+            Trưởng nhóm đủ điều kiện có thể đăng ký đề tài
+            còn trống.
+
+            Nếu hồ sơ đã bị từ chối hoặc đã hủy,
+            trưởng nhóm có thể đăng ký lại khi đủ điều kiện.
+
+        </p>
+
+        <!-- THONG BAO DANG KY LAI -->
+        <div class="alert alert-warning"
+             th:if="${canReRegister == true}">
+
+            <i class="bi bi-arrow-repeat me-2"></i>
+
+            <strong>Nhóm có thể đăng ký lại đề tài.</strong>
+
+            <div class="mt-1">
+                Chọn một đề tài còn trống và nhấn
+                <strong>Đăng ký lại</strong>.
+            </div>
+
+            <div>
+                Hồ sơ sẽ được gửi lại để trưởng khoa xét duyệt.
+            </div>
+
+        </div>
+
+        <!-- CHUA CHON DOT -->
+        <div class="alert alert-info"
+             th:if="${roundId == null}">
+
+            <i class="bi bi-info-circle me-2"></i>
+            Vui lòng chọn đợt đăng ký để xem danh sách đề tài.
+        </div>
+
+        <!-- KHONG CO DE TAI -->
+        <div class="alert alert-warning"
+             th:if="${roundId != null and #lists.isEmpty(topics)}">
+
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Hiện chưa có đề tài được công bố trong đợt này.
+        </div>
+
+        <!-- BANG DE TAI -->
+        <div class="table-responsive"
+             th:if="${not #lists.isEmpty(topics)}">
+
+            <table class="table table-hover align-middle border">
+
+                <thead class="bg-theme">
+                    <tr>
+                        <th class="bg-theme">STT</th>
+                        <th class="bg-theme">Mã đề tài</th>
+                        <th class="bg-theme">Tên đề tài</th>
+                        <th class="bg-theme">Bộ môn</th>
+                        <th class="bg-theme">Mô tả</th>
+                        <th class="bg-theme">Yêu cầu</th>
+                        <th class="bg-theme">Trạng thái</th>
+                        <th class="bg-theme">Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr th:each="topic, stat : ${topics}">
+
+                        <!-- STT -->
+                        <td th:text="${stat.count}">
+                            1
+                        </td>
+
+                        <!-- MA DE TAI -->
+                        <td>
+                            <strong th:text="${topic.code}">
+                                C03-DEMO-001
+                            </strong>
+                        </td>
+
+                        <!-- TEN DE TAI -->
+                        <td th:text="${topic.title}">
+                            Tên đề tài
+                        </td>
+
+                        <!-- BO MON -->
+                        <td th:text="${topic.departmentName}">
+                            Công nghệ thông tin
+                        </td>
+
+                        <!-- MO TA -->
+                        <td th:text="${topic.description}">
+                            Mô tả đề tài
+                        </td>
+
+                        <!-- YEU CAU -->
+                        <td th:text="${topic.requirements ?: 'Không có'}">
+                            Không có
+                        </td>
+
+                        <!-- TRANG THAI DE TAI -->
+                        <td>
+
+                            <span class="badge bg-success"
+                                  th:if="${topic.available}">
+
+                                Còn trống
+
+                            </span>
+
+                            <span class="badge bg-secondary"
+                                  th:unless="${topic.available}">
+
+                                Đã được đăng ký
+
+                            </span>
+
+                        </td>
+
+                        <!-- THAO TAC -->
+                        <td>
+
+                            <!-- DANG KY MOI HOAC DANG KY LAI -->
+                            <form th:if="${canRegister == true and topic.available}"
+                                  th:action="@{/topics/{id}/register(id=${topic.id})}"
+                                  method="post">
+
+                                <input type="hidden"
+                                       name="groupId"
+                                       th:value="${leaderGroupId}">
+
+                                <input type="hidden"
+                                       name="roundId"
+                                       th:value="${roundId}">
+
+                                <!-- CSRF -->
+                                <input type="hidden"
+                                       th:if="${_csrf != null}"
+                                       th:name="${_csrf.parameterName}"
+                                       th:value="${_csrf.token}">
+
+                                <!-- DANG KY LAI -->
+                                <button th:if="${canReRegister == true}"
+                                        type="submit"
+                                        class="btn btn-sm btn-warning"
+                                        onclick="return confirm('Bạn chắc chắn muốn đăng ký lại đề tài này? Hồ sơ sẽ được gửi lại để trưởng khoa xét duyệt.');">
+
+                                    <i class="bi bi-arrow-repeat me-1"></i>
+                                    Đăng ký lại
+
+                                </button>
+
+                                <!-- DANG KY MOI -->
+                                <button th:unless="${canReRegister == true}"
+                                        type="submit"
+                                        class="btn btn-sm btn-primary"
+                                        onclick="return confirm('Bạn chắc chắn muốn đăng ký đề tài này?');">
+
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Đăng ký
+
+                                </button>
+
+                            </form>
+
+                            <!-- KHONG DU DIEU KIEN -->
+                            <span class="text-muted"
+                                  th:if="${canRegister != true and topic.available}">
+
+                                Không đủ điều kiện đăng ký
+
+                            </span>
+
+                            <!-- DE TAI KHONG KHA DUNG -->
+                            <span class="text-muted"
+                                  th:unless="${topic.available}">
+
+                                Không khả dụng
+
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- DIEU KIEN DANG KY VA HUY DE TAI -->
+    <!-- ========================================= -->
+
+    <div class="content-card mt-4"
+         th:if="${roundId != null}">
+
+        <h5 class="mb-3">
+            <i class="bi bi-info-circle me-2"></i>
+            Điều kiện đăng ký và hủy đề tài
+        </h5>
+
+        <ul class="mb-0">
+
+            <li>
+                Chỉ trưởng nhóm sinh viên được phép đăng ký
+                hoặc hủy đăng ký đề tài.
+            </li>
+
+            <li>
+                Nhóm phải ở trạng thái FORMING.
+            </li>
+
+            <li>
+                Nhóm phải đủ số lượng thành viên
+                theo quy định khi đăng ký.
+            </li>
+
+            <li>
+                Đợt đăng ký phải đang mở
+                và còn thời hạn sinh viên.
+            </li>
+
+            <li>
+                Đề tài phải được công bố
+                và chưa bị nhóm khác giữ chỗ.
+            </li>
+
+            <li>
+                Chỉ được hủy hồ sơ đang chờ duyệt
+                (PENDING).
+            </li>
+
+            <li>
+                Không được hủy hồ sơ đã duyệt
+                (APPROVED).
+            </li>
+
+            <li>
+                Hồ sơ REJECTED hoặc CANCELLED
+                có thể đăng ký lại khi đủ điều kiện.
+            </li>
+
+            <li>
+                Đăng ký lại không được thực hiện
+                nếu hồ sơ đã phát sinh dữ liệu nghiệp vụ
+                phụ thuộc.
+            </li>
+
+        </ul>
+    </div>
+
+</div>
+
+</body>
+</html>
