@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Hồ sơ cá nhân</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <style></style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div class="page-title-tab mb-0">HỒ SƠ CÁ NHÂN</div>
+        </div>
+
+        <div class="row g-4">
+            <!-- cot trai -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="content-card text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-person-circle text-secondary" style="font-size: 6rem;"></i>
+                    </div>
+                    <h4 class="fw-bold text-theme mb-1" th:text="${user.fullname}">Tên Người Dùng</h4>
+                    <p class="text-muted mb-3" th:text="${user.email}">email@hcmute.edu.vn</p>
+
+                    <div class="d-flex justify-content-center gap-1 mb-4 flex-wrap">
+                        <span th:each="role : ${user.roles}" class="badge bg-theme" th:text="${role.code}">ROLE</span>
+                    </div>
+                    <ul class="list-group list-group-flush text-start">
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="bi bi-person-vcard me-2"></i>Tên đăng nhập</span>
+                            <span class="fw-bold" th:text="${user.username}">username</span>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="bi bi-shield-check me-2"></i>Trạng thái</span>
+                            <span class="badge bg-success" th:if="${user.enabled}">Đang hoạt động</span>
+                            <span class="badge bg-danger" th:if="${!user.enabled}">Bị khóa</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Cot phai -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="content-card p-0">
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-tabs px-3 pt-3 bg-light border-bottom-0" id="profileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold" id="info-tab" data-bs-toggle="tab"
+                                data-bs-target="#info" type="button" role="tab" aria-controls="info"
+                                aria-selected="true">
+                                <i class="bi bi-info-square me-2"></i>Thông tin chi tiết
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="password-tab" data-bs-toggle="tab"
+                                data-bs-target="#password" type="button" role="tab" aria-controls="password"
+                                aria-selected="false">
+                                <i class="bi bi-key me-2"></i>Đổi mật khẩu
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content p-4" id="profileTabsContent">
+                        <!-- TAB 1: thong tin chi tiet -->
+                        <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                            <!-- Neu la sinh vien -->
+                            <div th:if="${studentProfile != null}">
+                                <h5 class="text-theme fw-bold mb-4 border-bottom pb-2">Hồ sơ Sinh viên</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Mã số sinh viên</label>
+                                        <div class="fw-bold fs-6" th:text="${studentProfile.studentCode}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Lớp sinh hoạt</label>
+                                        <div class="fw-bold fs-6" th:text="${studentProfile.className}"></div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="text-muted small">Bộ môn trực thuộc</label>
+                                        <div class="fw-bold fs-6 text-primary"
+                                            th:text="${studentProfile.department.name}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Neu la giang vien -->
+                            <div th:if="${lecturerProfile != null}">
+                                <h5 class="text-theme fw-bold mb-4 border-bottom pb-2">Hồ sơ Giảng viên</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Mã giảng viên</label>
+                                        <div class="fw-bold fs-6" th:text="${lecturerProfile.lecturerCode}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Bộ môn trực thuộc</label>
+                                        <div class="fw-bold fs-6 text-primary"
+                                            th:text="${lecturerProfile.department.name}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Neu la admin (khong co profile) -->
+                            <div th:if="${studentProfile == null and lecturerProfile == null}"
+                                class="text-center py-5 text-muted">
+                                <i class="bi bi-shield-lock fs-1 d-block mb-3 text-secondary"></i>
+                                <span>Tài khoản Quản trị không có hồ sơ đính kèm.</span>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: Doi mat khau -->
+                        <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                            <form th:action="@{/profile/password}" th:object="${passwordForm}" method="post"
+                                id="form-change-password">
+                                <!-- Loi nghiep vu (sai pass cu, trung pass moi,...) -->
+                                <div class="alert alert-danger shadow-sm mb-4" th:if="${error != null}">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <span th:text="${error}"></span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-theme">Mật khẩu hiện tại <span
+                                            class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" th:field="*{currentPassword}"
+                                        th:classappend="${#fields.hasErrors('currentPassword')} ? 'is-invalid' : ''"
+                                        placeholder="Nhập mật khẩu đang sử dụng">
+                                    <div class="invalid-feedback" th:errors="*{currentPassword}"></div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-theme">Mật khẩu mới <span
+                                            class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" th:field="*{newPassword}"
+                                        th:classappend="${#fields.hasErrors('newPassword')} ? 'is-invalid' : ''"
+                                        placeholder="Tối thiểu 12 ký tự">
+                                    <div class="invalid-feedback" th:errors="*{newPassword}"></div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-theme">Xác nhận mật khẩu mới <span
+                                            class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" th:field="*{confirmPassword}"
+                                        th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid' : ''"
+                                        placeholder="Nhập lại mật khẩu mới">
+                                    <div class="invalid-feedback" th:errors="*{confirmPassword}"></div>
+                                </div>
+
+                                <div class="text-end mt-4 pt-3 border-top">
+                                    <button type="submit" class="btn btn-theme px-4">
+                                        <i class="bi bi-shield-lock me-2"></i>Cập nhật mật khẩu
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Tu dong chuyen tab doi password neu form co loi validation hoac loi nghiep vu
+                const passwordTabPane = document.getElementById('password');
+                const hasError = passwordTabPane.querySelector('.is-invalid') !== null || passwordTabPane.querySelector('.alert-danger') !== null;
+
+                if (hasError) {
+                    const tabTrigger = new bootstrap.Tab(document.getElementById('password-tab'));
+                    tabTrigger.show();
+                }
+            });
+        </script>
+    </th:block>
+</body>
+
+</html>

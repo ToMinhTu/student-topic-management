@@ -1,6 +1,7 @@
 package com.example.student_topic_management.identity.security;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -8,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.example.student_topic_management.identity.entity.AppUser;
+
 // Lay cac thong tin cua user
 public class CustomUserDetails implements UserDetails {
     private final AppUser appUser;
@@ -18,6 +20,22 @@ public class CustomUserDetails implements UserDetails {
 
     public AppUser getAppUser() {
         return appUser;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        CustomUserDetails that = (CustomUserDetails) o;
+        // So sanh bang username hoac id
+        return Objects.equals(getUsername(), that.getUsername());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getUsername());
     }
 
     @Override

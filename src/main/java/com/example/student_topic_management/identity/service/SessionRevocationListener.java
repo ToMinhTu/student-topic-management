@@ -18,21 +18,27 @@ public class SessionRevocationListener {
         this.registry = registry;
     }
 
-    // chay sau khi db da commit thanh cong thay doi mat khau
+    // Lang nghe event sau khi thay doi (lock user/change password) duoc commit
+    // xuong DB
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onChange(AccountAccessChanged event) {
-        // Lay ID session cua trinh duyet dang thuc hien doi password
+        // Lay ID session cua trinh duyet dang thuc hien
         String currentSessionId = null;
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         if (auth != null && auth.getDetails() instanceof WebAuthenticationDetails details) {
             currentSessionId = details.getSessionId();
         }
-        // Duyet va thu hoi cac session khac
+
+        // Tim tat ca user dang online trong SessionRegistry
         for (Object principal : registry.getAllPrincipals()) {
             if (principal instanceof UserDetails details && details.getUsername().equals(event.username())) {
+                // Thu hoi (expire) cac phien login cua user
                 for (SessionInformation session : registry.getAllSessions(principal, false)) {
                     // Chi xoa nhung session tu trinh duyet khac
-                    if (!session.getSessionId().equals(currentSessionId)) {
+                    // Tranh viec tu logout chinh minh
+                    // Admin lock user khac thi khong bi sao
+                    if (currentSessionId == null || !session.getSessionId().equals(currentSessionId)) {
                         session.expireNow();
                     }
                 }

@@ -93,7 +93,7 @@ public class SecurityConfig {
                 http.sessionManagement(session -> session
                                 .maximumSessions(-1)
                                 .sessionRegistry(sessionRegistry())
-                                .expiredUrl("/login?expired"));
+                                .expiredUrl("/login?expired=true"));
 
                 http.logout(logout -> logout
                                 .logoutUrl("/logout")
