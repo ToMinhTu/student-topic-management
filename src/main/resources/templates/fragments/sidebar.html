@@ -56,6 +56,12 @@
                 <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i
                     class="bi bi-lightbulb me-2"></i>Đề xuất đề tài</a></li>
             </th:block>
+            <th:block sec:authorize="hasRole('LECTURER')">
+                <li class="nav-item"><a th:href="@{/lecturer/registrations}" class="nav-link"><i class="bi bi-clipboard-check me-2"></i>Duyệt đăng ký nhóm</a></li>
+            </th:block>
+            <th:block sec:authorize="hasRole('STUDENT')">
+                <li class="nav-item"><a th:href="@{/topic-registration}" class="nav-link"><i class="bi bi-bookmark-check me-2"></i>Đăng ký đề tài</a></li>
+            </th:block>
         </ul>
     </nav>
 </body>

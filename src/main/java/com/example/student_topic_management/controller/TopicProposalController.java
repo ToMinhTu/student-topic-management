@@ -183,6 +183,40 @@ public class TopicProposalController {
         return "redirect:/topics/my";
     }
 
+    @PostMapping("/{id}/publish")
+    public String publish(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.publishTopic(id);
+            redirectAttributes.addFlashAttribute("success", "Đã công bố đề tài");
+        } catch (BusinessException | DataIntegrityViolationException ex) {
+            redirectAttributes.addFlashAttribute("error", friendlyMessage(ex));
+        }
+        return "redirect:/topics";
+    }
+
+    @PostMapping("/{id}/approve")
+    public String approve(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.approveTopic(id);
+            redirectAttributes.addFlashAttribute("success", "Đã duyệt đề tài");
+        } catch (BusinessException | DataIntegrityViolationException ex) {
+            redirectAttributes.addFlashAttribute("error", friendlyMessage(ex));
+        }
+        return "redirect:/topics/my";
+    }
+
+    @PostMapping("/{id}/reject")
+    public String reject(@PathVariable Long id, @RequestParam(required = false) String reason,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            service.rejectTopic(id, reason);
+            redirectAttributes.addFlashAttribute("success", "Đã từ chối đề tài");
+        } catch (BusinessException | DataIntegrityViolationException ex) {
+            redirectAttributes.addFlashAttribute("error", friendlyMessage(ex));
+        }
+        return "redirect:/topics/my";
+    }
+
     private String prepareForm(Model model) {
         TopicProposalForm form = (TopicProposalForm) model.getAttribute("topicForm");
         model.addAttribute("roundOptions", service.getProposalRounds(form == null ? null : form.getRoundId()));

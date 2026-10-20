@@ -63,6 +63,11 @@ public class SecurityConfig {
                 .requestMatchers("/management/announcements/**")
                 .hasAnyRole("ADMIN", "DEAN")
 
+                .requestMatchers("/topic-registration", "/topic-registration/**")
+                .hasRole("STUDENT")
+                .requestMatchers("/dean/registrations/**")
+                .hasRole("DEAN")
+
                 // B02 - Sinh vien chi duoc xem; giang vien duoc tao va quan ly de xuat
                 .requestMatchers(HttpMethod.GET, "/topics/my", "/topics/*")
                 .hasAnyRole("LECTURER", "STUDENT")

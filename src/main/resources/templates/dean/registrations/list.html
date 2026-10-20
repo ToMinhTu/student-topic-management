@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><meta charset="UTF-8"><title>Duyệt đăng ký đề tài</title></head>
+<body>
+<main layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2"><h2 class="mb-0">DUYỆT ĐĂNG KÝ ĐỀ TÀI</h2></div>
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+    <div class="content-card mb-4"><form method="get" th:action="@{/dean/registrations}" class="row g-3 align-items-end">
+        <div class="col-md-5"><label class="form-label fw-semibold">Đợt đăng ký</label><select name="roundId" class="form-select"><option value="">-- Tất cả đợt đăng ký --</option><option th:each="round : ${rounds}" th:value="${round.id}" th:text="${round.name}" th:selected="${selectedRoundId != null and selectedRoundId == round.id}"></option></select></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Trạng thái</label><select name="status" class="form-select"><option value="">-- Tất cả --</option><option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">Chờ duyệt</option><option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">Đã duyệt</option><option value="REJECTED" th:selected="${selectedStatus == 'REJECTED'}">Từ chối</option><option value="CANCELLED" th:selected="${selectedStatus == 'CANCELLED'}">Đã hủy</option></select></div>
+        <div class="col-md-3"><button class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Tìm kiếm</button></div>
+    </form></div>
+    <div class="content-card"><div class="d-flex justify-content-between mb-3"><h5>Danh sách hồ sơ đăng ký</h5><span class="badge bg-secondary" th:text="|Tổng: ${totalItems} hồ sơ|"></span></div>
+        <div class="alert alert-info" th:if="${#lists.isEmpty(registrations)}">Không có hồ sơ đăng ký nào.</div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(registrations)}"><table class="table table-hover align-middle"><thead><tr><th>Mã hồ sơ</th><th>Nhóm</th><th>Đề tài</th><th>Đợt</th><th>Ngày gửi</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+            <tr th:each="registration : ${registrations}"><td th:text="${registration.id}"></td><td><a th:href="@{/groups/{id}(id=${registration.groupId})}" th:text="${registration.groupName}"></a></td><td><strong th:text="${registration.topicCode}"></strong><div class="small text-muted" th:text="${registration.topicTitle}"></div></td><td th:text="${registration.roundName}"></td><td th:text="${#temporals.format(registration.submittedAt, 'dd/MM/yyyy HH:mm')}"></td><td><span class="badge" th:classappend="${registration.status == 'APPROVED' ? ' bg-success' : registration.status == 'REJECTED' ? ' bg-danger' : registration.status == 'CANCELLED' ? ' bg-secondary' : ' bg-warning text-dark'}" th:text="${registration.status}"></span></td><td><div class="d-flex gap-2" th:if="${registration.status == 'PENDING'}"><form method="post" th:action="@{/dean/registrations/{id}/approve(id=${registration.id})}"><button class="btn btn-sm btn-success" onclick="return confirm('Duyệt hồ sơ này?')"><i class="bi bi-check-circle me-1"></i>Duyệt</button></form><form method="post" th:action="@{/dean/registrations/{id}/reject(id=${registration.id})}"><input type="hidden" name="reason" value="Hồ sơ chưa đáp ứng yêu cầu."/><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Từ chối hồ sơ này?')"><i class="bi bi-x-circle me-1"></i>Từ chối</button></form></div><span class="text-muted small" th:unless="${registration.status == 'PENDING'}">Không có thao tác</span></td></tr>
+        </tbody></table></div>
+    </div>
+</main></body></html>

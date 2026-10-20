@@ -357,23 +357,75 @@ public class TopicProposalService {
         return saved;
     }
 
+    @Transactional
+    public Topic publishTopic(Long topicId) {
+        AppUser user = currentUserService.getCurrentUser();
+        boolean lecturer = Boolean.TRUE.equals(user.getEnabled()) && user.getRoles() != null
+                && user.getRoles().stream().anyMatch(role -> "LECTURER".equals(role.getCode()));
+        if (!lecturer) throw new BusinessException("Chỉ giáo viên mới được công bố đề tài");
+        Topic topic = topicRepository.findByIdForUpdate(topicId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy đề tài"));
+        if (topic.getStatus() != TopicStatus.APPROVED)
+            throw new BusinessException("Chỉ đề tài đã được duyệt mới được công bố");
+        topic.setStatus(TopicStatus.PUBLISHED);
+        topic.setPublishedAt(java.time.LocalDateTime.now(clock));
+        Topic saved = topicRepository.saveAndFlush(topic);
+        audit.record(saved, user.getId(), "TOPIC_PUBLISH");
+        return saved;
+    }
+
+    @Transactional
+    public Topic approveTopic(Long topicId) {
+        AppUser user = requireReviewer();
+        Topic topic = topicRepository.findByIdForUpdate(topicId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy đề tài"));
+        if (topic.getStatus() != TopicStatus.SUBMITTED)
+            throw new BusinessException("Chỉ đề tài đang chờ duyệt mới được duyệt");
+        topic.setStatus(TopicStatus.APPROVED);
+        topic.setApprovedBy(user.getId());
+        topic.setApprovedAt(java.time.LocalDateTime.now(clock));
+        topic.setRejectionReason(null);
+        Topic saved = topicRepository.saveAndFlush(topic);
+        audit.record(saved, user.getId(), "TOPIC_APPROVE");
+        return saved;
+    }
+
+    @Transactional
+    public Topic rejectTopic(Long topicId, String reason) {
+        AppUser user = requireReviewer();
+        Topic topic = topicRepository.findByIdForUpdate(topicId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy đề tài"));
+        if (topic.getStatus() != TopicStatus.SUBMITTED)
+            throw new BusinessException("Chỉ đề tài đang chờ duyệt mới được từ chối");
+        topic.setStatus(TopicStatus.REJECTED);
+        topic.setApprovedBy(user.getId());
+        topic.setApprovedAt(java.time.LocalDateTime.now(clock));
+        topic.setRejectionReason(reason == null || reason.isBlank() ? "Không đạt yêu cầu" : reason.trim());
+        Topic saved = topicRepository.saveAndFlush(topic);
+        audit.record(saved, user.getId(), "TOPIC_REJECT");
+        return saved;
+    }
+
+    private AppUser requireReviewer() {
+        AppUser user = currentUserService.getCurrentUser();
+        boolean allowed = Boolean.TRUE.equals(user.getEnabled()) && user.getRoles() != null
+                && user.getRoles().stream().anyMatch(role ->
+                    "LECTURER".equals(role.getCode()) || "DEAN".equals(role.getCode()));
+        if (!allowed) throw new BusinessException("Chỉ giáo viên hoặc trưởng khoa mới được duyệt đề tài");
+        return user;
+    }
+
     @Transactional(readOnly = true)
     public Page<Topic> getMyTopics(Pageable pageable) {
-        AppUser user = requireProposer();
-
-        return topicRepository.findByProposedBy(
-                user.getId(), pageable
-        );
+        requireProposer();
+        return topicRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
     public Topic getMyTopicDetail(Long topicId) {
-        AppUser user = requireProposer();
-
-        return topicRepository.findByIdAndProposedBy(
-                topicId, user.getId()
-        ).orElseThrow(() -> new BusinessException(
-                "Không tìm thấy đề tài hoặc bạn không có quyền xem"
+        requireProposer();
+        return topicRepository.findById(topicId).orElseThrow(() -> new BusinessException(
+                "Không tìm thấy đề tài"
         ));
     }
 }

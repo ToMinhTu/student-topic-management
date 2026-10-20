@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đề tài</title>
+    <style layout:fragment="css">
+        .topic-list-card {
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, .08)
+        }
+
+        .topic-list-card .table thead th {
+            background: #eff6ff;
+            color: #334155;
+            font-size: .82rem;
+            text-transform: uppercase
+        }
+
+        .topic-list-card .table td,
+        .topic-list-card .table th {
+            padding: 14px 16px;
+            vertical-align: middle
+        }
+
+        .topic-list-card .table th:nth-child(4),
+        .topic-list-card .table td:nth-child(4) {
+            display: none
+        }
+    </style>
+</head>
+
+<body>
+    <main layout:fragment="content" class="container-fluid px-3 px-lg-4 py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Danh sách đề tài</h2>
+                <p class="text-muted mb-0">Quản lý danh sách đề tài.</p>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end mb-3"><a sec:authorize="hasRole('LECTURER')" th:href="@{/topics/new}"
+                class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Thêm đề tài</a></div>
+        <div class="topic-list-card card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã đề tài</th>
+                            <th>Tên đề tài</th>
+                            <th>Mã đợt</th>
+                            <th>Trạng thái công bố</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="topic : ${topics.content}">
+                            <td class="fw-semibold" th:text="${topic.code}"></td>
+                            <td th:text="${topic.title}"></td>
+                            <td th:text="${topic.roundId}"></td>
+                            <td>
+                                <span th:if="${topic.status.name() == 'PUBLISHED'}" class="badge text-bg-success"><i
+                                        class="bi bi-check-circle me-1"></i>Đã công bố</span>
+                                <span th:if="${topic.status.name() == 'APPROVED'}" class="badge text-bg-primary"><i
+                                        class="bi bi-check2 me-1"></i>Đã duyệt</span>
+                                <span th:if="${topic.status.name() == 'SUBMITTED'}" class="badge text-bg-warning">Chờ
+                                    duyệt</span>
+                                <span th:if="${topic.status.name() == 'REJECTED'}" class="badge text-bg-danger">Từ
+                                    chối</span>
+                                <span th:if="${topic.status.name() == 'DRAFT'}" class="badge text-bg-secondary">Bản
+                                    nháp</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                        th:href="@{/topics/{id}(id=${topic.id})}"><i class="bi bi-eye me-1"></i>Xem</a>
+                                    <a sec:authorize="hasRole('LECTURER')" class="btn btn-sm btn-outline-secondary"
+                                        th:href="@{/topics/{id}/edit(id=${topic.id})}"><i
+                                            class="bi bi-pencil me-1"></i>Sửa</a>
+                                    <form sec:authorize="hasAnyRole('LECTURER','DEAN')"
+                                        th:if="${topic.status.name() == 'SUBMITTED'}"
+                                        th:action="@{/topics/{id}/approve(id=${topic.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success">Duyệt</button>
+                                    </form>
+                                    <form sec:authorize="hasAnyRole('LECTURER','DEAN')"
+                                        th:if="${topic.status.name() == 'SUBMITTED'}"
+                                        th:action="@{/topics/{id}/reject(id=${topic.id})}" method="post" class="d-inline">
+                                        <input type="hidden" name="reason" value="Đề tài chưa đạt yêu cầu"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Từ chối</button>
+                                    </form>
+                                    <form sec:authorize="hasRole('LECTURER')"
+                                        th:action="@{/topics/{id}/delete(id=${topic.id})}" method="post"
+                                        class="d-inline"><button type="submit" class="btn btn-sm btn-outline-danger"><i
+                                                class="bi bi-trash me-1"></i>Xóa</button></form>
+                                    <form sec:authorize="hasRole('LECTURER')"
+                                        th:if="${topic.status.name() == 'APPROVED'}"
+                                        th:action="@{/topics/{id}/publish(id=${topic.id})}" method="post"
+                                        class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                            onclick="return confirm('Công bố đề tài này?')">
+                                            <i class="bi bi-megaphone me-1"></i>Công bố
+                                        </button>
+                                    </form>
+                                    <form th:if="${false}" th:action="@{/topics/{id}/status(id=${topic.id})}"
+                                        method="post" class="d-flex gap-1">
+                                        <select name="status" class="form-select form-select-sm"
+                                            aria-label="Trạng thái đề tài">
+                                            <option value="SUBMITTED"
+                                                th:selected="${topic.status.name() == 'SUBMITTED'}">Đã gửi</option>
+                                            <option value="APPROVED" th:selected="${topic.status.name() == 'APPROVED'}">
+                                                Duyệt</option>
+                                            <option value="REJECTED" th:selected="${topic.status.name() == 'REJECTED'}">
+                                                Từ chối</option>
+                                            <option value="PUBLISHED"
+                                                th:selected="${topic.status.name() == 'PUBLISHED'}">Công bố</option>
+                                        </select><button type="submit" class="btn btn-sm btn-primary">Cập nhật</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${topics.empty}">
+                            <td colspan="5" class="text-center text-muted py-4">Chưa có đề tài.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
