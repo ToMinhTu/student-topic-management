@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đề tài của tôi</title>
+    <style layout:fragment="css">
+        .topic-page { font-family: Arial, sans-serif; margin: 30px; }
+        .topic-page table { width: 100%; border-collapse: collapse; }
+        .topic-page th, .topic-page td { border: 1px solid #ddd; padding: 12px; }
+        .topic-page th { background: #f3f4f6; }
+        .topic-page a { color: #2563eb; }
+        .topic-page .btn { display: inline-block; padding: 10px 14px;
+               background: #2563eb; color: white;
+               text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<main layout:fragment="content" class="topic-page">
+
+<h1>Đề tài của tôi</h1>
+
+<p><a class="btn" th:href="@{/topics/new}">Tạo đề xuất mới</a></p>
+
+<p th:if="${success}" th:text="${success}"></p>
+<p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Mã đề tài</th>
+        <th>Tên đề tài</th>
+        <th>Trạng thái</th>
+        <th>Thao tác</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="topic : ${topics.content}">
+        <td th:text="${topic.id}"></td>
+        <td th:text="${topic.code}"></td>
+        <td th:text="${topic.title}"></td>
+        <td th:text="${topic.status}"></td>
+        <td>
+            <a th:href="@{/topics/{id}(id=${topic.id})}">Chi tiết</a>
+        </td>
+    </tr>
+    <tr th:if="${topics.empty}">
+        <td colspan="5">Bạn chưa có đề xuất nào.</td>
+    </tr>
+    </tbody>
+</table>
+
+<p th:if="${topics.totalPages > 1}">
+    <a th:if="${topics.hasPrevious()}"
+       th:href="@{/topics/my(page=${topics.number - 1})}">
+        Trang trước
+    </a>
+
+    <span th:text="${topics.number + 1}"></span>
+    /
+    <span th:text="${topics.totalPages}"></span>
+
+    <a th:if="${topics.hasNext()}"
+       th:href="@{/topics/my(page=${topics.number + 1})}">
+        Trang sau
+    </a>
+</p>
+
+</main>
+</body>
+</html>

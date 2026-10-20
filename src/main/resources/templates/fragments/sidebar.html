@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<body>
+    <nav th:fragment="sidebar" id="app-sidebar" sec:authorize="isAuthenticated()">
+        <!-- Logo -->
+        <a class="logo-area" th:href="@{/}">
+            <!--anh that: <img th:src="@{/images/logo.png}" alt="Logo"> -->
+            <i class="bi bi-shield-shaded" style="font-size: 3.5rem;"></i>
+            <h5 class="fw-bold mt-2 mb-0" style="letter-spacing: 1px;">HCM-UTE</h5>
+        </a>
+
+        <!-- Info User -->
+        <div class="user-info">
+            <img th:src="@{/images/default-avatar.png}" alt="User Avatar" style="background: white;">
+            <h6 class="mb-1" sec:authentication="name">Nguyễn Văn A</h6>
+            <small style="color: #9ca3af;">Sinh viên</small>
+        </div>
+
+        <!-- Menu Navigation -->
+        <ul class="nav flex-column mb-auto mt-2">
+            <div class="menu-header">Trang cá nhân</div>
+            <li class="nav-item">
+                <a th:href="@{/}" class="nav-link"><i class="bi bi-house-door me-2"></i>Trang chủ</a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/announcements}" class="nav-link"><i class="bi bi-bell me-2"></i>Thông báo</a>
+            </li>
+
+            <th:block sec:authorize="hasRole('ADMIN')">
+                <div class="menu-header">Quản trị hệ thống</div>
+                <li class="nav-item"><a th:href="@{/admin/departments}" class="nav-link"><i
+                            class="bi bi-diagram-3 me-2"></i>Bộ Môn</a></li>
+                <li class="nav-item"><a th:href="@{/admin/users}" class="nav-link"><i
+                            class="bi bi-people me-2"></i>Người dùng</a></li>
+                <li class="nav-item"><a th:href="@{/management/announcements}" class="nav-link"><i
+                            class="bi bi-megaphone me-2"></i>QL Thông báo</a></li>
+            </th:block>
+
+            <th:block sec:authorize="hasRole('DEAN')">
+                <div class="menu-header">Nghiệp vụ khoa</div>
+                <li class="nav-item"><a th:href="@{/dean/rounds}" class="nav-link"><i
+                            class="bi bi-calendar-check me-2"></i>QL Đăng ký</a></li>
+                <li class="nav-item"><a th:href="@{/councils}" class="nav-link"><i
+                            class="bi bi-journal-bookmark me-2"></i>Hội đồng</a></li>
+                <li class="nav-item"><a th:href="@{/management/announcements}" class="nav-link"><i
+                            class="bi bi-megaphone me-2"></i>Thông báo khoa</a></li>
+            </th:block>
+
+            <th:block sec:authorize="hasAnyRole('STUDENT', 'ADMIN')">
+                <div class="menu-header">Đào tạo</div>
+                <li class="nav-item"><a th:href="@{/groups}" class="nav-link"><i class="bi bi-collection me-2"></i>Nhóm
+                        sinh viên</a></li>
+            </th:block>
+            <th:block sec:authorize="hasAnyRole('LECTURER', 'STUDENT')">
+                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i
+                    class="bi bi-lightbulb me-2"></i>Đề xuất đề tài</a></li>
+            </th:block>
+        </ul>
+    </nav>
+</body>
+
+</html>

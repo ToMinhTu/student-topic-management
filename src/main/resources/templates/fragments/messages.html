@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="alerts" class="floating-alerts">
+        <!-- Phan thong bao chung cho moi component -->
+        <!-- Thong bao thanh cong -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Thong bao loi -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-x-circle-fill me-2"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Custom thong bao cho login.html -->
+        <div th:if="${param.logout}" class="alert alert-success alert-dismissible fade show shadow" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> Đã đăng xuất thành công
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show shadow" role="alert">
+            <i class="bi bi-x-circle-fill me-2"></i> Thông tin đăng nhập không hợp lệ
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.passwordChanged}" class="alert alert-success alert-dismissible fade show shadow"
+            role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> Đổi mật khẩu thành công
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.expired}" class="alert alert-warning alert-dismissible fade show shadow" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> Phiên làm việc hết hạn. Vui lòng đăng nhập lại
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -6,11 +6,23 @@ import jakarta.validation.constraints.Size;
 public class DepartmentForm {
     private Long id;
 
-    @NotBlank (message = "Tên Bộ môn không được để trống")
-    @Size (max = 150, message = "Tên Bộ môn tối đa 150 ký tự")
+    @NotBlank(message = "Tên Bộ môn không được để trống")
+    @Size(max = 150, message = "Tên Bộ môn tối đa 150 ký tự")
     private String name;
 
+    @Size(max = 5000, message = "Mô tả tối đa 5000 ký tự")
     private String description;
+
+    public DepartmentForm() {
+    }
+
+    public DepartmentForm(Long id,
+            @NotBlank(message = "Tên Bộ môn không được để trống") @Size(max = 150, message = "Tên Bộ môn tối đa 150 ký tự") String name,
+            @Size(max = 5000, message = "Mô tả tối đa 5000 ký tự") String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
 
     public Long getId() {
         return id;
@@ -36,5 +48,4 @@ public class DepartmentForm {
         this.description = description;
     }
 
-    
 }

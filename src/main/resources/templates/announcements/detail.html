@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Chi tiết Thông báo</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <style></style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="card shadow-sm mx-auto" style="max-width: 900px;">
+            <div class="card-header bg-dark text-white p-4">
+                <h3 class="mb-2" th:text="${announcement.title}">Tiêu đề</h3>
+                <div class="text-light opacity-75 small">
+                    Đăng bởi: <strong th:text="${announcement.author.fullname}"></strong>
+                    | Ngày công bố (UTC): <span
+                        th:text="${#temporals.format(announcement.publishedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6;"
+                    th:text="${announcement.content}"></p>
+            </div>
+            <div class="card-footer bg-white p-3 text-end">
+                <a th:href="@{/announcements}" class="btn btn-outline-secondary">Quay lại danh sách</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>

@@ -11,20 +11,20 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.GenerationType;
 
-@Entity 
-@Table (name = "departments")
+@Entity
+@Table(name = "departments")
 public class Department {
-    @Id 
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column (nullable = false, length = 150, unique = true)
+    @Column(nullable = false, length = 150, unique = true)
     private String name;
 
-    @Column (columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column (name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public Department() {
@@ -35,11 +35,19 @@ public class Department {
         this.description = description;
     }
 
-    @PrePersist 
+    // Spring run ham nay truoc khi insert vao db de set gio utc
+    @PrePersist
     void initializeTime() {
-        if(createdAt == null) {
+        if (createdAt == null) {
             createdAt = LocalDateTime.now(ZoneOffset.UTC);
         }
+    }
+
+    public Department(Long id, String name, String description, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
@@ -73,4 +81,5 @@ public class Department {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
 }

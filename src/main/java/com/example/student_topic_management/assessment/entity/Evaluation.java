@@ -1,4 +1,5 @@
 // toan-D3
+// toan-D3 - thêm chức năng nhập điểm
 package com.example.student_topic_management.assessment.entity;
 
 import java.math.BigDecimal;

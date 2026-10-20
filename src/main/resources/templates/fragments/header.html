@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<body>
+    <header th:fragment="header" id="app-header" sec:authorize="isAuthenticated()">
+        <div class="d-flex align-items-center">
+            <!-- ON/OFF SIDEBAR -->
+            <button class="btn text-white me-3" id="sidebarToggle">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <h1 class="header-title d-none d-md-block">CỔNG ĐỀ TÀI SINH VIÊN</h1>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <!-- Icon THONG BAO -->
+            <a href="#" class="text-white me-4 position-relative">
+                <i class="bi bi-bell-fill fs-5"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style="font-size: 0.6rem;">2</span>
+            </a>
+
+            <!-- Menu user (Dropdown) -->
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                    id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img th:src="@{/images/default-avatar.png}" alt="Avatar" width="32" height="32"
+                        class="rounded-circle me-2" style="background: white;">
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownUser">
+                    <li>
+                        <h6 class="dropdown-header text-center" sec:authentication="name">Tài khoản</h6>
+                    </li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Hồ sơ của tôi</a></li>
+                    <li><a class="dropdown-item" th:href="@{/account/password}"><i class="bi bi-key me-2"></i>Đổi mật
+                            khẩu</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" class="dropdown-item text-danger fw-bold"><i
+                                    class="bi bi-box-arrow-right me-2"></i>Đăng xuất</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+    <!-- Giu layout khong vo trang login -->
+    <header th:fragment="header" id="app-header" sec:authorize="!isAuthenticated()" style="display: none;"></header>
+</body>
+
+</html>
