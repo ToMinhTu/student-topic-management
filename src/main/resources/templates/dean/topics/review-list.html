@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Phê duyệt đề tài theo khoa</title></head>
+<body>
+<main layout:fragment="content" class="container-fluid py-4">
+    <h1 class="h3 mb-4">Đề tài chờ trưởng khoa phê duyệt</h1>
+    <p>Danh sách đề tài của khoa đã được bộ môn đồng ý, chưa có quyết định cuối.
+        Quyết định chỉ được lưu trong pha đề xuất của đợt đang mở.</p>
+    <p><a th:href="@{/dean/topics/publish}">Công bố đề tài đã duyệt</a></p>
+    <div th:if="${topics.empty}" class="alert alert-info">Không có đề tài chờ phê duyệt trong trang này.</div>
+    <div th:unless="${topics.empty}" class="table-responsive">
+        <table class="table table-bordered">
+            <thead><tr><th scope="col">Mã đề tài</th><th scope="col">Tên đề tài</th>
+                <th scope="col">ID đợt</th><th scope="col">ID bộ môn</th><th scope="col">Thao tác</th></tr></thead>
+            <tbody><tr th:each="topic : ${topics.content}">
+                <td th:text="${topic.code}"></td><td th:text="${topic.title}"></td>
+                <td th:text="${topic.roundId}"></td><td th:text="${topic.departmentId}"></td>
+                <td><a th:href="@{/dean/topics/review/{id}(id=${topic.id})}">Xem và phê duyệt</a></td>
+            </tr></tbody>
+        </table>
+    </div>
+    <nav aria-label="Phân trang phê duyệt" class="d-flex gap-3 align-items-center">
+        <a th:if="${topics.hasPrevious()}" th:href="@{/dean/topics/review(page=${topics.number - 1})}">Trang trước</a>
+        <span th:if="${topics.totalPages > 0}" th:text="${'Trang ' + (topics.number + 1) + '/' + topics.totalPages}"></span>
+        <a th:if="${topics.hasNext()}" th:href="@{/dean/topics/review(page=${topics.number + 1})}">Trang sau</a>
+    </nav>
+</main>
+</body></html>

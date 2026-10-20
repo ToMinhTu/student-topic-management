@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Phê duyệt đề tài</title></head>
+<body>
+<main layout:fragment="content" class="container-fluid py-4">
+    <a th:href="@{/dean/topics/review}">Danh sách chờ phê duyệt</a>
+    <h1 class="h3 mt-3" th:text="${topic.title}"></h1>
+    <dl class="row">
+        <dt class="col-sm-3">Mã đề tài</dt><dd class="col-sm-9" th:text="${topic.code}"></dd>
+        <dt class="col-sm-3">ID bộ môn</dt><dd class="col-sm-9" th:text="${topic.departmentId}"></dd>
+        <dt class="col-sm-3">Trạng thái</dt><dd class="col-sm-9" th:text="${topic.status}"></dd>
+        <dt class="col-sm-3">Mô tả</dt><dd class="col-sm-9 text-break" style="white-space: pre-wrap" th:text="${topic.description}"></dd>
+        <dt class="col-sm-3">Yêu cầu</dt><dd class="col-sm-9 text-break" th:text="${topic.requirements ?: 'Không có'}"></dd>
+        <dt class="col-sm-3">Kết quả bộ môn</dt><dd class="col-sm-9" th:text="${topic.departmentDecision ?: 'Chưa sơ duyệt'}"></dd>
+        <dt class="col-sm-3">Nhận xét bộ môn</dt><dd class="col-sm-9 text-break" style="white-space: pre-wrap" th:text="${topic.departmentComment ?: 'Không có'}"></dd>
+        <dt class="col-sm-3">Người phê duyệt</dt><dd class="col-sm-9" th:text="${topic.approvedBy ?: 'Chưa có'}"></dd>
+        <dt class="col-sm-3">Thời gian phê duyệt (UTC)</dt><dd class="col-sm-9" th:text="${topic.approvedAt ?: 'Chưa có'}"></dd>
+        <dt class="col-sm-3">Lý do từ chối</dt><dd class="col-sm-9 text-break" style="white-space: pre-wrap" th:text="${topic.rejectionReason ?: 'Không có'}"></dd>
+    </dl>
+    <div th:unless="${canReview}" class="alert alert-info">
+        Đề tài chưa đủ điều kiện, đã có quyết định hoặc hiện ngoài thời gian phê duyệt.
+    </div>
+    <form th:if="${canReview}" th:action="@{/dean/topics/review/{id}(id=${topic.id})}"
+          th:object="${reviewForm}" method="post" class="card card-body">
+        <label for="decision" class="form-label">Quyết định của trưởng khoa</label>
+        <select id="decision" th:field="*{decision}" class="form-select mb-3" required>
+            <option value="">Chọn quyết định</option>
+            <option value="APPROVED">Phê duyệt</option>
+            <option value="REJECTED">Từ chối</option>
+        </select>
+        <label for="rejectionReason" class="form-label">Lý do từ chối</label>
+        <textarea id="rejectionReason" th:field="*{rejectionReason}" maxlength="4000" rows="5"
+                  class="form-control" aria-describedby="reasonHelp"></textarea>
+        <p id="reasonHelp" class="form-text">Bắt buộc nhập lý do khi từ chối. Tối đa 4000 ký tự.</p>
+        <button type="submit" class="btn btn-primary align-self-start">Lưu quyết định</button>
+    </form>
+</main>
+</body></html>
