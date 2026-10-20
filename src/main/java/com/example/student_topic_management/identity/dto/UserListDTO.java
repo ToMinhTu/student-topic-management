@@ -1,5 +1,6 @@
 package com.example.student_topic_management.identity.dto;
 
+// Read-Only DTO -> get list data
 public class UserListDTO {
     private Long id;
     private String username;

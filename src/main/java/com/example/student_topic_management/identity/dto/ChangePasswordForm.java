@@ -8,7 +8,7 @@ public class ChangePasswordForm {
     private String currentPassword;
 
     @NotBlank(message = "Mật khẩu mới không được để trống")
-    @Size(min = 12, max = 72, message = "Mật khẩu tối thiểu 12 ký tự")
+    @Size(min = 12, max = 72, message = "Mật khẩu mới phải từ 12 ký tự trở lên")
     private String newPassword;
 
     @NotBlank(message = "Vui lòng xác nhận mật khẩu mới")

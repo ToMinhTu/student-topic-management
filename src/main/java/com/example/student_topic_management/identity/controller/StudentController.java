@@ -1,6 +1,7 @@
 package com.example.student_topic_management.identity.controller;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,6 +20,7 @@ import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin/students")
+@PreAuthorize("hasRole('ADMIN')")
 public class StudentController {
     private final StudentAccountService studentAccountService;
     private final DepartmentRepository departmentRepository;
@@ -28,24 +30,23 @@ public class StudentController {
         this.departmentRepository = departmentRepository;
     }
 
+    private String reloadForm(Model model) {
+        // danh sach department
+        model.addAttribute("departments", departmentRepository.findAll());
+        return "users/student_form";
+    }
+
     @GetMapping("/new")
     public String showCreateForm(Model model) {
         model.addAttribute("form", new CreateStudentForm());
-        // danh sach department
-        model.addAttribute("departments", departmentRepository.findAll());
-        return "students/new";
-    }
-
-    private String reloadForm(Model model) {
-        model.addAttribute("departments", departmentRepository.findAll());
-        return "students/new";
+        return reloadForm(model);
     }
 
     // Nhan du lieu tu form
-    @PostMapping 
-    public String createStudent(@Valid @ModelAttribute("form") CreateStudentForm form, BindingResult errors,
+    @PostMapping("/save")
+    public String saveStudent(@Valid @ModelAttribute("form") CreateStudentForm form, BindingResult errors,
             Model model, RedirectAttributes redirect) {
-        // Neu nhap sai 
+        // Neu nhap sai
         if (errors.hasErrors()) {
             return reloadForm(model);
         }
@@ -55,16 +56,20 @@ public class StudentController {
             studentAccountService.createStudentAccount(form);
         } catch (BusinessException ex) {
             // Loi nghiep vu: Trung username, email
+            // Loi nay hien thi ngay duoi input
             errors.reject("business", ex.getMessage());
             return reloadForm(model);
         } catch (DataIntegrityViolationException ex) {
             // Loi 2 request cung luc luu trung MSSV (Tu database)
-            errors.reject("conflict", "Lỗi dữ liệu: Thông tin định danh đã tồn tại trong hệ thống.");
+            // errors.reject("conflict", "Lỗi dữ liệu: Thông tin định danh đã tồn tại trong
+            // hệ thống.");
+            // Loi nay se chuyen qua popup messages
+            model.addAttribute("error", "Lỗi dữ liệu: Thông tin định danh đã tồn tại trong hệ thống.");
             return reloadForm(model);
         }
 
         // Khi thanh cong
         redirect.addFlashAttribute("success", "Đã tạo tài khoản sinh vien thành công!");
-        return "redirect:/admin/students/new";
+        return "redirect:/admin/users";
     }
 }

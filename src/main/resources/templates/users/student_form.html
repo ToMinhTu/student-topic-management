@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Thêm mới Sinh viên</title>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div class="page-title-tab mb-0">THÊM MỚI SINH VIÊN</div>
+            <a th:href="@{/admin/users}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Về danh sách
+            </a>
+        </div>
+
+        <div class="content-card mx-auto" style="max-width: 850px;">
+
+            <form th:action="@{/admin/students/save}" th:object="${form}" method="post">
+                <!-- Bao loi nghiep vu -->
+                <!-- <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                    <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+                </div> -->
+                <div class="alert alert-danger shadow-sm mb-4" th:if="${#fields.hasGlobalErrors()}">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                    <strong>Lỗi:</strong>
+                    <span th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="d-block mt-1"></span>
+                </div>
+                <div class="row g-4">
+                    <!-- Thong tin tai khoan -->
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Tên đăng nhập <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" th:field="*{username}"
+                            th:classappend="${#fields.hasErrors('username')} ? 'is-invalid' : ''"
+                            placeholder="Ví dụ: 22110001">
+                        <div class="invalid-feedback" th:errors="*{username}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" th:field="*{password}"
+                            th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                            placeholder="Mật khẩu (tối thiểu 12 ký tự)">
+                        <div class="invalid-feedback" th:errors="*{password}"></div>
+                        <div class="form-text">Tối thiểu 12 ký tự</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Họ và tên <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" th:field="*{fullname}"
+                            th:classappend="${#fields.hasErrors('fullname')} ? 'is-invalid' : ''"
+                            placeholder="Ví dụ: Nguyễn Văn A">
+                        <div class="invalid-feedback" th:errors="*{fullname}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Email sinh viên <span
+                                class="text-danger">*</span></label>
+                        <input type="email" class="form-control" th:field="*{email}"
+                            th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                            placeholder="Ví dụ: 22110001@student.hcmute.edu.vn">
+                        <div class="invalid-feedback" th:errors="*{email}"></div>
+                    </div>
+
+                    <!-- phan cach -->
+                    <div class="col-12">
+                        <hr class="my-1">
+                    </div>
+
+                    <!-- Thong tin sinh vien -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-theme">Mã số sinh viên <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" th:field="*{studentCode}"
+                            th:classappend="${#fields.hasErrors('studentCode')} ? 'is-invalid' : ''"
+                            placeholder="Nhập MSSV">
+                        <div class="invalid-feedback" th:errors="*{studentCode}"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-theme">Lớp sinh hoạt</label>
+                        <input type="text" class="form-control" th:field="*{className}"
+                            th:classappend="${#fields.hasErrors('className')} ? 'is-invalid' : ''"
+                            placeholder="Ví dụ: 22DTH1A">
+                        <div class="invalid-feedback" th:errors="*{className}"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-theme">Bộ môn trực thuộc <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select" th:field="*{departmentId}"
+                            th:classappend="${#fields.hasErrors('departmentId')} ? 'is-invalid' : ''">
+                            <option value="">-- Chọn bộ môn --</option>
+                            <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{departmentId}"></div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-5 pt-3 border-top">
+                    <a th:href="@{/admin/users}" class="btn btn-light border px-4">Huỷ</a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-floppy me-2"></i>Lưu tài khoản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <script></script>
+    </th:block>
+</body>
+
+</html>

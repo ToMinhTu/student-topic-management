@@ -1,5 +1,6 @@
 package com.example.student_topic_management.identity.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import com.example.student_topic_management.identity.service.UserManagementServi
 
 @Controller
 @RequestMapping("/admin/users")
+@PreAuthorize("hasRole('ADMIN')")
 public class UserManagementController {
     private final UserManagementService userManagementService;
 
