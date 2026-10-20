@@ -32,6 +32,12 @@ public class DefenseForm {
     @Size(max = 200, message = "Địa điểm tối đa 200 ký tự")
     private String location;
 
+    @Positive(message = "Mã giảng viên phản biện phải là số dương")
+    private Long reviewerLecturerId;
+
+    public Long getReviewerLecturerId() { return reviewerLecturerId; }
+    public void setReviewerLecturerId(Long reviewerLecturerId) { this.reviewerLecturerId = reviewerLecturerId; }
+
     public Long getRegistrationId() {
         return registrationId;
     }

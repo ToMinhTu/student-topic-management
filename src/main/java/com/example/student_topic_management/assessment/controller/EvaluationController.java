@@ -11,6 +11,7 @@ import com.example.student_topic_management.assessment.dto.EvaluationForm;
 import com.example.student_topic_management.assessment.service.EvaluationService;
 
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 public class EvaluationController {
@@ -22,6 +23,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String listEvaluations(Model model) {
         model.addAttribute(
                 "evaluations",
@@ -31,6 +33,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations/new")
+    @PreAuthorize("hasRole('LECTURER')")
     public String showCreateForm(Model model) {
         model.addAttribute(
                 "evaluationForm",
@@ -40,20 +43,27 @@ public class EvaluationController {
     }
 
     @PostMapping("/evaluations/save")
+    @PreAuthorize("hasRole('LECTURER')")
     public String saveEvaluation(
             @Valid @ModelAttribute("evaluationForm") EvaluationForm form,
-            BindingResult result) {
+            BindingResult result, Model model) {
 
         if (result.hasErrors()) {
             return "evaluations/form";
         }
 
-        evaluationService.saveEvaluation(form);
+        try {
+            evaluationService.saveEvaluation(form);
+        } catch (RuntimeException ex) {
+            model.addAttribute("error", ex.getMessage());
+            return "evaluations/form";
+        }
 
         return "redirect:/evaluations";
     }
 
     @GetMapping("/evaluations/{id}")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String detailEvaluation(
             @PathVariable Long id,
             Model model) {

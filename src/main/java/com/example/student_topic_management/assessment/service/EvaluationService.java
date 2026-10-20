@@ -12,18 +12,22 @@ import com.example.student_topic_management.assessment.entity.Evaluation;
 import com.example.student_topic_management.assessment.entity.ReviewerAssignment;
 import com.example.student_topic_management.assessment.repository.EvaluationRepository;
 import com.example.student_topic_management.assessment.repository.ReviewerAssignmentRepository;
+import com.example.student_topic_management.identity.service.CurrentUserService;
 
 @Service
 public class EvaluationService {
 
     private final EvaluationRepository evaluationRepository;
     private final ReviewerAssignmentRepository assignmentRepository;
+    private final CurrentUserService currentUserService;
 
     public EvaluationService(
             EvaluationRepository evaluationRepository,
-            ReviewerAssignmentRepository assignmentRepository) {
+            ReviewerAssignmentRepository assignmentRepository,
+            CurrentUserService currentUserService) {
         this.evaluationRepository = evaluationRepository;
         this.assignmentRepository = assignmentRepository;
+        this.currentUserService = currentUserService;
     }
 
     public List<Evaluation> findAll() {
@@ -47,6 +51,11 @@ public class EvaluationService {
                 form.getAssignmentId())) {
             throw new RuntimeException(
                     "Phân công này đã có phiếu chấm");
+        }
+
+        Long currentUserId = currentUserService.getCurrentUserId();
+        if (!currentUserId.equals(assignment.getLecturerId())) {
+            throw new RuntimeException("Bạn không có quyền nhập điểm cho phân công này");
         }
 
         Evaluation evaluation = new Evaluation();

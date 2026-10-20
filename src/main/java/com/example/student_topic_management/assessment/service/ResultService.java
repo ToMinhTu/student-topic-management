@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.student_topic_management.assessment.dto.ResultForm;
 import com.example.student_topic_management.assessment.entity.Evaluation;
@@ -44,6 +45,7 @@ public class ResultService {
                         "Không tìm thấy kết quả"));
     }
 
+    @Transactional
     public void consolidateResult(ResultForm form) {
 
         if (resultRepository.existsByRegistrationId(

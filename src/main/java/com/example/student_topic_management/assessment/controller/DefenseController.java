@@ -14,6 +14,7 @@ import com.example.student_topic_management.assessment.dto.DefenseForm;
 import com.example.student_topic_management.assessment.service.DefenseService;
 
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 public class DefenseController {
@@ -25,12 +26,14 @@ public class DefenseController {
     }
 
     @GetMapping("/defenses")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String listDefenses(Model model) {
         model.addAttribute("defenses", defenseService.findAll());
         return "defenses/list";
     }
 
     @GetMapping("/defenses/new")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String showCreateForm(Model model) {
         model.addAttribute(
                 "defenseForm",
@@ -40,20 +43,27 @@ public class DefenseController {
     }
 
     @PostMapping("/defenses/save")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String saveDefense(
             @Valid @ModelAttribute("defenseForm") DefenseForm form,
-            BindingResult result) {
+            BindingResult result, Model model) {
 
         if (result.hasErrors()) {
             return "defenses/form";
         }
 
-        defenseService.saveDefense(form);
+        try {
+            defenseService.saveDefense(form);
+        } catch (RuntimeException ex) {
+            model.addAttribute("error", ex.getMessage());
+            return "defenses/form";
+        }
 
         return "redirect:/defenses";
     }
 
     @GetMapping("/defenses/{id}")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String detailDefense(
             @PathVariable Long id,
             Model model) {

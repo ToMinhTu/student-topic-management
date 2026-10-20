@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.example.student_topic_management.assessment.dto.DefenseForm;
 import com.example.student_topic_management.assessment.entity.Council;
@@ -13,19 +15,36 @@ import com.example.student_topic_management.assessment.entity.CouncilStatus;
 import com.example.student_topic_management.assessment.entity.Defense;
 import com.example.student_topic_management.assessment.repository.CouncilRepository;
 import com.example.student_topic_management.assessment.repository.DefenseRepository;
+import com.example.student_topic_management.assessment.repository.CouncilMemberRepository;
+import com.example.student_topic_management.assessment.repository.ReviewerAssignmentRepository;
+import com.example.student_topic_management.assessment.entity.CouncilMember;
+import com.example.student_topic_management.assessment.entity.ReviewerAssignment;
+import com.example.student_topic_management.identity.service.CurrentUserService;
 
 @Service
 public class DefenseService {
 
     private final DefenseRepository defenseRepository;
     private final CouncilRepository councilRepository;
+    private final CouncilMemberRepository councilMemberRepository;
+    private final ReviewerAssignmentRepository assignmentRepository;
+    private final CurrentUserService currentUserService;
+    private final JdbcTemplate jdbc;
 
     public DefenseService(
             DefenseRepository defenseRepository,
-            CouncilRepository councilRepository) {
+            CouncilRepository councilRepository,
+            CouncilMemberRepository councilMemberRepository,
+            ReviewerAssignmentRepository assignmentRepository,
+            CurrentUserService currentUserService,
+            JdbcTemplate jdbc) {
 
         this.defenseRepository = defenseRepository;
         this.councilRepository = councilRepository;
+        this.councilMemberRepository = councilMemberRepository;
+        this.assignmentRepository = assignmentRepository;
+        this.currentUserService = currentUserService;
+        this.jdbc = jdbc;
     }
 
     public List<Defense> findAll() {
@@ -42,7 +61,15 @@ public class DefenseService {
                         "Không tìm thấy lịch bảo vệ"));
     }
 
+    @Transactional
     public void saveDefense(DefenseForm form) {
+
+        String registrationStatus = jdbc.queryForObject(
+                "SELECT status FROM topic_registrations WHERE id = ? AND round_id = ?",
+                String.class, form.getRegistrationId(), form.getRoundId());
+        if (!"APPROVED".equals(registrationStatus)) {
+            throw new RuntimeException("Chỉ hồ sơ đăng ký đã được duyệt mới được lập lịch bảo vệ");
+        }
 
         Council council = councilRepository.findById(form.getCouncilId())
                 .orElseThrow(() -> new RuntimeException(
@@ -74,6 +101,13 @@ public class DefenseService {
                     "Hội đồng không thuộc đợt đăng ký này");
         }
 
+        boolean councilConflict = defenseRepository.findByCouncilId(form.getCouncilId()).stream()
+                .anyMatch(d -> d.getScheduledAt().equals(form.getScheduledAt())
+                        && !"CANCELLED".equals(d.getStatus()));
+        if (councilConflict) {
+            throw new RuntimeException("Hội đồng đã có lịch bảo vệ tại thời điểm này");
+        }
+
         Defense defense = new Defense();
 
         defense.setRegistrationId(form.getRegistrationId());
@@ -84,5 +118,24 @@ public class DefenseService {
         defense.setStatus("SCHEDULED");
 
         defenseRepository.save(defense);
+
+        Long assignedBy = currentUserService.getCurrentUserId();
+        for (CouncilMember member : councilMemberRepository.findByIdCouncilId(form.getCouncilId())) {
+            saveAssignment(form.getRegistrationId(), member.getId().getLecturerId(), "COUNCIL", assignedBy);
+        }
+        if (form.getReviewerLecturerId() != null) {
+            if (councilMemberRepository.existsById(new com.example.student_topic_management.assessment.entity.CouncilMemberId(form.getCouncilId(), form.getReviewerLecturerId())))
+                throw new RuntimeException("Giảng viên phản biện không được trùng thành viên hội đồng");
+            saveAssignment(form.getRegistrationId(), form.getReviewerLecturerId(), "REVIEWER", assignedBy);
+        }
+    }
+
+    private void saveAssignment(Long registrationId, Long lecturerId, String type, Long assignedBy) {
+        if (assignmentRepository.existsByRegistrationIdAndLecturerId(registrationId, lecturerId))
+            throw new RuntimeException("Một giảng viên không được phân công trùng trong cùng hồ sơ");
+        ReviewerAssignment a = new ReviewerAssignment();
+        a.setRegistrationId(registrationId); a.setLecturerId(lecturerId);
+        a.setAssignmentType(type); a.setAssignedBy(assignedBy);
+        assignmentRepository.save(a);
     }
 }

@@ -11,6 +11,7 @@ import com.example.student_topic_management.assessment.dto.ResultForm;
 import com.example.student_topic_management.assessment.service.ResultService;
 
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 public class ResultController {
@@ -22,6 +23,7 @@ public class ResultController {
     }
 
     @GetMapping("/results")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String listResults(Model model) {
         model.addAttribute(
                 "results",
@@ -31,6 +33,7 @@ public class ResultController {
     }
 
     @GetMapping("/results/new")
+    @PreAuthorize("hasRole('DEAN')")
     public String showCreateForm(Model model) {
         model.addAttribute(
                 "resultForm",
@@ -40,20 +43,27 @@ public class ResultController {
     }
 
     @PostMapping("/results/consolidate")
+    @PreAuthorize("hasRole('DEAN')")
     public String consolidateResult(
             @Valid @ModelAttribute("resultForm") ResultForm form,
-            BindingResult result) {
+            BindingResult result, Model model) {
 
         if (result.hasErrors()) {
             return "results/form";
         }
 
-        resultService.consolidateResult(form);
+        try {
+            resultService.consolidateResult(form);
+        } catch (RuntimeException ex) {
+            model.addAttribute("error", ex.getMessage());
+            return "results/form";
+        }
 
         return "redirect:/results";
     }
 
     @GetMapping("/results/{id}")
+    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
     public String detailResult(
             @PathVariable Long id,
             Model model) {
