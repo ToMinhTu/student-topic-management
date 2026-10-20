@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<body>
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm"
+        sec:authorize="isAuthenticated()">
+        <div class="container-fluid px-3 px-lg-4">
+            <a class="navbar-brand fw-bold" th:href="@{/}">
+                <i class="bi bi-shield-shaded me-2"></i>HCM-UTE
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar" aria-expanded="false" aria-label="Mở menu điều hướng">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}"><i class="bi bi-house-door me-1"></i>Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/announcements}"><i class="bi bi-bell me-1"></i>Thông báo</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('STUDENT','ADMIN')">
+                        <a class="nav-link" th:href="@{/groups}"><i class="bi bi-people me-1"></i>Nhóm sinh viên</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('LECTURER','STUDENT')">
+                        <a class="nav-link" th:href="@{/topics/my}"><i class="bi bi-lightbulb me-1"></i>Đề tài</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('DEAN')">
+                        <a class="nav-link" th:href="@{/dean/rounds}"><i class="bi bi-calendar-check me-1"></i>Đợt đăng ký</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('DEAN','DEPARTMENT_HEAD')">
+                        <a class="nav-link" th:href="@{/councils}"><i class="bi bi-journal-bookmark me-1"></i>Hội đồng</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:href="@{/admin/users}"><i class="bi bi-person-gear me-1"></i>Người dùng</a>
+                    </li>
+                </ul>
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span sec:authentication="name">Tài khoản</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" th:href="@{/account/password}">
+                                <i class="bi bi-key me-2"></i>Đổi mật khẩu
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button class="dropdown-item text-danger" type="submit">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</body>
+
+</html>
