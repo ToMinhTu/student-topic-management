@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
     layout:decorate="~{layout}">
 
 <head>
@@ -66,7 +66,7 @@
         <div class="container">
             <h1>Đề tài của tôi</h1>
 
-            <p><a class="btn" th:href="@{/topics/new}" style="background-color: #173B34;">Tạo đề xuất mới</a></p>
+            <p sec:authorize="hasRole('LECTURER')"><a class="btn" th:href="@{/topics/new}" style="background-color: #173B34;">Tạo đề xuất mới</a></p>
 
             <p th:if="${success}" th:text="${success}"></p>
             <p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
