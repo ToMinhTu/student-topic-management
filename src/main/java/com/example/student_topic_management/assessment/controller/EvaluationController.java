@@ -28,16 +28,17 @@ public class EvaluationController {
         model.addAttribute(
                 "evaluations",
                 evaluationService.findAll());
+        model.addAttribute("assignments", evaluationService.findAssignmentsForCurrentUser());
 
         return "evaluations/list";
     }
 
     @GetMapping("/evaluations/new")
     @PreAuthorize("hasRole('LECTURER')")
-    public String showCreateForm(Model model) {
-        model.addAttribute(
-                "evaluationForm",
-                new EvaluationForm());
+    public String showCreateForm(@RequestParam(required = false) Long assignmentId, Model model) {
+        EvaluationForm form = new EvaluationForm();
+        form.setAssignmentId(assignmentId);
+        model.addAttribute("evaluationForm", form);
 
         return "evaluations/form";
     }

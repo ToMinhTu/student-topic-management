@@ -12,9 +12,17 @@
 
         <!-- Info User -->
         <div class="user-info">
-            <img th:src="@{/images/default-avatar.png}" alt="User Avatar" style="background: white;">
+            <img th:src="@{/images/default-avatar.png}" alt="User Avatar"
+                style="background: white; border-radius: 50% !important;">
             <h6 class="mb-1" sec:authentication="name">Nguyễn Văn A</h6>
-            <small style="color: #9ca3af;">Sinh viên</small>
+            <small style="color: #9ca3af;"
+                sec:authorize="hasRole('STUDENT') and !hasRole('LECTURER') and !hasRole('DEAN') and !hasRole('ADMIN')">Sinh
+                viên</small>
+            <small style="color: #9ca3af;" sec:authorize="hasRole('LECTURER') and !hasRole('DEAN')">Giảng viên</small>
+            <small style="color: #9ca3af;" sec:authorize="hasRole('DEAN')">Trưởng khoa</small>
+            <small style="color: #9ca3af;"
+                sec:authorize="hasRole('ADMIN') and !hasRole('STUDENT') and !hasRole('LECTURER') and !hasRole('DEAN')">Quản
+                trị viên</small>
         </div>
 
         <!-- Menu Navigation -->
@@ -53,14 +61,18 @@
                         sinh viên</a></li>
             </th:block>
             <th:block sec:authorize="hasAnyRole('LECTURER', 'STUDENT')">
-                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i
-                    class="bi bi-lightbulb me-2"></i>Đề xuất đề tài</a></li>
+                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i class="bi bi-lightbulb me-2"></i>Đề
+                        xuất đề tài</a></li>
             </th:block>
             <th:block sec:authorize="hasRole('LECTURER')">
-                <li class="nav-item"><a th:href="@{/lecturer/registrations}" class="nav-link"><i class="bi bi-clipboard-check me-2"></i>Duyệt đăng ký nhóm</a></li>
+                <li class="nav-item"><a th:href="@{/lecturer/registrations}" class="nav-link"><i
+                            class="bi bi-clipboard-check me-2"></i>Duyệt đăng ký nhóm</a></li>
+                <li class="nav-item"><a th:href="@{/evaluations}" class="nav-link"><i class="bi bi-pencil-square me-2"></i>Chấm điểm</a></li>
             </th:block>
             <th:block sec:authorize="hasRole('STUDENT')">
-                <li class="nav-item"><a th:href="@{/topic-registration}" class="nav-link"><i class="bi bi-bookmark-check me-2"></i>Đăng ký đề tài</a></li>
+                <li class="nav-item"><a th:href="@{/topic-registration}" class="nav-link"><i
+                            class="bi bi-bookmark-check me-2"></i>Đăng ký đề tài</a></li>
+                <li class="nav-item"><a th:href="@{/results}" class="nav-link"><i class="bi bi-award me-2"></i>Xem điểm</a></li>
             </th:block>
         </ul>
     </nav>

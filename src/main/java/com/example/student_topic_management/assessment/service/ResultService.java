@@ -17,6 +17,7 @@ import com.example.student_topic_management.assessment.entity.ReviewerAssignment
 import com.example.student_topic_management.assessment.repository.EvaluationRepository;
 import com.example.student_topic_management.assessment.repository.ResultRepository;
 import com.example.student_topic_management.assessment.repository.ReviewerAssignmentRepository;
+import com.example.student_topic_management.identity.service.CurrentUserService;
 
 @Service
 public class ResultService {
@@ -24,15 +25,18 @@ public class ResultService {
     private final ResultRepository resultRepository;
     private final ReviewerAssignmentRepository assignmentRepository;
     private final EvaluationRepository evaluationRepository;
+    private final CurrentUserService currentUserService;
 
     public ResultService(
             ResultRepository resultRepository,
             ReviewerAssignmentRepository assignmentRepository,
-            EvaluationRepository evaluationRepository) {
+            EvaluationRepository evaluationRepository,
+            CurrentUserService currentUserService) {
 
         this.resultRepository = resultRepository;
         this.assignmentRepository = assignmentRepository;
         this.evaluationRepository = evaluationRepository;
+        this.currentUserService = currentUserService;
     }
 
     public List<Result> findAll() {
@@ -43,6 +47,10 @@ public class ResultService {
         return resultRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Không tìm thấy kết quả"));
+    }
+
+    public List<Result> findVisibleToStudent() {
+        return resultRepository.findVisibleToStudent(currentUserService.getCurrentUserId());
     }
 
     @Transactional

@@ -1,59 +1,55 @@
-<!-- toan-D3 -->
-<!-- toan-D3 - thêm chức năng nhập điểm -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Nhập điểm</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>Nhập phiếu chấm điểm</title>
 </head>
 
 <body>
-
-    <h1>Nhập phiếu chấm</h1>
-
-    <form th:action="@{/evaluations/save}" th:object="${evaluationForm}" method="post">
-
-        <label>Mã phân công:</label>
-        <input type="number" th:field="*{assignmentId}">
-
-        <p th:if="${#fields.hasErrors('assignmentId')}" th:errors="*{assignmentId}">
-        </p>
-
-        <br>
-
-        <label>Điểm:</label>
-        <input type="number" step="0.01" min="0" max="10" th:field="*{score}">
-
-        <p th:if="${#fields.hasErrors('score')}" th:errors="*{score}">
-        </p>
-
-        <br>
-
-        <label>Nhận xét:</label>
-        <textarea th:field="*{comments}" rows="5" cols="40">
-    </textarea>
-
-        <p th:if="${#fields.hasErrors('comments')}" th:errors="*{comments}">
-        </p>
-
-        <br><br>
-
-        <button type="submit">
-            Lưu phiếu chấm
-        </button>
-    </form>
-
-    <br>
-
-    <a href="/evaluations">
-        Quay lại danh sách
-    </a>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div layout:fragment="content" class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2><i class="bi bi-pencil-square me-2"></i>Nhập phiếu chấm điểm</h2>
+                        <p class="text-muted mb-0">Nhập điểm cho phân công được tạo từ lịch bảo vệ D2</p>
+                    </div><a th:href="@{/evaluations}" class="btn btn-outline-secondary"><i
+                            class="bi bi-arrow-left me-1"></i>Quay lại</a>
+                </div>
+                <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <form th:action="@{/evaluations/save}" th:object="${evaluationForm}" method="post">
+                            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Chỉ giảng viên được phân
+                                công mới có quyền nhập phiếu chấm.</div>
+                            <div class="mb-3"><label class="form-label fw-semibold">Mã phân công</label><input
+                                    type="number" class="form-control" th:field="*{assignmentId}" readonly>
+                                <div class="form-text">Mã này được lấy từ phân công trong D2.</div>
+                                <div class="text-danger small" th:errors="*{assignmentId}"></div>
+                            </div>
+                            <div class="mb-3"><label class="form-label fw-semibold">Điểm <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group"><input type="number" class="form-control" min="0" max="10"
+                                        step="0.01" placeholder="Nhập điểm từ 0 đến 10" th:field="*{score}"><span
+                                        class="input-group-text">/ 10</span></div>
+                                <div class="text-danger small" th:errors="*{score}"></div>
+                            </div>
+                            <div class="mb-3"><label class="form-label fw-semibold">Nhận xét</label><textarea
+                                    class="form-control" rows="6" maxlength="2000"
+                                    placeholder="Nhập nhận xét về phần bảo vệ..." th:field="*{comments}"></textarea>
+                                <div class="form-text">Tối đa 2000 ký tự.</div>
+                                <div class="text-danger small" th:errors="*{comments}"></div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top"><a th:href="@{/evaluations}"
+                                    class="btn btn-light">Hủy</a><button type="submit" class="btn btn-primary"><i
+                                        class="bi bi-check-lg me-1"></i>Lưu phiếu chấm</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

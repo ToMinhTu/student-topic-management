@@ -12,6 +12,7 @@ import com.example.student_topic_management.assessment.service.ResultService;
 
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 @Controller
 public class ResultController {
@@ -23,11 +24,13 @@ public class ResultController {
     }
 
     @GetMapping("/results")
-    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
-    public String listResults(Model model) {
+    @PreAuthorize("hasAnyRole('STUDENT','LECTURER','DEAN')")
+    public String listResults(Model model, Authentication authentication) {
+        boolean student = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_STUDENT".equals(a.getAuthority()));
         model.addAttribute(
                 "results",
-                resultService.findAll());
+                student ? resultService.findVisibleToStudent() : resultService.findAll());
 
         return "results/list";
     }

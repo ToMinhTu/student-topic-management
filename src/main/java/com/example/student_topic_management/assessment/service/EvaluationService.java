@@ -34,6 +34,10 @@ public class EvaluationService {
         return evaluationRepository.findAll();
     }
 
+    public List<ReviewerAssignment> findAssignmentsForCurrentUser() {
+        return assignmentRepository.findByLecturerId(currentUserService.getCurrentUserId());
+    }
+
     public Evaluation findById(Long id) {
         return evaluationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
