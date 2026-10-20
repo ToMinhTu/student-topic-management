@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Quản lý thông báo</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <!-- <style>
+            /* hover */
+            .table-hover tbody tr {
+                transition: background-color 0.2s;
+                cursor: pointer;
+            }
+
+            /* format tab */
+            .nav-tabs .nav-link {
+                border: none;
+                border-bottom: 2px solid transparent;
+                color: #6c757d;
+                font-weight: 500;
+            }
+
+            .nav-tabs .nav-link.active {
+                color: var(--theme-color) !important;
+                border-bottom: 3px solid var(--theme-color) !important;
+                background: transparent;
+            }
+
+            .nav-tabs .nav-link:hover {
+                border-bottom: 2px solid #dee2e6;
+            }
+        </style> -->
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div class="page-title-tab mb-0">QUẢN LÝ THÔNG BÁO</div>
+            <a th:href="@{/management/announcements/new}" class="btn btn-theme">
+                <i class="bi bi-plus-circle me-2"></i>Tạo thông báo mới
+            </a>
+        </div>
+
+        <div class="content-card p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Tiêu đề</th>
+                            <th>Tác giả</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th class="text-center pe-4">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ann : ${announcements}">
+                            <td class="ps-4 fw-bold text-theme" th:text="${ann.title}"></td>
+                            <td th:text="${ann.author.fullname}"></td>
+                            <td th:text="${#temporals.format(ann.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td>
+                                <span th:if="${ann.publishedAt == null}" class="badge bg-secondary">Bản nháp</span>
+                                <span th:if="${ann.publishedAt != null}" class="badge bg-success">
+                                    Đã công bố <br>
+                                    <small th:text="${#temporals.format(ann.publishedAt, 'dd/MM/yyyy HH:mm')}"></small>
+                                </span>
+                            </td>
+                            <td class="text-center pe-4">
+                                <!-- Chi hien sua/xoa/cong bo neu la ban nhap -->
+                                <th:block th:if="${ann.publishedAt == null}">
+                                    <a th:href="@{/management/announcements/{id}/edit(id=${ann.id})}"
+                                        class="btn btn-sm btn-outline-primary" title="Sửa">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <form th:action="@{/management/announcements/{id}/publish(id=${ann.id})}"
+                                        method="post" class="d-inline">
+                                        <button type="button" class="btn btn-sm btn-outline-success" title="Công bố"
+                                            onclick="confirmAction(this.form, 'Bạn có chắc chắn muốn công bố thông báo này? Hành động này không thể hoàn tác.', 'Xác nhận công bố', 'Công bố ngay')">
+                                            <i class="bi bi-megaphone"></i>
+                                        </button>
+                                    </form>
+
+                                    <form th:action="@{/management/announcements/{id}/delete(id=${ann.id})}"
+                                        method="post" class="d-inline">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa"
+                                            onclick="confirmAction(this.form, 'Bạn có chắc muốn xóa bản nháp này?', 'Xác nhận xóa', 'Đồng ý xóa')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </th:block>
+
+                                <!-- Hien nut xem neu da cong bo -->
+                                <th:block th:if="${ann.publishedAt != null}">
+                                    <a th:href="@{/announcements/{id}(id=${ann.id})}"
+                                        class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </th:block>
+                            </td>
+                        </tr>
+                        <!-- Khi khong co thong bao nao -->
+                        <tr th:if="${#lists.isEmpty(announcements)}">
+                            <td colspan="5" class="text-center text-muted py-4">Chưa có thông báo nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>
