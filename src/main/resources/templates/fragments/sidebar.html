@@ -67,6 +67,8 @@
             <th:block sec:authorize="hasRole('LECTURER')">
                 <li class="nav-item"><a th:href="@{/lecturer/registrations}" class="nav-link"><i
                             class="bi bi-clipboard-check me-2"></i>Duyệt đăng ký nhóm</a></li>
+                <li class="nav-item"><a th:href="@{/defenses}" class="nav-link"><i
+                            class="bi bi-calendar2-check me-2"></i>Lịch bảo vệ</a></li>
                 <li class="nav-item"><a th:href="@{/evaluations}" class="nav-link"><i class="bi bi-pencil-square me-2"></i>Chấm điểm</a></li>
             </th:block>
             <th:block sec:authorize="hasRole('STUDENT')">

@@ -64,10 +64,28 @@ public class DefenseService {
     @Transactional
     public void saveDefense(DefenseForm form) {
 
-        String registrationStatus = jdbc.queryForObject(
-                "SELECT status FROM topic_registrations WHERE id = ? AND round_id = ?",
-                String.class, form.getRegistrationId(), form.getRoundId());
-        if (!"APPROVED".equals(registrationStatus)) {
+        List<RegistrationInfo> registrations = jdbc.query(
+                "SELECT round_id, status FROM topic_registrations WHERE id = ?",
+                (rs, rowNum) -> new RegistrationInfo(
+                        rs.getLong("round_id"),
+                        rs.getString("status")),
+                form.getRegistrationId());
+
+        if (registrations.isEmpty()) {
+            throw new RuntimeException(
+                    "Không tìm thấy hồ sơ đăng ký #" + form.getRegistrationId());
+        }
+
+        RegistrationInfo registration = registrations.get(0);
+
+        if (!registration.roundId().equals(form.getRoundId())) {
+            throw new RuntimeException(
+                    "Hồ sơ #" + form.getRegistrationId()
+                            + " thuộc đợt #" + registration.roundId()
+                            + ", không phải đợt #" + form.getRoundId());
+        }
+
+        if (!"APPROVED".equals(registration.status())) {
             throw new RuntimeException("Chỉ hồ sơ đăng ký đã được duyệt mới được lập lịch bảo vệ");
         }
 
@@ -138,4 +156,6 @@ public class DefenseService {
         a.setAssignmentType(type); a.setAssignedBy(assignedBy);
         assignmentRepository.save(a);
     }
+
+    private record RegistrationInfo(Long roundId, String status) {}
 }

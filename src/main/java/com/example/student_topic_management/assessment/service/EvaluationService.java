@@ -5,7 +5,9 @@ package com.example.student_topic_management.assessment.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.student_topic_management.assessment.dto.EvaluationForm;
 import com.example.student_topic_management.assessment.entity.Evaluation;
@@ -35,7 +37,12 @@ public class EvaluationService {
     }
 
     public List<ReviewerAssignment> findAssignmentsForCurrentUser() {
-        return assignmentRepository.findByLecturerId(currentUserService.getCurrentUserId());
+        return assignmentRepository
+                .findByLecturerId(currentUserService.getCurrentUserId())
+                .stream()
+                .filter(assignment -> !evaluationRepository
+                        .existsByAssignmentId(assignment.getId()))
+                .toList();
     }
 
     public Evaluation findById(Long id) {
@@ -44,6 +51,7 @@ public class EvaluationService {
                         "Không tìm thấy phiếu chấm"));
     }
 
+    @Transactional
     public void saveEvaluation(EvaluationForm form) {
 
         ReviewerAssignment assignment = assignmentRepository
@@ -51,15 +59,15 @@ public class EvaluationService {
                 .orElseThrow(() -> new RuntimeException(
                         "Không tìm thấy phân công chấm"));
 
-        if (evaluationRepository.existsByAssignmentId(
-                form.getAssignmentId())) {
-            throw new RuntimeException(
-                    "Phân công này đã có phiếu chấm");
-        }
-
         Long currentUserId = currentUserService.getCurrentUserId();
         if (!currentUserId.equals(assignment.getLecturerId())) {
             throw new RuntimeException("Bạn không có quyền nhập điểm cho phân công này");
+        }
+
+        if (evaluationRepository.existsByAssignmentId(
+                form.getAssignmentId())) {
+            throw new RuntimeException(
+                    "Bạn đã chấm điểm cho phân công này rồi");
         }
 
         Evaluation evaluation = new Evaluation();
@@ -68,6 +76,14 @@ public class EvaluationService {
         evaluation.setComments(form.getComments());
         evaluation.setSubmittedAt(LocalDateTime.now());
 
-        evaluationRepository.save(evaluation);
+        try {
+            // Flush ngay để ràng buộc UNIQUE assignment_id chặn cả hai request
+            // được gửi gần như đồng thời.
+            evaluationRepository.saveAndFlush(evaluation);
+        } catch (DataIntegrityViolationException ex) {
+            throw new RuntimeException(
+                    "Bạn đã chấm điểm cho phân công này rồi",
+                    ex);
+        }
     }
 }

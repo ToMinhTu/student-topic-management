@@ -121,6 +121,17 @@ public class RoundController {
         return LIST_REDIRECT;
     }
 
+    // Các URL thao tác chỉ được thay đổi dữ liệu bằng POST. Nếu người dùng mở
+    // trực tiếp URL trên trình duyệt (GET), đưa họ về trang chi tiết thay vì
+    // hiển thị Whitelabel 405.
+    @GetMapping({"/{id}/open", "/{id}/close", "/{id}/delete"})
+    public String actionRequiresPost(@PathVariable Long id, RedirectAttributes redirect) {
+        redirect.addFlashAttribute(
+                "error",
+                "Vui lòng sử dụng nút thao tác trên giao diện để thực hiện chức năng này.");
+        return LIST_REDIRECT + "/" + id;
+    }
+
     // Chỉ xử lý lỗi của module đợt; lỗi phân quyền vẫn do Spring Security xử lý.
     @ExceptionHandler({NoSuchElementException.class, IllegalArgumentException.class,
             IllegalStateException.class})

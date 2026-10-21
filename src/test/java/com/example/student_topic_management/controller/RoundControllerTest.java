@@ -92,6 +92,15 @@ class RoundControllerTest {
     }
 
     @Test
+    void directGetToActionRedirectsInsteadOfReturning405() throws Exception {
+        mvc.perform(get("/dean/rounds/1/open"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/dean/rounds/1"))
+                .andExpect(flash().attribute("error", containsString("sử dụng nút thao tác")));
+        verify(service, never()).openRound(anyLong());
+    }
+
+    @Test
     void missingRoundReturnsReadableMessage() throws Exception {
         when(service.getRoundById(1L)).thenThrow(new NoSuchElementException("Không tìm thấy đợt"));
         mvc.perform(get("/dean/rounds/1")).andExpect(redirectedUrl("/dean/rounds"))

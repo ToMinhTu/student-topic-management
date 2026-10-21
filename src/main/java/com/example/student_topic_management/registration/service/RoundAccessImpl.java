@@ -1,7 +1,8 @@
-
 package com.example.student_topic_management.registration.service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -66,12 +67,14 @@ public class RoundAccessImpl implements RoundAccess {
             """,
             (rs, rowNum) -> new RoundWindow(
                 rs.getString("status"),
-                rs.getTimestamp("student_starts_at")
-                    .toLocalDateTime()
-                    .toInstant(java.time.ZoneOffset.UTC),
-                rs.getTimestamp("student_ends_at")
-                    .toLocalDateTime()
-                    .toInstant(java.time.ZoneOffset.UTC)
+                rs.getObject(
+                        "student_starts_at",
+                        LocalDateTime.class)
+                    .toInstant(ZoneOffset.UTC),
+                rs.getObject(
+                        "student_ends_at",
+                        LocalDateTime.class)
+                    .toInstant(ZoneOffset.UTC)
             ),
             roundId
         );

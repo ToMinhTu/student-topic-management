@@ -625,4 +625,22 @@ public class GroupController {
 
         return "redirect:/groups/" + id;
     }
+
+    // Không thay đổi dữ liệu bằng GET. Khi một URL thao tác được mở trực tiếp
+    // trên thanh địa chỉ, chuyển về chi tiết nhóm với hướng dẫn thay vì trả 405.
+    @GetMapping({
+            "/{id:\\d+}/join",
+            "/{id:\\d+}/leave",
+            "/{id:\\d+}/transfer-leader"
+    })
+    public String groupActionRequiresPost(
+            @PathVariable("id") Long id,
+            RedirectAttributes redirect) {
+
+        redirect.addFlashAttribute(
+                "errorMessage",
+                "Vui lòng sử dụng nút thao tác trên trang chi tiết nhóm.");
+
+        return "redirect:/groups/" + id;
+    }
 }
