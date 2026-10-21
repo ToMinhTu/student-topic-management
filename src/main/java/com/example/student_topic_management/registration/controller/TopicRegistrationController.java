@@ -65,7 +65,7 @@ public class TopicRegistrationController {
     // C03 - DANH SACH DE TAI
     // =====================================================
 
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping
     public String listTopics(
             @RequestParam(
