@@ -36,9 +36,9 @@
                                 <div class="text-danger small" th:errors="*{score}"></div>
                             </div>
                             <div class="mb-3"><label class="form-label fw-semibold">Nhận xét</label><textarea
-                                    class="form-control" rows="6" maxlength="2000"
+                                    class="form-control" rows="6" maxlength="5000" required
                                     placeholder="Nhập nhận xét về phần bảo vệ..." th:field="*{comments}"></textarea>
-                                <div class="form-text">Tối đa 2000 ký tự.</div>
+                                <div class="form-text">Bắt buộc, tối đa 5000 ký tự.</div>
                                 <div class="text-danger small" th:errors="*{comments}"></div>
                             </div>
                             <div class="d-flex justify-content-end gap-2 pt-3 border-top"><a th:href="@{/evaluations}"

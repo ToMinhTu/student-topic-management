@@ -12,7 +12,7 @@ import com.example.student_topic_management.assessment.service.ResultService;
 
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class ResultController {
@@ -25,56 +25,68 @@ public class ResultController {
 
     @GetMapping("/results")
     @PreAuthorize("hasAnyRole('STUDENT','LECTURER','DEAN')")
-    public String listResults(Model model, Authentication authentication) {
-        boolean student = authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_STUDENT".equals(a.getAuthority()));
-        model.addAttribute(
-                "results",
-                student ? resultService.findVisibleToStudent() : resultService.findAll());
-
+    public String listResults(Model model) {
+        model.addAttribute("results", resultService.findVisibleResults());
         return "results/list";
     }
 
     @GetMapping("/results/new")
-    @PreAuthorize("hasRole('DEAN')")
+    @PreAuthorize("hasRole('LECTURER') and !hasRole('STUDENT')")
     public String showCreateForm(Model model) {
-        model.addAttribute(
-                "resultForm",
-                new ResultForm());
-
+        model.addAttribute("resultForm", new ResultForm());
+        model.addAttribute("candidates", resultService.findConfirmationCandidates());
         return "results/form";
     }
 
     @PostMapping("/results/consolidate")
-    @PreAuthorize("hasRole('DEAN')")
+    @PreAuthorize("hasRole('LECTURER') and !hasRole('STUDENT')")
     public String consolidateResult(
             @Valid @ModelAttribute("resultForm") ResultForm form,
-            BindingResult result, Model model) {
+            BindingResult bindingResult, Model model,
+            RedirectAttributes redirectAttributes) {
 
-        if (result.hasErrors()) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("candidates", resultService.findConfirmationCandidates());
             return "results/form";
         }
 
         try {
-            resultService.consolidateResult(form);
+            var saved = resultService.consolidateResult(form);
+            redirectAttributes.addFlashAttribute("success", "Đã xác nhận và tính điểm trung bình thành công");
+            return "redirect:/results/" + saved.getId();
         } catch (RuntimeException ex) {
             model.addAttribute("error", ex.getMessage());
+            model.addAttribute("candidates", resultService.findConfirmationCandidates());
             return "results/form";
         }
-
-        return "redirect:/results";
     }
 
     @GetMapping("/results/{id}")
-    @PreAuthorize("hasAnyRole('LECTURER','DEAN')")
+    @PreAuthorize("hasAnyRole('STUDENT','LECTURER','DEAN')")
     public String detailResult(
             @PathVariable Long id,
             Model model) {
 
         model.addAttribute(
                 "result",
-                resultService.findById(id));
+                resultService.findVisibleById(id));
 
         return "results/detail";
+    }
+
+    @PostMapping("/dean/results/{id}/publish")
+    @PreAuthorize("hasRole('DEAN') and !hasRole('STUDENT')")
+    public String publishResult(
+            @PathVariable Long id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            boolean published = resultService.publishResult(id);
+            redirectAttributes.addFlashAttribute("success",
+                    published ? "Đã công bố kết quả và tạo thông báo cho sinh viên"
+                            : "Kết quả này đã được công bố trước đó");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/results/" + id;
     }
 }

@@ -1,60 +1,39 @@
-<!-- toan-D3 -->
-<!-- toan-D3 - thêm chức năng tổng hợp kết quả -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Chi tiết kết quả</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Chi tiết kết quả</title></head>
 <body>
-
-    <h1>Chi tiết kết quả</h1>
-
-    <p>
-        ID kết quả:
-        <span th:text="${result.id}"></span>
-    </p>
-
-    <p>
-        Mã hồ sơ:
-        <span th:text="${result.registrationId}"></span>
-    </p>
-
-    <p>
-        Điểm cuối:
-        <span th:text="${result.finalScore}"></span>
-    </p>
-
-    <p>
-        Số phiếu chấm:
-        <span th:text="${result.componentCount}"></span>
-    </p>
-
-    <p>
-        Kết luận:
-        <span th:text="${result.conclusion}"></span>
-    </p>
-
-    <p>
-        Người xác nhận:
-        <span th:text="${result.confirmedBy}"></span>
-    </p>
-
-    <p>
-        Thời gian xác nhận:
-        <span th:text="${result.confirmedAt}"></span>
-    </p>
-
-    <a href="/results">
-        Quay lại danh sách
-    </a>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<div layout:fragment="content" class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h2><i class="bi bi-award me-2"></i>Chi tiết kết quả</h2><p class="text-muted mb-0" th:text="${result.topicCode + ' - ' + result.topicTitle}"></p></div>
+        <a th:href="@{/results}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Quay lại</a>
+    </div>
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <strong>Kết quả hồ sơ #<span th:text="${result.registrationId}"></span></strong>
+            <span th:if="${result.publishedAt != null}" class="badge bg-light text-success">Đã công bố</span>
+            <span th:if="${result.publishedAt == null}" class="badge bg-warning text-dark">Chờ công bố</span>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-6"><div class="text-muted small">Nhóm</div><div class="fs-5 fw-semibold" th:text="${result.groupName}"></div></div>
+                <div class="col-md-6"><div class="text-muted small">Điểm trung bình</div><div class="display-6 fw-bold text-success" th:text="${result.finalScore + ' / 10'}"></div></div>
+                <div class="col-md-6"><div class="text-muted small">Số phiếu chấm</div><div class="fs-5" th:text="${result.componentCount}"></div></div>
+                <div class="col-md-6"><div class="text-muted small">Chủ tịch xác nhận</div><div class="fs-5" th:text="${result.confirmerName}"></div></div>
+                <div class="col-12"><div class="text-muted small">Kết luận</div><div class="p-3 bg-light rounded" style="white-space: pre-wrap" th:text="${result.conclusion}"></div></div>
+                <div class="col-md-6"><div class="text-muted small">Thời gian xác nhận</div><div th:text="${#temporals.format(result.confirmedAt, 'dd/MM/yyyy HH:mm')}"></div></div>
+                <div class="col-md-6"><div class="text-muted small">Thời gian công bố</div><div th:text="${result.publishedAt == null ? 'Chưa công bố' : #temporals.format(result.publishedAt, 'dd/MM/yyyy HH:mm')}"></div></div>
+            </div>
+            <form sec:authorize="hasRole('DEAN') and !hasRole('STUDENT')" th:if="${result.publishedAt == null}"
+                  th:action="@{/dean/results/{id}/publish(id=${result.id})}" method="post" class="mt-4 pt-3 border-top text-end"
+                  onsubmit="return confirm('Sau khi công bố, sinh viên trong danh sách đăng ký sẽ xem được kết quả. Tiếp tục?')">
+                <button class="btn btn-success" type="submit"><i class="bi bi-send-check me-1"></i>Công bố kết quả</button>
+            </form>
+        </div>
+    </div>
+</div>
 </body>
-
 </html>

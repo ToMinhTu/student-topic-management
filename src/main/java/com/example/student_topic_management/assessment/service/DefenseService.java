@@ -3,7 +3,10 @@
 package com.example.student_topic_management.assessment.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,6 +62,70 @@ public class DefenseService {
         return defenseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Không tìm thấy lịch bảo vệ"));
+    }
+
+    public Set<Long> findCompletableDefenseIds() {
+        Long lecturerId = currentUserService.getCurrentUserId();
+        return new HashSet<>(jdbc.queryForList("""
+                SELECT d.id
+                FROM defenses d
+                JOIN council_members cm ON cm.council_id = d.council_id
+                WHERE cm.lecturer_id = ? AND cm.slot_no = 1
+                  AND d.status = 'SCHEDULED' AND d.scheduled_at <= ?
+                """, Long.class, lecturerId, LocalDateTime.now(ZoneOffset.UTC)));
+    }
+
+    public boolean canCurrentUserComplete(Long defenseId) {
+        return findCompletableDefenseIds().contains(defenseId);
+    }
+
+    @Transactional
+    public void completeDefense(Long defenseId) {
+        Long actorId = currentUserService.getCurrentUserId();
+        List<Defense> rows = jdbc.query("""
+                SELECT id, registration_id, round_id, council_id, scheduled_at, location, status
+                FROM defenses WHERE id = ? FOR UPDATE
+                """, (rs, rowNum) -> {
+                    Defense defense = new Defense();
+                    defense.setRegistrationId(rs.getLong("registration_id"));
+                    defense.setRoundId(rs.getLong("round_id"));
+                    defense.setCouncilId(rs.getLong("council_id"));
+                    defense.setScheduledAt(rs.getTimestamp("scheduled_at").toLocalDateTime());
+                    defense.setLocation(rs.getString("location"));
+                    defense.setStatus(rs.getString("status"));
+                    return defense;
+                }, defenseId);
+        if (rows.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy lịch bảo vệ");
+        }
+        Defense defense = rows.get(0);
+        Integer chair = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM council_members
+                WHERE council_id = ? AND lecturer_id = ? AND slot_no = 1
+                """, Integer.class, defense.getCouncilId(), actorId);
+        if (chair == null || chair != 1) {
+            throw new RuntimeException("Chỉ Chủ tịch hội đồng được kết thúc buổi bảo vệ");
+        }
+        if (!"SCHEDULED".equals(defense.getStatus())) {
+            throw new RuntimeException("Chỉ lịch đang chờ bảo vệ mới có thể kết thúc");
+        }
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        if (defense.getScheduledAt().isAfter(now)) {
+            throw new RuntimeException("Chưa đến thời gian bảo vệ");
+        }
+
+        int updated = jdbc.update("UPDATE defenses SET status = 'DONE' WHERE id = ? AND status = 'SCHEDULED'",
+                defenseId);
+        if (updated != 1) {
+            throw new RuntimeException("Không thể cập nhật trạng thái lịch bảo vệ");
+        }
+        int audited = jdbc.update("""
+                INSERT INTO audit_logs (actor_id, action, entity_type, entity_id, details, created_at)
+                VALUES (?, 'DEFENSE_COMPLETED', 'DEFENSE', ?, ?, ?)
+                """, actorId, defenseId, "Kết thúc buổi bảo vệ #" + defenseId, now);
+        if (audited != 1) {
+            throw new RuntimeException("Không thể ghi nhật ký hệ thống");
+        }
     }
 
     @Transactional

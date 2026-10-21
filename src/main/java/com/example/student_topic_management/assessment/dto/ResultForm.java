@@ -4,16 +4,17 @@ package com.example.student_topic_management.assessment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class ResultForm {
 
     @NotNull(message = "Mã hồ sơ không được để trống")
+    @Positive(message = "Mã hồ sơ không hợp lệ")
     private Long registrationId;
 
-    @NotNull(message = "Mã người xác nhận không được để trống")
-    private Long confirmedBy;
-
     @NotBlank(message = "Kết luận không được để trống")
+    @Size(max = 5000, message = "Kết luận không được vượt quá 5000 ký tự")
     private String conclusion;
 
     public Long getRegistrationId() {
@@ -22,14 +23,6 @@ public class ResultForm {
 
     public void setRegistrationId(Long registrationId) {
         this.registrationId = registrationId;
-    }
-
-    public Long getConfirmedBy() {
-        return confirmedBy;
-    }
-
-    public void setConfirmedBy(Long confirmedBy) {
-        this.confirmedBy = confirmedBy;
     }
 
     public String getConclusion() {

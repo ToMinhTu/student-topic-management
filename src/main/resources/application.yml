@@ -35,3 +35,5 @@ server:
       cookie:
         http-only: true
         same-site: lax
+app:
+  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
