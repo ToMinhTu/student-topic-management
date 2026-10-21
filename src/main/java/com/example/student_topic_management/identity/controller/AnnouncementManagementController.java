@@ -1,6 +1,7 @@
 package com.example.student_topic_management.identity.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.context.annotation.Profile;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import com.example.student_topic_management.identity.service.AnnouncementService
 import jakarta.validation.Valid;
 
 @Controller
+@Profile("legacy-announcements")
 @RequestMapping("/management/announcements")
 public class AnnouncementManagementController {
     private final AnnouncementService service;

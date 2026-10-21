@@ -3,6 +3,7 @@ package com.example.student_topic_management.identity.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,18 @@ public class AnnouncementService {
     public List<Announcement> getDrafts() {
         return announcementRepository.findByPublishedAtIsNullOrderByCreatedAtDesc();
     }
+
+    public List<Announcement> getManagementList() { return announcementRepository.findAllWithAuthor(PageRequest.of(0, 50)); }
+    public Announcement getForManagementById(Long id) { return getById(id); }
+    public List<Announcement> getPublishedList() { return announcementRepository.findPublished(LocalDateTime.now(ZoneOffset.UTC), PageRequest.of(0, 50)); }
+    public Announcement getPublishedById(Long id) {
+        Announcement a = getById(id);
+        if (a.getPublishedAt() == null || a.getPublishedAt().isAfter(LocalDateTime.now(ZoneOffset.UTC))) throw new BusinessException("Thông báo chưa được công bố");
+        return a;
+    }
+
+    public void createDraft(AnnouncementForm form) { saveDraft(form); }
+    public void updateDraft(Long id, AnnouncementForm form) { form.setId(id); saveDraft(form); }
 
     public List<Announcement> getPublished() {
         return announcementRepository.findByPublishedAtIsNotNullAndPublishedAtLessThanEqualOrderByPublishedAtDesc(

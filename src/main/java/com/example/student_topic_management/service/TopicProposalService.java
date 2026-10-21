@@ -418,7 +418,7 @@ public class TopicProposalService {
     @Transactional(readOnly = true)
     public Page<Topic> getMyTopics(Pageable pageable) {
         requireProposer();
-        return topicRepository.findAll(pageable);
+        return topicRepository.findByProposedBy(requireProposer().getId(), pageable);
     }
 
     @Transactional(readOnly = true)

@@ -49,4 +49,14 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM Topic t WHERE t.id = :id")
     Optional<Topic> findByIdForUpdate(@Param("id") Long id);
+
+    @Query("SELECT new com.example.student_topic_management.dto.PublishedTopicView(t.id, t.roundId, t.departmentId, t.code, t.title, t.description, t.requirements) FROM Topic t WHERE t.status = com.example.student_topic_management.enums.TopicStatus.PUBLISHED AND (:keyword IS NULL OR lower(t.title) LIKE lower(concat('%', :keyword, '%'))) AND (:departmentId IS NULL OR t.departmentId = :departmentId) AND (:supervisorId IS NULL OR :supervisorId IS NOT NULL)")
+    Page<com.example.student_topic_management.dto.PublishedTopicView> searchPublishedTopics(@Param("keyword") String keyword, @Param("departmentId") Long departmentId, @Param("supervisorId") Long supervisorId, Pageable pageable);
+
+    Page<Topic> findByDepartmentIdAndStatusAndDepartmentDecisionIsNull(Long departmentId, TopicStatus status, Pageable pageable);
+
+    @Query("SELECT t FROM Topic t WHERE t.status = com.example.student_topic_management.enums.TopicStatus.SUBMITTED")
+    Page<Topic> findPendingDeanReview(Pageable pageable);
+
+    Page<Topic> findByStatusAndPublishedAtIsNull(TopicStatus status, Pageable pageable);
 }

@@ -1,0 +1,481 @@
+
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nộp báo cáo PDF - C05</title>
+
+    <style layout:fragment="css">
+        .reports-page {
+            width: 100%;
+            max-width: none;
+            padding: 20px 24px;
+            margin: 0;
+            box-sizing: border-box;
+            color: #263238;
+        }
+
+        .reports-page .page-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .reports-page .ribbon-title {
+            display: inline-flex;
+            align-items: center;
+            min-width: 300px;
+            min-height: 42px;
+            padding: 8px 40px 8px 18px;
+            background: #173e34;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            clip-path: polygon(
+                0 0,
+                100% 0,
+                calc(100% - 20px) 100%,
+                0 100%
+            );
+        }
+
+        .reports-page .report-card {
+            width: 100%;
+            background: white;
+            padding: 22px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.035);
+        }
+
+        .reports-page .card-heading {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 16px;
+            color: #263238;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .reports-page .card-heading i {
+            color: #173e34;
+        }
+
+        .reports-page .report-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .reports-page .btn-back {
+            background: #64748b;
+            color: white;
+        }
+
+        .reports-page .btn-back:hover {
+            background: #475569;
+            color: white;
+        }
+
+        .reports-page .btn-upload {
+            background: #2563eb;
+            color: white;
+        }
+
+        .reports-page .btn-upload:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+        .reports-page .btn-download {
+            background: #07805b;
+            color: white;
+        }
+
+        .reports-page .btn-download:hover {
+            background: #066b4c;
+            color: white;
+        }
+
+        .reports-page .info-line {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            color: #475569;
+            font-size: 15px;
+        }
+
+        .reports-page .registration-badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #075985;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .reports-page .muted {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .reports-page .upload-box {
+            padding: 20px;
+            border: 2px dashed #cbd5e1;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .reports-page .file-input {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: white;
+            color: #334155;
+        }
+
+        .reports-page .file-input:focus {
+            outline: 2px solid #93c5fd;
+            outline-offset: 1px;
+        }
+
+        .reports-page .alert-success-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 18px;
+            margin-bottom: 18px;
+            border: 1px solid #86efac;
+            border-radius: 7px;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .reports-page .alert-error-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 18px;
+            margin-bottom: 18px;
+            border: 1px solid #fca5a5;
+            border-radius: 7px;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .reports-page .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .reports-page .reports-table {
+            width: 100%;
+            min-width: 780px;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+
+        .reports-page .reports-table th,
+        .reports-page .reports-table td {
+            padding: 13px 15px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .reports-page .reports-table th {
+            background: #f3f4f6;
+            color: #1f2937;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .reports-page .reports-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .reports-page .reports-table th:last-child,
+        .reports-page .reports-table td:last-child {
+            text-align: center;
+        }
+
+        .reports-page .version-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-radius: 5px;
+            font-weight: 700;
+        }
+
+        .reports-page .file-name {
+            color: #1f2937;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .reports-page .empty-state {
+            padding: 36px 15px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .reports-page .empty-state i {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 32px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .reports-page {
+                padding: 14px 12px;
+            }
+
+            .reports-page .ribbon-title {
+                min-width: 0;
+                font-size: 15px;
+            }
+
+            .reports-page .report-card {
+                padding: 15px;
+            }
+
+            .reports-page .page-top {
+                align-items: stretch;
+            }
+
+            .reports-page .report-btn {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+
+    <div class="reports-page">
+
+        <!-- Thanh tiêu đề -->
+        <div class="page-top">
+
+            <div class="ribbon-title">
+                NỘP BÁO CÁO PDF
+            </div>
+
+            <a class="report-btn btn-back"
+               th:href="@{/groups}">
+                <i class="bi bi-arrow-left"></i>
+                Quay lại danh sách nhóm
+            </a>
+
+        </div>
+
+        <!-- Thông tin hồ sơ -->
+        <section class="report-card">
+
+            <h2 class="card-heading">
+                <i class="bi bi-file-earmark-text"></i>
+                Thông tin hồ sơ đăng ký
+            </h2>
+
+            <div class="info-line">
+                <span>Mã hồ sơ đăng ký:</span>
+
+                <strong class="registration-badge"
+                        th:text="${registrationId}">
+                    1
+                </strong>
+            </div>
+
+        </section>
+
+        <!-- Thông báo thành công -->
+        <div class="alert-success-custom"
+             role="status"
+             th:if="${success != null}">
+
+            <i class="bi bi-check-circle-fill"></i>
+
+            <span th:text="${success}">
+                Nộp báo cáo thành công.
+            </span>
+
+        </div>
+
+        <!-- Thông báo lỗi -->
+        <div class="alert-error-custom"
+             role="alert"
+             th:if="${error != null}">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+            <span th:text="${error}">
+                Có lỗi xảy ra.
+            </span>
+
+        </div>
+
+        <!-- Upload PDF - chỉ nhóm trưởng được thấy -->
+        <section class="report-card"
+                 th:if="${canUpload}">
+
+            <h2 class="card-heading">
+                <i class="bi bi-cloud-arrow-up"></i>
+                Nộp phiên bản báo cáo mới
+            </h2>
+
+            <p class="muted">
+                Chỉ trưởng nhóm được nộp báo cáo.
+                File phải có định dạng PDF và dung lượng tối đa 10 MB.
+            </p>
+
+            <form th:action="@{/reports/{id}/upload(id=${registrationId})}"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <div class="upload-box">
+
+                    <label for="reportFile"
+                           class="d-block fw-semibold mb-2">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                        Chọn tệp báo cáo PDF
+                    </label>
+
+                    <input id="reportFile"
+                           class="file-input"
+                           type="file"
+                           name="file"
+                           accept=".pdf,application/pdf"
+                           required>
+
+                    <button class="report-btn btn-upload"
+                            type="submit">
+
+                        <i class="bi bi-cloud-upload"></i>
+                        Nộp báo cáo
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+        <!-- Lịch sử báo cáo -->
+        <section class="report-card">
+
+            <h2 class="card-heading">
+                <i class="bi bi-clock-history"></i>
+                Lịch sử các phiên bản báo cáo
+            </h2>
+
+            <!-- Chưa có báo cáo -->
+            <div class="empty-state"
+                 th:if="${#lists.isEmpty(reports)}">
+
+                <i class="bi bi-inbox"></i>
+
+                Chưa có báo cáo nào được nộp.
+
+            </div>
+
+            <!-- Bảng báo cáo -->
+            <div class="table-wrapper"
+                 th:unless="${#lists.isEmpty(reports)}">
+
+                <table class="reports-table">
+
+                    <thead>
+                    <tr>
+                        <th>Phiên bản</th>
+                        <th>Tên file</th>
+                        <th>Dung lượng</th>
+                        <th>Ngày nộp</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="report : ${reports}">
+
+                        <td>
+                            <span class="version-badge"
+                                  th:text="|V${report.versionNo()}|">
+                                V1
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="file-name"
+                                  th:text="${report.originalName()}">
+                                BaoCao.pdf
+                            </span>
+                        </td>
+
+                        <td th:text="${report.sizeBytes() + ' bytes'}">
+                            102400 bytes
+                        </td>
+
+                        <td th:text="${report.createdAt()}">
+                            2026-10-21
+                        </td>
+
+                        <td>
+                            <a class="report-btn btn-download"
+                               th:href="@{/reports/files/{id}/download(id=${report.id()})}">
+
+                                <i class="bi bi-download"></i>
+                                Tải PDF
+
+                            </a>
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+</body>
+</html>
