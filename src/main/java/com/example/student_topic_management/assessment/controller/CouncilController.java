@@ -16,8 +16,10 @@ import com.example.student_topic_management.assessment.dto.CouncilForm;
 import com.example.student_topic_management.assessment.service.CouncilService;
 
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
+@PreAuthorize("hasAnyRole('LECTURER','DEAN')")
 public class CouncilController {
 
     private final CouncilService councilService;
