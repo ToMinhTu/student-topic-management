@@ -1,7 +1,8 @@
 <!-- toan-D2 -->
 <!-- toan-D2 - thêm chức năng quản lý lịch bảo vệ -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html  lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
     <meta charset="UTF-8">
@@ -9,63 +10,63 @@
 </head>
 
 <body>
+    <div layout:fragment="content" class="container py-4">
+        <h1>Tạo lịch bảo vệ</h1>
 
-    <h1>Tạo lịch bảo vệ</h1>
+        <form th:action="@{/defenses/save}" th:object="${defenseForm}" method="post">
 
-    <form th:action="@{/defenses/save}" th:object="${defenseForm}" method="post">
+            <label>Mã hồ sơ:</label>
+            <input type="number" th:field="*{registrationId}">
 
-        <label>Mã hồ sơ:</label>
-        <input type="number" th:field="*{registrationId}">
+            <p th:if="${#fields.hasErrors('registrationId')}" th:errors="*{registrationId}">
+            </p>
 
-        <p th:if="${#fields.hasErrors('registrationId')}" th:errors="*{registrationId}">
-        </p>
+            <br>
+
+            <label>Mã đợt:</label>
+            <input type="number" th:field="*{roundId}">
+
+            <p th:if="${#fields.hasErrors('roundId')}" th:errors="*{roundId}">
+            </p>
+
+            <br>
+
+            <label>Mã hội đồng:</label>
+            <input type="number" th:field="*{councilId}">
+
+            <p th:if="${#fields.hasErrors('councilId')}" th:errors="*{councilId}">
+            </p>
+
+            <br>
+
+            <label>Thời gian bảo vệ:</label>
+            <input type="datetime-local" th:field="*{scheduledAt}">
+
+            <p th:if="${#fields.hasErrors('scheduledAt')}" th:errors="*{scheduledAt}">
+            </p>
+
+            <br>
+
+            <label>Địa điểm:</label>
+            <input type="text" th:field="*{location}">
+
+            <p th:if="${#fields.hasErrors('location')}" th:errors="*{location}">
+            </p>
+
+            <br><br>
+
+            <button type="submit">
+                Lưu lịch bảo vệ
+            </button>
+
+        </form>
 
         <br>
 
-        <label>Mã đợt:</label>
-        <input type="number" th:field="*{roundId}">
-
-        <p th:if="${#fields.hasErrors('roundId')}" th:errors="*{roundId}">
-        </p>
-
-        <br>
-
-        <label>Mã hội đồng:</label>
-        <input type="number" th:field="*{councilId}">
-
-        <p th:if="${#fields.hasErrors('councilId')}" th:errors="*{councilId}">
-        </p>
-
-        <br>
-
-        <label>Thời gian bảo vệ:</label>
-        <input type="datetime-local" th:field="*{scheduledAt}">
-
-        <p th:if="${#fields.hasErrors('scheduledAt')}" th:errors="*{scheduledAt}">
-        </p>
-
-        <br>
-
-        <label>Địa điểm:</label>
-        <input type="text" th:field="*{location}">
-
-        <p th:if="${#fields.hasErrors('location')}" th:errors="*{location}">
-        </p>
-
-        <br><br>
-
-        <button type="submit">
-            Lưu lịch bảo vệ
-        </button>
-
-    </form>
-
-    <br>
-
-    <a href="/defenses">
-        Quay lại danh sách
-    </a>
-
+        <a href="/defenses">
+            Quay lại danh sách
+        </a>
+    </div>
 </body>
 
 </html>

@@ -70,6 +70,16 @@ public class DeanRegistrationService {
     @PreAuthorize("hasRole('DEAN')")
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void approveRegistration(Long registrationId) {
+        approveRegistration(registrationId, false);
+    }
+
+    @PreAuthorize("hasRole('LECTURER') and !hasRole('STUDENT')")
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void approveAsSupervisor(Long registrationId) {
+        approveRegistration(registrationId, true);
+    }
+
+    private void approveRegistration(Long registrationId, boolean supervisorOnly) {
 
         if (registrationId == null || registrationId <= 0) {
             throw new IllegalArgumentException(
@@ -80,10 +90,10 @@ public class DeanRegistrationService {
         // 1. Lay tai khoan truong khoa dang dang nhap.
         AppUser dean = currentUserService.getCurrentUser();
 
-        if (!Boolean.TRUE.equals(dean.getEnabled())
+        if (dean == null || !Boolean.TRUE.equals(dean.getEnabled())
                 || dean.getRoles() == null
                 || dean.getRoles().stream().noneMatch(
-                        role -> "DEAN".equals(role.getCode())
+                        role -> (supervisorOnly ? "LECTURER" : "DEAN").equals(role.getCode())
                 )) {
 
             throw new IllegalStateException(
@@ -92,6 +102,7 @@ public class DeanRegistrationService {
         }
 
         Long deanId = dean.getId();
+        requireNoStudentRole(dean, supervisorOnly);
 
         // 2. Doc thong tin ho so ban dau de xac dinh round.
         // Sau khi khoa se kiem tra lai.
@@ -193,6 +204,10 @@ public class DeanRegistrationService {
             throw new IllegalStateException(
                     "De tai chua duoc cong bo"
             );
+        }
+
+        if (supervisorOnly) {
+            requireSupervisor(topicId, deanId);
         }
 
         // 6. Khoa ho so va kiem tra lai thong tin.
@@ -415,6 +430,16 @@ public class DeanRegistrationService {
     @PreAuthorize("hasRole('DEAN')")
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void rejectRegistration(Long registrationId, String reason) {
+        rejectRegistration(registrationId, reason, false);
+    }
+
+    @PreAuthorize("hasRole('LECTURER') and !hasRole('STUDENT')")
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void rejectAsSupervisor(Long registrationId, String reason) {
+        rejectRegistration(registrationId, reason, true);
+    }
+
+    private void rejectRegistration(Long registrationId, String reason, boolean supervisorOnly) {
 
         // 1. Kiem tra du lieu dau vao
         if (registrationId == null || registrationId <= 0) {
@@ -444,7 +469,7 @@ public class DeanRegistrationService {
                 || !Boolean.TRUE.equals(dean.getEnabled())
                 || dean.getRoles() == null
                 || dean.getRoles().stream().noneMatch(
-                        role -> "DEAN".equals(role.getCode())
+                        role -> (supervisorOnly ? "LECTURER" : "DEAN").equals(role.getCode())
                 )) {
             throw new IllegalStateException(
                     "Tai khoan khong co quyen tu choi dang ky"
@@ -452,6 +477,7 @@ public class DeanRegistrationService {
         }
 
         Long deanId = dean.getId();
+        requireNoStudentRole(dean, supervisorOnly);
 
         // 3. Doc thong tin ho so ban dau
         List<RegistrationInfo> initialRegistrations = jdbc.query(
@@ -549,6 +575,9 @@ public class DeanRegistrationService {
 
         // Khong bat buoc topic phai PUBLISHED khi tu choi.
         // DEAN can co the tu choi ho so PENDING khong con hop le.
+        if (supervisorOnly) {
+            requireSupervisor(topicId, deanId);
+        }
 
         // 7. Khoa ho so va kiem tra lai trang thai
         List<LockedRegistration> registrations = jdbc.query(
@@ -642,6 +671,23 @@ public class DeanRegistrationService {
             throw new IllegalStateException(
                     "Khong the ghi nhat ky tu choi ho so"
             );
+        }
+    }
+    private void requireNoStudentRole(AppUser actor, boolean supervisorOnly) {
+        if (supervisorOnly && actor.getRoles().stream().anyMatch(role -> "STUDENT".equals(role.getCode()))) {
+            throw new org.springframework.security.access.AccessDeniedException("Sinh viên không được duyệt hồ sơ");
+        }
+    }
+
+    private void requireSupervisor(Long topicId, Long lecturerId) {
+        // The topic is already locked. Lock the assignment as well until the decision commits.
+        List<Long> supervisors = jdbc.queryForList("""
+                SELECT lecturer_id FROM topic_supervisors
+                WHERE topic_id = ? AND lecturer_id = ? FOR UPDATE
+                """, Long.class, topicId, lecturerId);
+        if (supervisors.isEmpty()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Bạn chỉ được xử lý hồ sơ thuộc đề tài mình hướng dẫn");
         }
     }
 }

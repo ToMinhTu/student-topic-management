@@ -1,7 +1,8 @@
 <!-- toan-D3 -->
 <!-- toan-D3 - thêm chức năng nhập điểm -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
     <meta charset="UTF-8">
@@ -9,38 +10,45 @@
 </head>
 
 <body>
-
-    <h1>Chi tiết phiếu chấm</h1>
-
-    <p>
-        ID phiếu chấm:
-        <span th:text="${evaluation.id}"></span>
-    </p>
-
-    <p>
-        Mã phân công:
-        <span th:text="${evaluation.assignmentId}"></span>
-    </p>
-
-    <p>
-        Điểm:
-        <span th:text="${evaluation.score}"></span>
-    </p>
-
-    <p>
-        Nhận xét:
-        <span th:text="${evaluation.comments}"></span>
-    </p>
-
-    <p>
-        Thời gian nộp:
-        <span th:text="${evaluation.submittedAt}"></span>
-    </p>
-
-    <a href="/evaluations">
-        Quay lại danh sách
-    </a>
-
+    <div layout:fragment="content" class="container py-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h2><i class="bi bi-clipboard2-check me-2" aria-hidden="true"></i>Chi tiết phiếu chấm</h2>
+                <p class="text-muted mb-0">Thông tin điểm số và nhận xét của phiếu chấm.</p>
+            </div>
+            <a th:href="@{/evaluations}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay lại danh sách
+            </a>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <strong>Phiếu chấm #<span th:text="${evaluation.id}"></span></strong>
+                <span th:if="${evaluation.submittedAt != null}" class="badge text-bg-success">Đã nộp</span>
+                <span th:if="${evaluation.submittedAt == null}" class="badge text-bg-warning">Chưa nộp</span>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row g-4 mb-0">
+                    <div class="col-md-6">
+                        <dt class="text-muted small mb-1">Mã phân công</dt>
+                        <dd class="fs-5 fw-semibold mb-0" th:text="${evaluation.assignmentId}"></dd>
+                    </div>
+                    <div class="col-md-6">
+                        <dt class="text-muted small mb-1">Điểm đánh giá</dt>
+                        <dd class="display-6 fw-bold text-primary mb-0" th:text="${evaluation.score + ' / 10'}"></dd>
+                    </div>
+                    <div class="col-12">
+                        <dt class="text-muted small mb-2">Nhận xét</dt>
+                        <dd class="p-3 bg-light rounded text-break mb-0" style="white-space: pre-wrap"
+                            th:text="${#strings.isEmpty(evaluation.comments) ? 'Chưa có nhận xét' : evaluation.comments}"></dd>
+                    </div>
+                    <div class="col-12">
+                        <dt class="text-muted small mb-1">Thời gian nộp</dt>
+                        <dd class="mb-0" th:text="${evaluation.submittedAt == null ? 'Chưa nộp' : #temporals.format(evaluation.submittedAt, 'dd/MM/yyyy HH:mm')}"></dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

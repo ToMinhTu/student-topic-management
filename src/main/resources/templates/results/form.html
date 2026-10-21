@@ -1,55 +1,60 @@
-<!-- toan-D3 -->
-<!-- toan-D3 - thêm chức năng tổng hợp kết quả -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Tổng hợp kết quả</title>
+    <title>Xác nhận kết quả</title>
 </head>
 
 <body>
-
-    <h1>Tổng hợp kết quả</h1>
-
-    <form th:action="@{/results/consolidate}" th:object="${resultForm}" method="post">
-
-        <label>Mã hồ sơ:</label>
-        <input type="number" th:field="*{registrationId}">
-
-        <p th:if="${#fields.hasErrors('registrationId')}" th:errors="*{registrationId}">
-        </p>
-
-        <br>
-
-        <label>Mã người xác nhận:</label>
-        <input type="number" th:field="*{confirmedBy}">
-
-        <p th:if="${#fields.hasErrors('confirmedBy')}" th:errors="*{confirmedBy}">
-        </p>
-
-        <br>
-
-        <label>Kết luận:</label>
-        <input type="text" th:field="*{conclusion}">
-
-        <p th:if="${#fields.hasErrors('conclusion')}" th:errors="*{conclusion}">
-        </p>
-
-        <br><br>
-
-        <button type="submit">
-            Tổng hợp kết quả
-        </button>
-
-    </form>
-
-    <br>
-
-    <a href="/results">
-        Quay lại danh sách
-    </a>
-
+    <div layout:fragment="content" class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2><i class="bi bi-calculator me-2"></i>Xác nhận kết quả</h2>
+                        <p class="text-muted mb-0">Điểm trung bình được tính tự động từ các phiếu chấm đã nộp.</p>
+                    </div>
+                    <a th:href="@{/results}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Quay
+                        lại</a>
+                </div>
+                <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+                <div class="alert alert-warning" th:if="${#lists.isEmpty(candidates)}">Bạn chưa có hồ sơ nào sẵn sàng
+                    xác nhận. Hồ sơ phải kết thúc bảo vệ và bạn phải là Chủ tịch hội đồng.</div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <form th:action="@{/results/consolidate}" th:object="${resultForm}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Hồ sơ bảo vệ <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" th:field="*{registrationId}">
+                                    <option value="">-- Chọn hồ sơ --</option>
+                                    <option th:each="candidate : ${candidates}" th:value="${candidate.registrationId}"
+                                        th:disabled="${!candidate.ready()}"
+                                        th:text="${'#' + candidate.registrationId + ' - ' + candidate.groupName + ' - ' + candidate.topicCode + ' (' + candidate.submittedCount + '/' + candidate.assignmentCount + ' phiếu)'}">
+                                    </option>
+                                </select>
+                                <div class="text-danger small" th:errors="*{registrationId}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Kết luận <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control" rows="5" maxlength="5000" th:field="*{conclusion}"
+                                    placeholder="Nhập kết luận của hội đồng..."></textarea>
+                                <div class="text-danger small" th:errors="*{conclusion}"></div>
+                            </div>
+                            <div class="alert alert-info"><i class="bi bi-shield-check me-2"></i>Người xác nhận được lấy
+                                từ tài khoản đang đăng nhập; không thể nhập thay mã giảng viên.</div>
+                            <div class="d-flex justify-content-end gap-2"><a th:href="@{/results}"
+                                    class="btn btn-light">Hủy</a><button class="btn btn-primary" type="submit"
+                                    th:disabled="${#lists.isEmpty(candidates)}"><i
+                                        class="bi bi-check2-circle me-1"></i>Tính điểm và xác nhận</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
