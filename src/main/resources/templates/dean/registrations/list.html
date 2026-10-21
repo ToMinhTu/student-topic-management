@@ -1,0 +1,692 @@
+
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đăng ký đề tài - Trưởng khoa</title>
+</head>
+
+<body>
+
+<div layout:fragment="content">
+
+    <!-- TIEU DE -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <div class="page-title-tab mb-0">
+            DUYỆT ĐĂNG KÝ ĐỀ TÀI
+        </div>
+    </div>
+
+    <!-- THONG BAO -->
+    <div class="alert alert-success alert-dismissible fade show"
+         th:if="${success}">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Đóng"></button>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible fade show"
+         th:if="${error}">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Đóng"></button>
+    </div>
+
+    <!-- C04.1 - BO LOC HO SO -->
+    <div class="content-card mb-4">
+        <h5 class="mb-3">
+            <i class="bi bi-funnel me-2"></i>
+            Bộ lọc hồ sơ đăng ký
+        </h5>
+
+        <form method="get"
+              th:action="@{/dean/registrations}">
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-5">
+                    <label for="roundId"
+                           class="form-label fw-semibold">
+                        Đợt đăng ký
+                    </label>
+
+                    <select id="roundId"
+                            name="roundId"
+                            class="form-select">
+
+                        <option value="">
+                            -- Tất cả đợt đăng ký --
+                        </option>
+
+                        <option th:each="round : ${rounds}"
+                                th:value="${round.id}"
+                                th:text="${round.name}"
+                                th:selected="${selectedRoundId != null and selectedRoundId == round.id}">
+                            Đợt đăng ký
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="status"
+                           class="form-label fw-semibold">
+                        Trạng thái hồ sơ
+                    </label>
+
+                    <select id="status"
+                            name="status"
+                            class="form-select">
+
+                        <option value="">
+                            -- Tất cả trạng thái --
+                        </option>
+
+                        <option value="PENDING"
+                                th:selected="${selectedStatus == 'PENDING'}">
+                            Chờ duyệt
+                        </option>
+
+                        <option value="APPROVED"
+                                th:selected="${selectedStatus == 'APPROVED'}">
+                            Đã duyệt
+                        </option>
+
+                        <option value="REJECTED"
+                                th:selected="${selectedStatus == 'REJECTED'}">
+                            Từ chối
+                        </option>
+
+                        <option value="CANCELLED"
+                                th:selected="${selectedStatus == 'CANCELLED'}">
+                            Đã hủy
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i>
+                        Tìm kiếm
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- DANH SACH HO SO -->
+    <div class="content-card">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="bi bi-clipboard-check me-2"></i>
+                Danh sách hồ sơ đăng ký
+            </h5>
+
+            <span class="badge bg-secondary"
+                  th:text="|Tổng: ${totalItems} hồ sơ|">
+                Tổng: 0 hồ sơ
+            </span>
+        </div>
+
+        <div class="alert alert-info"
+             th:if="${#lists.isEmpty(registrations)}">
+            <i class="bi bi-info-circle me-1"></i>
+            Không có hồ sơ đăng ký nào phù hợp với điều kiện tìm kiếm.
+        </div>
+
+        <!-- BANG HO SO -->
+        <div class="table-responsive"
+             th:unless="${#lists.isEmpty(registrations)}">
+
+            <table class="table table-hover table-bordered align-middle">
+
+                <thead class="table-light">
+                <tr>
+                    <th>Mã hồ sơ</th>
+                    <th>Nhóm sinh viên</th>
+                    <th>Đề tài</th>
+                    <th>Đợt đăng ký</th>
+                    <th>Ngày gửi</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                <tr th:each="registration : ${registrations}">
+
+                    <td th:text="${registration.id}">1</td>
+
+                    <td>
+                        <a th:href="@{/groups/{id}(id=${registration.groupId})}"
+                           th:text="${registration.groupName}">
+                            Nhóm sinh viên
+                        </a>
+                    </td>
+
+                    <td>
+                        <div class="fw-semibold"
+                             th:text="${registration.topicCode}">
+                            C04-TEST-001
+                        </div>
+
+                        <div class="small text-muted"
+                             th:text="${registration.topicTitle}">
+                            Tên đề tài
+                        </div>
+                    </td>
+
+                    <td th:text="${registration.roundName}">
+                        Đợt đăng ký
+                    </td>
+
+                    <td th:text="${#temporals.format(registration.submittedAt, 'dd/MM/yyyy HH:mm')}">
+                        20/10/2026
+                    </td>
+
+                    <!-- TRANG THAI -->
+                    <td>
+
+                        <span class="badge bg-warning text-dark"
+                              th:if="${registration.status == 'PENDING'}">
+                            Chờ duyệt
+                        </span>
+
+                        <span class="badge bg-success"
+                              th:if="${registration.status == 'APPROVED'}">
+                            Đã duyệt
+                        </span>
+
+                        <span class="badge bg-danger"
+                              th:if="${registration.status == 'REJECTED'}">
+                            Từ chối
+                        </span>
+
+                        <span class="badge bg-secondary"
+                              th:if="${registration.status == 'CANCELLED'}">
+                            Đã hủy
+                        </span>
+
+                    </td>
+
+                    <!-- C04.2 + C04.3 - CAC THAO TAC -->
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap"
+                             th:if="${registration.status == 'PENDING'}">
+
+                            <!-- NUT DUYET -->
+                            <button type="button"
+                                    class="btn btn-sm btn-success"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#approveRegistrationModal"
+                                    th:attr="data-registration-id=${registration.id},
+                                             data-group-name=${registration.groupName},
+                                             data-topic-code=${registration.topicCode}">
+
+                                <i class="bi bi-check-circle me-1"></i>
+                                Duyệt
+                            </button>
+
+                            <!-- NUT TU CHOI -->
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#rejectRegistrationModal"
+                                    th:attr="data-registration-id=${registration.id},
+                                             data-group-name=${registration.groupName},
+                                             data-topic-code=${registration.topicCode}">
+
+                                <i class="bi bi-x-circle me-1"></i>
+                                Từ chối
+                            </button>
+                        </div>
+
+                        <span class="text-muted small"
+                              th:unless="${registration.status == 'PENDING'}">
+                            Không có thao tác
+                        </span>
+                    </td>
+
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PHAN TRANG -->
+        <div class="d-flex justify-content-between align-items-center mt-4"
+             th:if="${totalPages > 0}">
+
+            <div class="text-muted small"
+                 th:text="|Trang ${currentPage + 1} / ${totalPages}|">
+                Trang 1 / 1
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <a class="btn btn-sm btn-outline-secondary"
+                   th:if="${hasPrevious}"
+                   th:href="@{/dean/registrations(
+                       roundId=${selectedRoundId},
+                       status=${selectedStatus},
+                       page=${currentPage - 1}
+                   )}">
+                    <i class="bi bi-chevron-left"></i>
+                    Trước
+                </a>
+
+                <a class="btn btn-sm btn-outline-secondary"
+                   th:if="${hasNext}"
+                   th:href="@{/dean/registrations(
+                       roundId=${selectedRoundId},
+                       status=${selectedStatus},
+                       page=${currentPage + 1}
+                   )}">
+                    Sau
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================ -->
+    <!-- C04.2 - MODAL DUYET DANG KY -->
+    <!-- ============================================ -->
+
+    <div class="modal fade"
+         id="approveRegistrationModal"
+         tabindex="-1"
+         aria-labelledby="approveRegistrationModalLabel"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title"
+                        id="approveRegistrationModalLabel">
+
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Xác nhận duyệt đăng ký
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Đóng"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <p>Bạn có chắc chắn muốn duyệt hồ sơ này không?</p>
+
+                    <p class="mb-1">
+                        <strong>Mã hồ sơ:</strong>
+                        <span id="approveRegistrationId"></span>
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>Nhóm:</strong>
+                        <span id="approveGroupName"></span>
+                    </p>
+
+                    <p class="mb-0">
+                        <strong>Đề tài:</strong>
+                        <span id="approveTopicCode"></span>
+                    </p>
+
+                    <div class="alert alert-warning mt-3 mb-0">
+                        Sau khi duyệt thành công,
+                        hồ sơ chuyển sang
+                        <strong>APPROVED</strong>
+                        và nhóm sinh viên chuyển sang
+                        <strong>LOCKED</strong>.
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Hủy
+                    </button>
+
+                    <!-- CSRF duoc Spring Security/Thymeleaf xu ly -->
+                    <form id="approveRegistrationForm"
+                          method="post"
+                          th:action="@{/dean/registrations}">
+
+                        <button type="submit"
+                                class="btn btn-success"
+                                id="confirmApproveButton">
+
+                            <i class="bi bi-check-circle me-1"></i>
+                            Xác nhận duyệt
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- C04.3 - MODAL TU CHOI DANG KY -->
+    <!-- ============================================ -->
+
+    <div class="modal fade"
+         id="rejectRegistrationModal"
+         tabindex="-1"
+         aria-labelledby="rejectRegistrationModalLabel"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <!-- FORM TU CHOI -->
+                <form id="rejectRegistrationForm"
+                      method="post"
+                      th:action="@{/dean/registrations}">
+
+                    <div class="modal-header">
+
+                        <h5 class="modal-title"
+                            id="rejectRegistrationModalLabel">
+
+                            <i class="bi bi-x-circle text-danger me-2"></i>
+                            Từ chối đăng ký đề tài
+                        </h5>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Đóng"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <p>Bạn có chắc chắn muốn từ chối hồ sơ này?</p>
+
+                        <p class="mb-1">
+                            <strong>Mã hồ sơ:</strong>
+                            <span id="rejectRegistrationId"></span>
+                        </p>
+
+                        <p class="mb-1">
+                            <strong>Nhóm:</strong>
+                            <span id="rejectGroupName"></span>
+                        </p>
+
+                        <p class="mb-3">
+                            <strong>Đề tài:</strong>
+                            <span id="rejectTopicCode"></span>
+                        </p>
+
+                        <label for="rejectReason"
+                               class="form-label fw-semibold">
+                            Lý do từ chối
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <textarea id="rejectReason"
+                                  name="reason"
+                                  class="form-control"
+                                  rows="4"
+                                  maxlength="1000"
+                                  required
+                                  placeholder="Nhập lý do từ chối hồ sơ..."></textarea>
+
+                        <div class="form-text">
+                            Bắt buộc nhập lý do, tối đa 1000 ký tự.
+                        </div>
+
+                        <div class="alert alert-warning mt-3 mb-0">
+                            Khi từ chối, hồ sơ chuyển sang
+                            <strong>REJECTED</strong>.
+                            Đề tài được giải phóng và
+                            nhóm vẫn giữ trạng thái
+                            <strong>FORMING</strong>.
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">
+                            Hủy
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-danger"
+                                id="confirmRejectButton">
+
+                            <i class="bi bi-x-circle me-1"></i>
+                            Xác nhận từ chối
+                        </button>
+
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- JAVASCRIPT XU LY HAI MODAL -->
+<!-- ============================================ -->
+
+<th:block layout:fragment="js">
+
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Thymeleaf xu ly context path
+            const baseUrl =
+                /*[[@{/dean/registrations}]]*/
+                "/dean/registrations";
+
+            // =====================================
+            // C04.2 - MODAL DUYET
+            // =====================================
+
+            const approveModal = document.getElementById(
+                "approveRegistrationModal"
+            );
+
+            const approveForm = document.getElementById(
+                "approveRegistrationForm"
+            );
+
+            const approveButton = document.getElementById(
+                "confirmApproveButton"
+            );
+
+            if (approveModal && approveForm && approveButton) {
+
+                approveModal.addEventListener(
+                    "show.bs.modal",
+                    function (event) {
+
+                        const button = event.relatedTarget;
+                        if (!button) return;
+
+                        const registrationId =
+                            button.getAttribute("data-registration-id");
+
+                        const groupName =
+                            button.getAttribute("data-group-name");
+
+                        const topicCode =
+                            button.getAttribute("data-topic-code");
+
+                        document.getElementById(
+                            "approveRegistrationId"
+                        ).textContent = registrationId || "";
+
+                        document.getElementById(
+                            "approveGroupName"
+                        ).textContent = groupName || "";
+
+                        document.getElementById(
+                            "approveTopicCode"
+                        ).textContent = topicCode || "";
+
+                        approveButton.disabled = true;
+                        approveForm.removeAttribute("action");
+
+                        if (!registrationId ||
+                            !/^[1-9]\d*$/.test(registrationId)) {
+                            return;
+                        }
+
+                        approveForm.action =
+                            baseUrl.replace(/\/$/, "") +
+                            "/" +
+                            encodeURIComponent(registrationId) +
+                            "/approve";
+
+                        approveButton.disabled = false;
+                    }
+                );
+
+                approveForm.addEventListener(
+                    "submit",
+                    function () {
+                        approveButton.disabled = true;
+                    }
+                );
+            }
+
+            // =====================================
+            // C04.3 - MODAL TU CHOI
+            // =====================================
+
+            const rejectModal = document.getElementById(
+                "rejectRegistrationModal"
+            );
+
+            const rejectForm = document.getElementById(
+                "rejectRegistrationForm"
+            );
+
+            const rejectButton = document.getElementById(
+                "confirmRejectButton"
+            );
+
+            const rejectReason = document.getElementById(
+                "rejectReason"
+            );
+
+            if (rejectModal && rejectForm &&
+                rejectButton && rejectReason) {
+
+                rejectModal.addEventListener(
+                    "show.bs.modal",
+                    function (event) {
+
+                        const button = event.relatedTarget;
+                        if (!button) return;
+
+                        const registrationId =
+                            button.getAttribute("data-registration-id");
+
+                        const groupName =
+                            button.getAttribute("data-group-name");
+
+                        const topicCode =
+                            button.getAttribute("data-topic-code");
+
+                        document.getElementById(
+                            "rejectRegistrationId"
+                        ).textContent = registrationId || "";
+
+                        document.getElementById(
+                            "rejectGroupName"
+                        ).textContent = groupName || "";
+
+                        document.getElementById(
+                            "rejectTopicCode"
+                        ).textContent = topicCode || "";
+
+                        rejectReason.value = "";
+                        rejectReason.setCustomValidity("");
+                        rejectButton.disabled = true;
+                        rejectForm.removeAttribute("action");
+
+                        if (!registrationId ||
+                            !/^[1-9]\d*$/.test(registrationId)) {
+                            return;
+                        }
+
+                        rejectForm.action =
+                            baseUrl.replace(/\/$/, "") +
+                            "/" +
+                            encodeURIComponent(registrationId) +
+                            "/reject";
+
+                        rejectButton.disabled = false;
+                    }
+                );
+
+                rejectReason.addEventListener(
+                    "input",
+                    function () {
+                        rejectReason.setCustomValidity("");
+                    }
+                );
+
+                rejectForm.addEventListener(
+                    "submit",
+                    function (event) {
+
+                        if (!rejectReason.value.trim()) {
+
+                            event.preventDefault();
+
+                            rejectReason.setCustomValidity(
+                                "Vui lòng nhập lý do từ chối"
+                            );
+
+                            rejectReason.reportValidity();
+                            return;
+                        }
+
+                        rejectReason.setCustomValidity("");
+
+                        if (!rejectForm.checkValidity()) {
+                            return;
+                        }
+
+                        rejectButton.disabled = true;
+                    }
+                );
+            }
+
+        });
+    </script>
+
+</th:block>
+
+</body>
+</html>

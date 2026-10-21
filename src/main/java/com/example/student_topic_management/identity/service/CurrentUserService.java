@@ -8,13 +8,20 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.student_topic_management.common.exception.BusinessException;
 import com.example.student_topic_management.identity.entity.AppUser;
 import com.example.student_topic_management.identity.repository.AppUserRepository;
+import com.example.student_topic_management.identity.repository.LecturerProfileRepository;
+import com.example.student_topic_management.identity.repository.StudentProfileRepository;
 
 @Service
 public class CurrentUserService {
     private final AppUserRepository userRepository;
+    private final StudentProfileRepository studentRepo;
+    private final LecturerProfileRepository lecturerRepo;
 
-    public CurrentUserService(AppUserRepository userRepository) {
+    public CurrentUserService(AppUserRepository userRepository, StudentProfileRepository studentRepo,
+            LecturerProfileRepository lecturerRepo) {
         this.userRepository = userRepository;
+        this.studentRepo = studentRepo;
+        this.lecturerRepo = lecturerRepo;
     }
 
     @Transactional(readOnly = true)
@@ -32,5 +39,29 @@ public class CurrentUserService {
 
     public Long getCurrentUserId() {
         return getCurrentUser().getId();
+    }
+
+    // Lay studentId
+    @Transactional(readOnly = true)
+    public Long getStudentId() {
+        return studentRepo.findById(getCurrentUserId())
+                .map(profile -> profile.getUserId())
+                .orElseThrow(() -> new BusinessException("Tài khoản hiện tại không phải là sinh viên"));
+    }
+
+    // Lay lecturerId
+    @Transactional(readOnly = true)
+    public Long getLecturerId() {
+        return lecturerRepo.findById(getCurrentUserId())
+                .map(profile -> profile.getUserid())
+                .orElseThrow(() -> new BusinessException("Tài khoản hiện tại không phải là giảng viên"));
+    }
+
+    // Lay departmentId
+    @Transactional(readOnly = true)
+    public Long getLecturerDepartmentId() {
+        return lecturerRepo.findById(getCurrentUserId())
+                .map(profile -> profile.getDepartment().getId())
+                .orElseThrow(() -> new BusinessException("Tài khoản hiện tại không phải là giảng viên"));
     }
 }

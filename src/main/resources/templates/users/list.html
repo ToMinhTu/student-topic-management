@@ -3,7 +3,7 @@
     layout:decorate="~{layout}">
 
 <head>
-    <title>Quản lý Tài Khoản</title>
+    <title>Quản Lý Người Dùng</title>
     <!-- css rieng -->
     <th:block layout:fragment="css">
         <!-- link, style, etc -->
@@ -13,54 +13,69 @@
 
 <body>
     <div layout:fragment="content">
-        <h2 class="mb-4">Danh sách Tài khoản Hệ thống</h2>
-
-        <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
-        <div th:if="${error}" th:text="${error}" class="alert alert-danger"></div>
-
-        <div class="d-flex gap-2 mb-3">
-            <a th:href="@{/admin/students/new}" class="btn btn-primary">+ Thêm Sinh Viên</a>
-            <a th:href="@{/admin/lecturers/new}" class="btn btn-info text-white">+ Thêm Giảng Viên</a>
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div class="page-title-tab mb-0">Quản Lý Người Dùng</div>
+            <div class="d-flex gap-2">
+                <a th:href="@{/admin/students/new}" class="btn btn-outline-primary btn-sm fw-bold px-3">
+                    <i class="bi bi-person-plus-fill me-2"></i> Thêm Sinh Viên</a>
+                <a th:href="@{/admin/lecturers/new}" class="btn btn-theme btn-sm fw-bold px-3">
+                    <i class="bi bi-person-badge-fill me-2"></i> Thêm Giảng Viên</a>
+            </div>
         </div>
 
-        <table class="table table-bordered bg-white shadow-sm align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th style="width: 50px;">ID</th>
-                    <th>Tên đăng nhập</th>
-                    <th>Họ và Tên</th>
-                    <th>Email</th>
-                    <th>Vai trò</th>
-                    <th style="width: 120px;" class="text-center">Trạng thái</th>
-                    <th style="width: 120px;" class="text-center">Hành động</th>
-                </tr>
-            <tbody>
-                <tr th:each="user : ${users}">
-                    <td th:text="${user.id}"></td>
-                    <td th:text="${user.username}" class="fw-bold"></td>
-                    <td th:text="${user.fullname}"></td>
-                    <td th:text="${user.email}"></td>
-                    <td th:text="${user.roleNames}"></td>
-                    <td class="text-center">
-                        <span th:if="${user.enabled}" class="badge bg-success">
-                            <i class="bi bi-check-circle me-1"></i> Hoạt động
-                        </span>
-                        <span th:unless="${user.enabled}" class="badge bg-danger">
-                            <i class="bi bi-lock-fill me-1"></i> Bị khóa
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}" method="post">
-                            <button type="submit"
-                                th:class="${user.enabled} ? 'btn btn-sm btn-danger' : 'btn btn-sm btn-success'"
-                                th:text="${user.enabled} ? 'Khoá' : 'Mở Khoá'"
-                                onclick="return confirm('Xác nhận thay đổi trạng thái tài khoản này?');"></button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-            </thead>
-        </table>
+        <div class="content-card">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border mb-0">
+                    <thead class="bg-theme">
+                        <tr>
+                            <th class="bg-theme text-white py-3 px-3">Tên đăng nhập</th>
+                            <th class="bg-theme text-white py-3">Họ và Tên</th>
+                            <th class="bg-theme text-white py-3">Email</th>
+                            <th class="bg-theme text-white py-3">Vai trò</th>
+                            <th class="bg-theme text-white py-3 text-center">Trạng thái</th>
+                            <th class="bg-theme text-white py-3 text-center" style="width: 100px;">Khoá</th>
+                        </tr>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-people fs-4 d-block mb-2"></i>Chưa có dữ liệu người dùng
+                            </td>
+                        </tr>
+                        <tr th:each="user : ${users}">
+                            <td th:text="${user.username}" class="fw-bold px-3 text-theme"></td>
+                            <td th:text="${user.fullname}"></td>
+                            <td th:text="${user.email}" class="text-muted small"></td>
+                            <td>
+                                <span class="badge bg-secondary me-1" th:text="${user.roleNames}"></span>
+                            </td>
+                            <td class="text-center">
+                                <span th:if="${user.enabled}" class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Đang hoạt động
+                                </span>
+                                <span th:if="${!user.enabled}" class="badge bg-danger">
+                                    <i class="bi bi-lock-fill me-1"></i> Bị khóa
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}" method="post">
+                                    <button type="button" class="btn btn-sm"
+                                        th:classappend="${user.enabled} ? 'btn-outline-danger' : 'btn-outline-success'"
+                                        th:title="${user.enabled} ? 'Khoá tài khoản' : 'Mở Khoá tài khoản'"
+                                        th:data-msg="|Xác nhận thay đổi trạng thái tài khoản [${user.username}] này?|"
+                                        th:data-title="${user.enabled} ? 'Xác nhận khoá tài khoản' : 'Xác nhận mở khoá'"
+                                        th:data-btn="${user.enabled} ? 'Khoá tài khoản' : 'Mở khoá'"
+                                        onclick="window.confirmAction(this.closest('form'), this.getAttribute('data-msg'), this.getAttribute('data-title'), this.getAttribute('data-btn'))">
+                                        <i class="bi"
+                                            th:classappend="${user.enabled} ? 'bi-lock-fill' : 'bi-unlock-fill'"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                    </thead>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Js rieng -->

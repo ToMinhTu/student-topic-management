@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><meta charset="UTF-8"><title>Giảng viên hướng dẫn</title></head>
+<body>
+<main layout:fragment="content">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <h1 class="h3 mb-0">Giảng viên hướng dẫn</h1>
+        <a class="btn btn-outline-secondary" th:href="@{/dean/topics/supervisors}">Chọn đề tài khác</a>
+    </div>
+    <div class="card shadow-sm mb-3"><div class="card-body">
+        <h2 class="h5" th:text="${topic.title}"></h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Mã đề tài</dt><dd class="col-sm-9" th:text="${topic.code}"></dd>
+            <dt class="col-sm-3">ID đợt đăng ký</dt><dd class="col-sm-9" th:text="${topic.roundId}"></dd>
+            <dt class="col-sm-3">Trạng thái</dt><dd class="col-sm-9" th:text="${topic.status}"></dd>
+        </dl>
+    </div></div>
+    <div th:if="${approvedRegistration}" class="alert alert-warning" role="alert">Đề tài đã có đăng ký APPROVED, không được thay đổi giảng viên hướng dẫn.</div>
+    <div th:if="${not canEdit and not approvedRegistration}" class="alert alert-info" role="alert">Chỉ được xem phân công. Đề tài phải ở trạng thái DRAFT để thêm hoặc xóa giảng viên hướng dẫn.</div>
+    <div th:if="${formErrors != null}" class="alert alert-danger" role="alert">
+        <ul class="mb-0"><li th:each="message : ${formErrors}" th:text="${message}"></li></ul>
+    </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">Danh sách phân công</div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Vị trí</th><th>Mã giảng viên</th><th>Họ tên</th><th th:if="${canEdit}">Thao tác</th></tr></thead>
+                <tbody>
+                <tr th:each="slot : ${slots}">
+                    <td th:text="${slot.slotNo}"></td><td th:text="${slot.lecturerCode}"></td><td th:text="${slot.fullName}"></td>
+                    <td th:if="${canEdit}">
+                        <form th:if="${slot.lecturerId != null}" method="post"
+                              th:action="@{/dean/topics/{topicId}/supervisors/{lecturerId}/delete(topicId=${topic.id},lecturerId=${slot.lecturerId})}"
+                              onsubmit="return confirm('Bạn có chắc muốn xóa phân công này?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Xóa phân công</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <section th:if="${canEdit}" class="card shadow-sm"><div class="card-body">
+        <h2 class="h5">Thêm giảng viên hướng dẫn</h2>
+        <p class="text-muted">Tối đa 2 giảng viên, mỗi người một vị trí. Vị trí 1 và 2 chỉ biểu thị thứ tự phân công.</p>
+        <p th:if="${#lists.isEmpty(availableSlots)}" class="alert alert-info mb-0">Đã sử dụng đủ hai vị trí phân công.</p>
+        <p th:if="${not #lists.isEmpty(availableSlots) and #lists.isEmpty(candidates)}" class="alert alert-info mb-0">Không còn giảng viên đủ điều kiện để phân công.</p>
+        <form th:if="${not #lists.isEmpty(candidates) and not #lists.isEmpty(availableSlots)}"
+              th:action="@{/dean/topics/{topicId}/supervisors(topicId=${topic.id})}"
+              th:object="${supervisorForm}" method="post" class="row g-3">
+            <div class="col-md-8">
+                <label for="lecturerId" class="form-label">Giảng viên</label>
+                <select id="lecturerId" th:field="*{lecturerId}" class="form-select" required>
+                    <option value="">-- Chọn giảng viên --</option>
+                    <option th:each="lecturer : ${candidates}" th:value="${lecturer.id}"
+                            th:text="${lecturer.lecturerCode + ' — ' + lecturer.fullName}"></option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="slotNo" class="form-label">Vị trí</label>
+                <select id="slotNo" th:field="*{slotNo}" class="form-select" required>
+                    <option value="">-- Chọn vị trí --</option>
+                    <option th:each="slotNo : ${availableSlots}" th:value="${slotNo}" th:text="${slotNo}"></option>
+                </select>
+            </div>
+            <div class="col-12"><button type="submit" class="btn btn-primary">Thêm giảng viên hướng dẫn</button></div>
+        </form>
+    </div></section>
+</main>
+</body>
+</html>

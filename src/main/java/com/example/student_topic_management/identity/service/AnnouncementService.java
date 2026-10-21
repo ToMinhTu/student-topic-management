@@ -4,86 +4,130 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import org.springframework.cglib.core.Local;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.student_topic_management.audit.service.AuditLogService;
 import com.example.student_topic_management.common.exception.BusinessException;
 import com.example.student_topic_management.identity.dto.AnnouncementForm;
 import com.example.student_topic_management.identity.entity.Announcement;
+import com.example.student_topic_management.identity.entity.AppUser;
 import com.example.student_topic_management.identity.repository.AnnouncementRepository;
 
 @Service
 public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final CurrentUserService currentUserService;
+    private final AuditLogService auditLogService;
 
-    public AnnouncementService(AnnouncementRepository announcementRepository, CurrentUserService currentUserService) {
+    public AnnouncementService(AnnouncementRepository announcementRepository, CurrentUserService currentUserService,
+            AuditLogService auditLogService) {
         this.announcementRepository = announcementRepository;
         this.currentUserService = currentUserService;
+        this.auditLogService = auditLogService;
     }
 
-    public List<Announcement> getDrafts() {
-        return announcementRepository.findByPublishedAtIsNullOrderByCreatedAtDesc();
+    // =========================== ADMIN VA DEAN ===========================
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
+    public List<Announcement> getManagementList() {
+        // Lay 50 thong bao moi nhat
+        return announcementRepository.findAllWithAuthor(PageRequest.of(0, 50));
     }
 
-    public List<Announcement> getPublished() {
-        return announcementRepository.findByPublishedAtIsNotNullAndPublishedAtLessThanEqualOrderByPublishedAtDesc(
-                LocalDateTime.now(ZoneOffset.UTC));
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
+    public Announcement getForManagementById(Long id) {
+        return announcementRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy thông báo"));
     }
 
-    public Announcement getById(Long id) {
-        return announcementRepository.findById(id).orElseThrow(() -> new BusinessException("Không tìm thấy thông báo"));
-    }
-
-    // Chi ADMIN hoac DEAN moi duoc tao
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
-    public void saveDraft(AnnouncementForm form) {
-        // 1. Tao moi nhap
-        if (form.getId() == null) {
-            Announcement ann = new Announcement();
-            ann.setTitle(form.getTitle());
-            ann.setContent(form.getContent());
-            ann.setAuthor(currentUserService.getCurrentUser()); // tu dong lay nguoi dang nhap
-            announcementRepository.save(ann);
-        }
-        // 2. sua nhap
-        else {
-            Announcement ann = getById(form.getId());
-            if (ann.getPublishedAt() != null) {
-                throw new BusinessException("Không thể sửa thông báo đã được công bố");
-            }
-            ann.setTitle(form.getTitle());
-            ann.setContent(form.getContent());
-            announcementRepository.save(ann);
-        }
+    public void createDraft(AnnouncementForm form) {
+        // authorId lay tu principal
+        AppUser author = currentUserService.getCurrentUser();
+
+        Announcement announcement = new Announcement();
+        announcement.setTitle(form.getTitle());
+        announcement.setContent(form.getContent());
+        announcement.setAuthor(author);
+        // publishedAt tu dong la NULL (Ban nhap)
+
+        announcementRepository.save(announcement);
     }
 
-    // Chi ADMIN hoac DEAN moi duoc xoa
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
+    public void updateDraft(Long id, AnnouncementForm form) {
+        Announcement announcement = getForManagementById(id);
+
+        // chi sua ban nhap
+        if (announcement.getPublishedAt() != null) {
+            throw new BusinessException("Không thể sửa thông báo đã được công bố");
+        }
+
+        announcement.updateDraft(form.getTitle(), form.getContent());
+        announcementRepository.save(announcement);
+    }
+
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public void deleteDraft(Long id) {
-        Announcement ann = getById(id);
-        if (ann.getPublishedAt() != null) {
-            throw new BusinessException("Không thể xóa thông báo đã công bố");
+        Announcement announcement = getForManagementById(id);
+
+        // chi xoa ban nhap
+        if (announcement.getPublishedAt() != null) {
+            throw new BusinessException("Không thể xoá thông báo đã được công bố");
         }
-        announcementRepository.delete(ann);
+
+        announcementRepository.delete(announcement);
     }
 
-    // Chi ADMIN hoac DEAN moi dc bam cong bo
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public void publish(Long id) {
-        Announcement ann = getById(id);
+        Announcement announcement = getForManagementById(id);
 
         // Neu da cong bo thi bo qua
         // khong doi ngay gio cap nhay lai lap lai
-        if (ann.getPublishedAt() != null) {
+        if (announcement.getPublishedAt() != null) {
             return;
         }
 
-        ann.setPublishedAt(LocalDateTime.now(ZoneOffset.UTC));
-        announcementRepository.save(ann);
+        // Set thoi gian he thong server (UTC)
+        announcement.publish(LocalDateTime.now(ZoneOffset.UTC));
+        announcementRepository.save(announcement);
+
+        // Ghi Audit Log
+        auditLogService.log(
+                "ANNOUNCEMENT_PUBLISHED",
+                "ANNOUNCEMENT",
+                announcement.getId(),
+                "Đã công bố thông báo: " + announcement.getTitle());
+    }
+
+    // =========================== TAT CA USER ===========================
+    @Transactional(readOnly = true)
+    public List<Announcement> getPublishedList() {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        return announcementRepository.findPublished(now, PageRequest.of(0, 50));
+    }
+
+    @Transactional(readOnly = true)
+    public Announcement getPublishedById(Long id) {
+        Announcement announcement = announcementRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Thông báo không tồn tại"));
+
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+
+        if (announcement.getPublishedAt() == null || announcement.getPublishedAt().isAfter(now)) {
+            throw new BusinessException("Thông báo này chưa được công bố");
+        }
+
+        return announcement;
     }
 }

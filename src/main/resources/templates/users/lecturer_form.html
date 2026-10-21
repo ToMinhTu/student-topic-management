@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Thêm mới Giảng viên</title>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div class="page-title-tab mb-0">THÊM MỚI GIẢNG VIÊN</div>
+            <a th:href="@{/admin/users}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Về danh sách
+            </a>
+        </div>
+
+        <div class="content-card mx-auto" style="max-width: 850px;">
+
+            <form th:action="@{/admin/lecturers/save}" th:object="${form}" method="post">
+                <!-- Bao loi nghiep vu -->
+                <!-- <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                        <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+                    </div> -->
+                <div class="alert alert-danger shadow-sm mb-4" th:if="${#fields.hasGlobalErrors()}">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                    <strong>Lỗi:</strong>
+                    <span th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="d-block mt-1"></span>
+                </div>
+
+                <div class="row g-4">
+                    <!-- thong tin tai khoan -->
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Tên đăng nhập <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" th:field="*{username}"
+                            th:classappend="${#fields.hasErrors('username')} ? 'is-invalid' : ''"
+                            placeholder="Tên đăng nhập">
+                        <div class="invalid-feedback" th:errors="*{username}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" th:field="*{password}"
+                            th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                            placeholder="Mật khẩu (tối thiểu 12 ký tự)">
+                        <div class="invalid-feedback" th:errors="*{password}"></div>
+                        <div class="form-text">Tối thiểu 12 ký tự</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Họ và tên <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" th:field="*{fullname}"
+                            th:classappend="${#fields.hasErrors('fullname')} ? 'is-invalid' : ''"
+                            placeholder="Ví dụ: TS. Lê Văn B">
+                        <div class="invalid-feedback" th:errors="*{fullname}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Email công vụ <span
+                                class="text-danger">*</span></label>
+                        <input type="email" class="form-control" th:field="*{email}"
+                            th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                            placeholder="Ví dụ: levanb@hcmute.edu.vn">
+                        <div class="invalid-feedback" th:errors="*{email}"></div>
+                    </div>
+
+                    <!-- Thong tin giang vien -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Mã giảng viên <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" th:field="*{lecturerCode}"
+                            th:classappend="${#fields.hasErrors('lecturerCode')} ? 'is-invalid' : ''"
+                            placeholder="Nhập MGV">
+                        <div class="invalid-feedback" th:errors="*{lecturerCode}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-theme">Bộ môn quản lý <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select" th:field="*{departmentId}"
+                            th:classappend="${#fields.hasErrors('departmentId')} ? 'is-invalid' : ''">
+                            <option value="">-- Chọn bộ môn --</option>
+                            <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{departmentId}"></div>
+                    </div>
+
+                    <!-- Quyen bo sung -->
+                    <div class="col-12 mt-2">
+                        <label class="form-label fw-bold text-theme d-block mb-3">Quyền quản lý bổ sung</label>
+                        <div class="d-flex gap-4 p-3 bg-light rounded border">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" class="form-check-input" th:field="*{assignDepartmentHead}"
+                                    id="roleDeptHead">
+                                <label for="roleDeptHead" class="form-check-label ms-1">
+                                    Trưởng bộ môn (DEPARTMENT_HEAD)
+                                </label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input type="checkbox" class="form-check-input" th:field="*{assignDean}" id="roleDean">
+                                <label for="roleDean" class="form-check-label ms-1">
+                                    Trưởng khoa (DEAN)
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-5 pt-3 border-top">
+                    <a th:href="@{/admin/users}" class="btn btn-light border px-4">Hủy</a>
+                    <button type="submit" class="btn btn-theme px-4">
+                        <i class="bi bi-floppy me-2"></i>Lưu tài khoản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <script></script>
+    </th:block>
+</body>
+
+</html>

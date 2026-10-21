@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS student_topic_management CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-USE student_topic_management;
+-- CREATE DATABASE IF NOT EXISTS student_topic_management CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- USE student_topic_management;
 SET NAMES utf8mb4;
 SET time_zone = '+00:00';
 
@@ -186,6 +186,20 @@ CREATE TABLE `topic_registrations` (
   CONSTRAINT `fk_topic_registrations_3` FOREIGN KEY (`submitted_by`) REFERENCES `students` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_topic_registrations_4` FOREIGN KEY (`decided_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
  ) ENGINE=InnoDB;
+
+-- C03: Luu snapshot thanh vien tai thoi diem nop dang ky de tai.
+CREATE TABLE `registration_members` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `registration_id` BIGINT NOT NULL,
+  `student_id` BIGINT NOT NULL,
+  `slot_no` TINYINT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_registration_members_student` (`registration_id`, `student_id`),
+  UNIQUE KEY `uq_registration_members_slot` (`registration_id`, `slot_no`),
+  CONSTRAINT `ck_registration_members_slot` CHECK (`slot_no` BETWEEN 1 AND 5),
+  CONSTRAINT `fk_registration_members_registration` FOREIGN KEY (`registration_id`) REFERENCES `topic_registrations` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_registration_members_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`user_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB;
 
 CREATE TABLE `reports` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,
