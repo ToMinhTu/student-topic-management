@@ -4,28 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đề tài của tôi</title>
-    <style layout:fragment="css">
-        .topic-page { font-family: Arial, sans-serif; margin: 30px; }
-        .topic-page table { width: 100%; border-collapse: collapse; }
-        .topic-page th, .topic-page td { border: 1px solid #ddd; padding: 12px; }
-        .topic-page th { background: #f3f4f6; }
-        .topic-page a { color: #2563eb; }
-        .topic-page .btn { display: inline-block; padding: 10px 14px;
-               background: #2563eb; color: white;
-               text-decoration: none; border-radius: 5px; }
-    </style>
+<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
 </head>
 <body>
-<main layout:fragment="content" class="topic-page">
+<main layout:fragment="content" class="part-b-page">
 
-<h1>Đề tài của tôi</h1>
+<div class="b-page-heading"><h1 class="page-title-tab mb-0">Đề tài của tôi</h1></div>
 
-<p><a class="btn" th:href="@{/topics/new}">Tạo đề xuất mới</a></p>
+<p><a class="btn btn-theme" th:href="@{/topics/new}">Tạo đề xuất mới</a></p>
 
-<p th:if="${success}" th:text="${success}"></p>
+<p class="alert alert-success" th:if="${success}" th:text="${success}"></p>
 <p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
 
-<table>
+<div class="b-table-scroll"><table class="table align-middle">
     <thead>
     <tr>
         <th>ID</th>
@@ -49,7 +40,7 @@
         <td colspan="5">Bạn chưa có đề xuất nào.</td>
     </tr>
     </tbody>
-</table>
+</table></div>
 
 <p th:if="${topics.totalPages > 1}">
     <a th:if="${topics.hasPrevious()}"

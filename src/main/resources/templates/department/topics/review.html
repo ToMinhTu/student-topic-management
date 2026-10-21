@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
-<head><title>Sơ duyệt đề tài</title></head>
+<head><title>Sơ duyệt đề tài</title><th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
+</head>
 <body>
-<main layout:fragment="content" class="container-fluid py-4">
+<main layout:fragment="content" class="part-b-page">
     <a th:href="@{/department/topics}">Danh sách chờ sơ duyệt</a>
-    <h1 class="h3 mt-3" th:text="${topic.title}"></h1>
+    <div class="b-page-heading"><h1 th:text="${topic.title}" class="page-title-tab mb-0"></h1></div>
     <dl class="row">
         <dt class="col-sm-3">Mã đề tài</dt><dd class="col-sm-9" th:text="${topic.code}"></dd>
         <dt class="col-sm-3">Trạng thái</dt><dd class="col-sm-9" th:text="${topic.status}"></dd>
@@ -28,7 +29,7 @@
         <label for="comment" class="form-label">Nhận xét / lý do từ chối</label>
         <textarea id="comment" th:field="*{comment}" maxlength="4000" rows="5" class="form-control" aria-describedby="commentHelp"></textarea>
         <p id="commentHelp" class="form-text">Bắt buộc nhập lý do khi từ chối. Tối đa 4000 ký tự.</p>
-        <button type="submit" class="btn btn-primary align-self-start">Lưu sơ duyệt</button>
+        <button type="submit" class="btn btn-theme align-self-start">Lưu sơ duyệt</button>
     </form>
 </main>
 </body></html>

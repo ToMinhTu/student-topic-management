@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
-<head><title>Công bố đề tài</title></head>
+<head><title>Công bố đề tài</title><th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
+</head>
 <body>
-<main layout:fragment="content" class="container-fluid py-4">
-    <h1 class="h3 mb-4">Đề tài đã duyệt chờ công bố</h1>
+<main layout:fragment="content" class="part-b-page">
+    <div class="b-page-heading"><h1 class="page-title-tab mb-0">Đề tài đã duyệt chờ công bố</h1></div>
     <div class="d-flex gap-3 mb-3">
         <a th:href="@{/dean/topics/review}">Phê duyệt đề tài</a>
         <a th:href="@{/catalog/topics}">Tra cứu đề tài đã công bố</a>
     </div>
     <div th:if="${topics.empty}" class="alert alert-info">Không có đề tài chờ công bố trong trang này.</div>
     <div th:unless="${topics.empty}" class="table-responsive">
-        <table class="table table-bordered align-middle">
+        <div class="b-table-scroll"><table class="table table-bordered align-middle">
             <thead><tr><th scope="col">Mã đề tài</th><th scope="col">Tên đề tài</th>
                 <th scope="col">ID đợt</th><th scope="col">ID bộ môn</th><th scope="col">Thao tác</th></tr></thead>
             <tbody><tr th:each="topic : ${topics.content}">
@@ -19,11 +20,11 @@
                 <td th:text="${topic.roundId}"></td><td th:text="${topic.departmentId}"></td>
                 <td>
                     <form th:action="@{/dean/topics/publish/{id}(id=${topic.id})}" method="post">
-                        <button type="submit" class="btn btn-primary btn-sm">Công bố</button>
+                        <button type="submit" class="btn btn-theme btn-sm">Công bố</button>
                     </form>
                 </td>
             </tr></tbody>
-        </table>
+        </table></div>
     </div>
     <nav aria-label="Phân trang công bố" class="d-flex gap-3 align-items-center">
         <a th:if="${topics.hasPrevious()}" th:href="@{/dean/topics/publish(page=${topics.number - 1})}">Trang trước</a>

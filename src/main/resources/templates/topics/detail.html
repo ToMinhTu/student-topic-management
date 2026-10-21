@@ -4,19 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chi tiết đề tài</title>
-    <style layout:fragment="css">
-        .topic-page { font-family: Arial, sans-serif; max-width: 850px;
-               margin: 30px auto; line-height: 1.6; }
-        .topic-page .actions { margin-top: 24px; display: flex; gap: 12px; }
-        .topic-page button, .topic-page .btn { padding: 10px 15px; cursor: pointer; }
-    </style>
+<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
 </head>
 <body>
-<main layout:fragment="content" class="topic-page">
+<main layout:fragment="content" class="part-b-page">
 
-<h1 th:text="${topic.title}">Chi tiết đề tài</h1>
+<div class="b-page-heading"><h1 th:text="${topic.title}" class="page-title-tab mb-0">Chi tiết đề tài</h1></div>
 
-<p th:if="${success}" th:text="${success}"></p>
+<p class="alert alert-success" th:if="${success}" th:text="${success}"></p>
 <p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
 
 <p><strong>Mã đề tài:</strong>
@@ -38,17 +33,19 @@
 <h3>Yêu cầu</h3>
 <p th:text="${topic.requirements}"></p>
 
+</section>
+
 <div class="actions"
      th:if="${topic.status.name() == 'DRAFT' or topic.status.name() == 'REJECTED'}">
 
-    <a class="btn"
+    <a class="btn btn-theme"
        th:href="@{/topics/{id}/edit(id=${topic.id})}">
         Chỉnh sửa
     </a>
 
     <form th:action="@{/topics/{id}/submit(id=${topic.id})}"
           method="post">
-        <button type="submit">
+        <button type="submit" class="btn btn-theme">
             Gửi đề xuất
         </button>
     </form>

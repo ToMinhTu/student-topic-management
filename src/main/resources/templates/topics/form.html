@@ -4,24 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đề xuất đề tài</title>
-    <style layout:fragment="css">
-        .topic-page { font-family: Arial, sans-serif; max-width: 750px;
-               margin: 30px auto; }
-        .topic-page label { display: block; margin-top: 16px; font-weight: bold; }
-        .topic-page input, .topic-page textarea, .topic-page select { width: 100%; padding: 10px;
-                          box-sizing: border-box; }
-        .topic-page textarea { min-height: 100px; }
-        .topic-page .error { color: #b91c1c; }
-        .topic-page button { margin-top: 20px; padding: 12px 20px;
-                 cursor: pointer; }
-    </style>
+<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
 </head>
 <body>
-<main layout:fragment="content" class="topic-page">
+<main layout:fragment="content" class="part-b-page">
 
-<h1 th:text="${editMode} ? 'Chỉnh sửa đề xuất' : 'Tạo đề xuất mới'"></h1>
+<div class="b-page-heading"><h1 th:text="${editMode} ? 'Chỉnh sửa đề xuất' : 'Tạo đề xuất mới'" class="page-title-tab mb-0"></h1></div>
 
-<form th:action="${editMode}
+<form class="content-card b-proposal-form" th:action="${editMode}
         ? @{/topics/{id}(id=${topicId})}
         : @{/topics}"
       th:object="${topicForm}"
@@ -32,41 +22,41 @@
            th:text="${err}"></p>
     </div>
 
-        <label for="roundId">Đợt đăng ký</label>
-    <select id="roundId" th:field="*{roundId}" th:disabled="${editMode}" required>
+        <label class="form-label" for="roundId">Đợt đăng ký</label>
+    <select class="form-select" id="roundId" th:field="*{roundId}" th:disabled="${editMode}" required>
         <option value="">-- Chọn đợt đăng ký --</option>
         <option th:each="round : ${roundOptions}" th:value="${round.id}" th:text="${round.name}"></option>
     </select>
-    <input th:if="${editMode}" type="hidden" th:field="*{roundId}">
+    <input class="form-control" th:if="${editMode}" type="hidden" th:field="*{roundId}">
     <p class="error" th:errors="*{roundId}"></p>
 
-        <label for="departmentId">Bộ môn</label>
-    <select id="departmentId" th:field="*{departmentId}" required>
+        <label class="form-label" for="departmentId">Bộ môn</label>
+    <select class="form-select" id="departmentId" th:field="*{departmentId}" required>
         <option value="">-- Chọn bộ môn --</option>
         <option th:each="department : ${departmentOptions}" th:value="${department.id}" th:text="${department.name}"></option>
     </select>
     <p class="error" th:errors="*{departmentId}"></p>
 
-    <label for="code">Mã đề tài</label>
-    <input id="code" type="text" maxlength="40"
+    <label class="form-label" for="code">Mã đề tài</label>
+    <input class="form-control" id="code" type="text" maxlength="40"
            th:field="*{code}" required>
     <p class="error" th:errors="*{code}"></p>
 
-    <label for="title">Tên đề tài</label>
-    <input id="title" type="text" maxlength="255"
+    <label class="form-label" for="title">Tên đề tài</label>
+    <input class="form-control" id="title" type="text" maxlength="255"
            th:field="*{title}" required>
     <p class="error" th:errors="*{title}"></p>
 
-    <label for="description">Mô tả đề tài</label>
-    <textarea id="description"
+    <label class="form-label" for="description">Mô tả đề tài</label>
+    <textarea class="form-control" id="description"
               th:field="*{description}" required></textarea>
     <p class="error" th:errors="*{description}"></p>
 
-    <label for="requirements">Yêu cầu</label>
-    <textarea id="requirements"
+    <label class="form-label" for="requirements">Yêu cầu</label>
+    <textarea class="form-control" id="requirements"
               th:field="*{requirements}"></textarea>
 
-    <button type="submit">Lưu đề xuất nháp</button>
+    <button type="submit" class="btn btn-theme">Lưu đề xuất nháp</button>
     <a th:href="@{/topics/my}">Quay lại</a>
 </form>
 
