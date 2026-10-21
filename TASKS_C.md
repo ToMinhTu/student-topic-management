@@ -168,50 +168,170 @@ C04.4 – Hủy đăng ký
 - [x] Kiểm thử hủy đăng ký qua giao diện.
 - [x] Kiểm tra trạng thái CANCELLED và audit trên MySQL.
 - [ ] Xác nhận lần cuối luồng đăng ký lại sau hủy trên giao diện.
-7. C05 – Nộp và tải báo cáo
-- [ ] Upload báo cáo PDF.
-- [ ] Kiểm tra định dạng và dung lượng file.
-- [ ] Lưu phiên bản báo cáo.
-- [ ] Lưu thông tin file và SHA-256.
-- [ ] Kiểm thử upload, download và quyền truy cập.
-8. C06 – Kiểm thử tích hợp và bàn giao
+## 7. C05 – Nộp và tải báo cáo PDF
+
+### C05.1 – Nộp báo cáo PDF
+- [x] Xây dựng `ReportController.java`.
+- [x] Xây dựng `ReportService.java`.
+- [x] Xây dựng `ReportRepository.java`.
+- [x] Cho phép trưởng nhóm nộp báo cáo PDF.
+- [x] Chỉ cho phép nộp khi hồ sơ đăng ký ở trạng thái `APPROVED`.
+- [x] Kiểm tra nhóm đã ở trạng thái `LOCKED`.
+- [x] Kiểm tra quyền trưởng nhóm trước khi lưu báo cáo.
+- [x] Kiểm tra hạn nộp báo cáo khi đã được thiết lập.
+- [x] Kiểm tra phần mở rộng `.pdf` và dấu hiệu định dạng PDF.
+- [x] Giới hạn dung lượng file tối đa 10 MB.
+- [x] Lưu file vào thư mục `uploads/reports/`.
+- [x] Không đưa thư mục lưu PDF lên GitHub.
+
+### C05.2 – Quản lý phiên bản báo cáo
+- [x] Lưu thông tin báo cáo vào bảng `reports`.
+- [x] Tự động tăng số phiên bản khi nộp báo cáo mới.
+- [x] Lưu tên file gốc, dung lượng và thời gian nộp.
+- [x] Lưu thông tin người nộp.
+- [x] Tạo khóa lưu trữ ngẫu nhiên bằng UUID.
+- [x] Tính và lưu mã SHA-256.
+- [x] Sử dụng transaction và khóa hồ sơ đăng ký để hạn chế trùng phiên bản.
+
+### C05.3 – Xem và tải báo cáo PDF
+- [x] Hiển thị danh sách lịch sử các phiên bản báo cáo.
+- [x] Cho phép thành viên đang hoạt động trong nhóm xem danh sách báo cáo.
+- [x] Cho phép thành viên tải báo cáo PDF.
+- [x] Kiểm tra quyền truy cập trước khi tải file.
+- [x] Kiểm tra dung lượng và SHA-256 khi tải file.
+- [x] Chỉ trưởng nhóm nhìn thấy biểu mẫu nộp báo cáo.
+- [x] Hiển thị thông báo khi thành viên không có quyền nộp báo cáo.
+
+### C05.4 – Kết quả kiểm thử
+- [x] Trưởng nhóm `student.c04.01` nộp PDF thành công.
+- [x] Nộp thành công 2 phiên bản báo cáo.
+- [x] Kiểm tra dữ liệu báo cáo trong MySQL.
+- [x] Thành viên `student.c04.02` xem được danh sách báo cáo.
+- [x] Thành viên tải và mở được PDF phiên bản 2.
+- [x] Thành viên không được phép nộp PDF.
+- [x] Hệ thống hiển thị thông báo từ chối quyền.
+- [x] Giao diện ẩn biểu mẫu upload đối với thành viên.
+- [x] Biên dịch Maven thành công (`BUILD SUCCESS`).
+- [ ] Bổ sung kiểm thử tự động cho `ReportService`.
+- [ ] Kiểm thử đầy đủ file vượt quá 10 MB.
+- [ ] Kiểm thử người ngoài nhóm truy cập và tải báo cáo.
+- [ ] Kiểm thử nộp báo cáo sau thời hạn.
+- [ ] Kiểm thử tích hợp C05 sau khi merge vào `main`.
+
+### Đường dẫn C05
+- Danh sách báo cáo: `GET /reports/{registrationId}`.
+- Nộp báo cáo: `POST /reports/{registrationId}/upload`.
+- Tải báo cáo: `GET /reports/files/{reportId}/download`.
+
+### Môi trường kiểm thử C05
+- Spring Boot 4.1.1.
+- Cổng: `8081`.
+- Profile: `c04test`.
+- Database: `student_topic_management_c04_test`.
+
+### Hạn chế cần hoàn thiện
+- Chưa tích hợp đầy đủ đường dẫn báo cáo vào menu hoặc trang nhóm.
+- Cần thống nhất cách hiển thị thời gian theo múi giờ Việt Nam.
+- Cần kiểm thử thêm các trường hợp lỗi và giới hạn upload.
+
+---
+
+## 8. C06 – Kiểm thử tích hợp và bàn giao
+
+### Các công việc đã hoàn thành
+- [x] Kiểm thử C01–C02 bằng JUnit và Mockito.
+- [x] Hoàn thành 16/16 bài kiểm thử `GroupServiceTest`.
 - [x] Kiểm thử C03 bằng JUnit và Mockito.
-- [x] Kiểm thử C04.2 bằng JUnit và Mockito.
-- [x] Kiểm thử C04.2 trên MySQL thật.
-- [x] Kiểm thử C04.2 qua giao diện.
-- [x] Kiểm thử C04.3 bằng JUnit và Mockito.
-- [x] Kiểm thử C04.3 trên MySQL thật.
-- [x] Kiểm thử C04.3 qua giao diện Spring Boot.
-- [x] Xác nhận rollback khi ghi audit từ chối thất bại.
-- [x] Tạo commit 6f15a51 (C03–C04.2).
-- [x] Push code lên nhánh Khai và tạo Pull Request #18.
-- [ ] Commit và push thay đổi C04.3 đang nằm trên máy cục bộ.
+- [x] Hoàn thành 6/6 bài kiểm thử C03 ở giai đoạn kiểm thử ban đầu.
+- [x] Kiểm thử C04.2 bằng Unit Test và Integration Test.
+- [x] Kiểm thử C04.3 bằng Unit Test và Integration Test.
+- [x] Kiểm thử C04.4 bằng Unit Test và Integration Test.
+- [x] Kiểm thử duyệt, từ chối và hủy đăng ký qua giao diện.
+- [x] Kiểm tra dữ liệu C04 trên MySQL thử nghiệm.
+- [x] Kiểm thử thủ công chức năng upload và download C05.
+- [x] Kiểm thử phân quyền trưởng nhóm và thành viên trong C05.
+- [x] Commit và push code C05 lên nhánh `Khai`.
+- [x] Cập nhật tiêu đề và mô tả Pull Request #22.
+
+### Công việc chưa hoàn thành
 - [ ] Hoàn tất review của trưởng nhóm.
-- [ ] Merge Pull Request #18 vào main.
-- [ ] Kiểm thử toàn bộ dự án sau merge.
+- [ ] Merge Pull Request #22 vào `main`.
+- [ ] Chạy lại toàn bộ bộ kiểm thử trên code mới nhất.
+- [ ] Kiểm thử tích hợp C01–C05 sau merge.
 - [ ] Kiểm thử tích hợp với phần A, B và D.
-- [ ] Chuẩn bị dữ liệu demo và minh chứng báo cáo.
-9. Git và Pull Request
-- Repository: ToMinhTu/student-topic-management.
-- Nhánh làm việc: Khai.
-- Commit C03–C04.2: 6f15a51.
-- Commit cập nhật sidebar/TASKS_C trước đó: ace49d3.
-- Pull Request: https://github.com/ToMinhTu/student-topic-management/pull/18.
-- Trạng thái: PR đã tạo; C04.3 chưa commit/push, chưa được xác nhận merge.
-Lưu ý về file riêng trên máy
+- [ ] Kiểm tra phân quyền giữa các vai trò trong toàn hệ thống.
+- [ ] Chuẩn bị dữ liệu demo và hình ảnh minh chứng.
+- [ ] Hoàn thiện báo cáo và bàn giao chức năng phần C.
+
+---
+
+## 9. Git và Pull Request
+
+### Thông tin repository
+- Repository: `ToMinhTu/student-topic-management`.
+- Nhánh làm việc: `Khai`.
+- Nhánh đích: `main`.
+
+### Các commit quan trọng
+- C03–C04.2: `6f15a51`.
+- Cập nhật sidebar/TASKS_C trước đó: `ace49d3`.
+- C05 – PDF Report Upload & Download: `765b630`.
+
+### Pull Request
+- PR #18: https://github.com/ToMinhTu/student-topic-management/pull/18
+- PR #22: https://github.com/ToMinhTu/student-topic-management/pull/22
+
+### Trạng thái hiện tại
+- [x] Code C05 đã commit trên nhánh `Khai`.
+- [x] Code C05 đã push lên GitHub.
+- [x] Cập nhật tiêu đề PR #22 bao gồm C02–C03–C05.
+- [x] Cập nhật mô tả các chức năng và kết quả kiểm thử.
+- [x] Xóa nhánh thử nghiệm `feature/khai-c05`.
+- [ ] Hoàn tất review PR #22.
+- [ ] Xác nhận PR #22 đã merge vào `main`.
+
+**Lưu ý:** Cần kiểm tra trạng thái PR #18 và các commit đã được đưa vào `main` trước khi thực hiện merge tiếp theo.
+
+### Các file riêng trên máy
+
 Không commit hoặc push các file:
-- schema_c04_test_local.sql
-- seed_dean_c01_local.sql
-- sidebar_khai_backup_local.html
-Không dùng git add . hoặc git add -A khi các file này còn nằm trong thư mục dự án.
-10. Các công việc tiếp theo
-- [x] Đồng bộ cách bố trí sidebar.html theo main, chỉ thêm menu thuộc phần C.
-- [x] Hoàn thiện C04.3 – Xử lý từ chối đăng ký.
-- [ ] Cập nhật TASKS_C.md, commit và push C04.3 lên nhánh Khai.
-- [ ] Thống nhất migration registration_members với thành viên phụ trách database.
-- [ ] Hoàn thiện đăng ký lại sau khi hồ sơ bị từ chối (lưu ý UNIQUE(group_id)).
-- [ ] Hoàn thiện C04.4 – Hủy đăng ký.
-- [ ] Triển khai C05 – Báo cáo PDF.
-- [ ] Kiểm tra vấn đề tiếng Việt và múi giờ của dữ liệu từ chối.
-- [ ] Kiểm thử tích hợp toàn dự án và xử lý lỗi phát sinh.
-- [ ] Chờ trưởng nhóm review và merge PR #18.
+
+- `TopicRegistrationController_backup_local.java`
+- `TopicRegistrationService_backup_local.java`
+- `schema_c04_test_local.sql`
+- `seed_dean_c01_local.sql`
+- `sidebar_khai_backup_local.html`
+- `topics_list_backup_local.html`
+
+Không dùng `git add .`, `git add -A` hoặc `git clean -fd` khi chưa xác định rõ các file cần xử lý.
+
+Không commit dữ liệu PDF trong `uploads/reports/`.
+
+---
+
+## 10. Các công việc tiếp theo
+
+### Hoàn thiện chức năng
+- [x] Hoàn thiện C01 – Quản lý nhóm sinh viên.
+- [x] Hoàn thiện C02 – Quản lý thành viên và trưởng nhóm.
+- [x] Triển khai C03 – Đăng ký đề tài.
+- [x] Hoàn thiện C04.1 – Danh sách hồ sơ.
+- [x] Hoàn thiện C04.2 – Duyệt đăng ký.
+- [x] Hoàn thiện C04.3 – Từ chối đăng ký.
+- [x] Triển khai C04.4 – Hủy đăng ký.
+- [x] Triển khai C05 – Nộp và tải báo cáo PDF.
+
+### Công việc cần tiếp tục
+- [ ] Rà soát lần cuối quy trình đăng ký lại sau từ chối hoặc hủy.
+- [ ] Hoàn thiện tích hợp C05 vào giao diện chính.
+- [ ] Kiểm thử giới hạn dung lượng và hạn nộp PDF.
+- [ ] Kiểm thử quyền truy cập của người ngoài nhóm.
+- [ ] Thống nhất migration `registration_members` với thành viên phụ trách database.
+- [ ] Kiểm tra vấn đề hiển thị tiếng Việt và múi giờ.
+- [ ] Bổ sung kiểm thử tự động cho C05.
+- [ ] Chờ trưởng nhóm review và merge PR #22.
+- [ ] Đồng bộ code với `main` sau khi merge.
+- [ ] Kiểm thử tích hợp với phần A, B và D.
+- [ ] Hoàn thiện dữ liệu demo, tài liệu và báo cáo đồ án.
+
+**Tổng kết:** Các chức năng C01–C05 đã được triển khai. C05 đã hoàn thành các kiểm thử thủ công cơ bản và được push lên GitHub. Phần C chưa hoàn tất bàn giao vì vẫn còn kiểm thử bổ sung, tích hợp toàn hệ thống và review/merge Pull Request.
