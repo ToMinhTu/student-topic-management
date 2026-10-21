@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Tra cứu đề tài đã công bố</title>
+</head>
+<body>
+<main layout:fragment="content" class="container-fluid py-4">
+    <h1 class="h3 mb-4">Tra cứu đề tài đã công bố</h1>
+
+    <form method="get" th:action="@{/catalog/topics}" class="card card-body mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="keyword" class="form-label">Mã hoặc tên đề tài</label>
+                <input type="search" id="keyword" name="keyword" class="form-control"
+                       maxlength="255" th:value="${filter.keyword}"
+                       placeholder="Nhập mã hoặc tên đề tài">
+            </div>
+            <div class="col-md-4">
+                <label for="roundId" class="form-label">Đợt đăng ký</label>
+                <select id="roundId" name="roundId" class="form-select">
+                    <option value="">Tất cả đợt</option>
+                    <option th:each="round : ${rounds}" th:value="${round.id}"
+                            th:text="${round.name}"
+                            th:selected="${round.id == filter.roundId}"></option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="departmentId" class="form-label">Bộ môn</label>
+                <select id="departmentId" name="departmentId" class="form-select">
+                    <option value="">Tất cả bộ môn</option>
+                    <option th:each="department : ${departments}" th:value="${department.id}"
+                            th:text="${department.name}"
+                            th:selected="${department.id == filter.departmentId}"></option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2">
+                <input type="hidden" name="size" th:value="${filter.size}">
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                <a th:href="@{/catalog/topics}" class="btn btn-outline-secondary">Xóa lọc</a>
+            </div>
+        </div>
+    </form>
+
+    <p aria-live="polite">
+        Tổng số kết quả: <strong th:text="${topics.totalElements}">0</strong>
+    </p>
+    <div th:if="${topics.empty}" class="alert alert-info" role="status">
+        Không có đề tài đã công bố trong trang kết quả này.
+        Hãy thay đổi bộ lọc hoặc quay về trang trước nếu có.
+    </div>
+
+    <div th:unless="${topics.empty}" class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <caption>Danh sách đề tài đã công bố</caption>
+            <thead>
+            <tr>
+                <th scope="col">Mã đề tài</th>
+                <th scope="col">Tên đề tài</th>
+                <th scope="col">ID đợt</th>
+                <th scope="col">ID bộ môn</th>
+                <th scope="col">Mô tả</th>
+                <th scope="col">Yêu cầu</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="topic : ${topics.content}">
+                <td th:text="${topic.code}"></td>
+                <td th:text="${topic.title}"></td>
+                <td th:text="${topic.roundId}"></td>
+                <td th:text="${topic.departmentId}"></td>
+                <td class="text-break" style="white-space: pre-wrap" th:text="${topic.description}"></td>
+                <td class="text-break" style="white-space: pre-wrap"
+                    th:text="${topic.requirements ?: 'Không có'}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Phân trang đề tài"
+         class="d-flex flex-wrap gap-3 align-items-center mt-3"
+         th:if="${topics.hasPrevious() or topics.hasNext()}">
+        <a th:if="${topics.hasPrevious()}" class="btn btn-outline-primary" rel="prev"
+           th:href="@{/catalog/topics(keyword=${filter.keyword},roundId=${filter.roundId},departmentId=${filter.departmentId},page=${topics.number - 1},size=${filter.size})}">
+            Trước (Previous)
+        </a>
+        <span>Trang <span th:text="${topics.number + 1}">1</span>
+            — Tổng số trang: <span th:text="${topics.totalPages}">1</span></span>
+        <a th:if="${topics.hasNext()}" class="btn btn-outline-primary" rel="next"
+           th:href="@{/catalog/topics(keyword=${filter.keyword},roundId=${filter.roundId},departmentId=${filter.departmentId},page=${topics.number + 1},size=${filter.size})}">
+            Sau (Next)
+        </a>
+    </nav>
+</main>
+</body>
+</html>

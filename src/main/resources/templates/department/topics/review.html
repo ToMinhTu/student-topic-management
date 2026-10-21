@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Sơ duyệt đề tài</title></head>
+<body>
+<main layout:fragment="content" class="container-fluid py-4">
+    <a th:href="@{/department/topics}">Danh sách chờ sơ duyệt</a>
+    <h1 class="h3 mt-3" th:text="${topic.title}"></h1>
+    <dl class="row">
+        <dt class="col-sm-3">Mã đề tài</dt><dd class="col-sm-9" th:text="${topic.code}"></dd>
+        <dt class="col-sm-3">Trạng thái</dt><dd class="col-sm-9" th:text="${topic.status}"></dd>
+        <dt class="col-sm-3">Mô tả</dt><dd class="col-sm-9 text-break" style="white-space: pre-wrap" th:text="${topic.description}"></dd>
+        <dt class="col-sm-3">Yêu cầu</dt><dd class="col-sm-9 text-break" th:text="${topic.requirements ?: 'Không có'}"></dd>
+        <dt class="col-sm-3">Kết quả sơ duyệt</dt><dd class="col-sm-9" th:text="${topic.departmentDecision ?: 'Chưa sơ duyệt'}"></dd>
+        <dt class="col-sm-3">Nhận xét bộ môn</dt><dd class="col-sm-9 text-break" style="white-space: pre-wrap" th:text="${topic.departmentComment ?: 'Không có'}"></dd>
+    </dl>
+    <div th:unless="${canReview}" class="alert alert-info">
+        Đề tài đã được xử lý hoặc hiện không trong thời gian cho phép sơ duyệt.
+    </div>
+    <form th:if="${canReview}" th:action="@{/department/topics/{id}/review(id=${topic.id})}"
+          th:object="${reviewForm}" method="post" class="card card-body">
+        <label for="decision" class="form-label">Kết quả sơ duyệt</label>
+        <select id="decision" th:field="*{decision}" class="form-select mb-3" required>
+            <option value="">Chọn kết quả</option>
+            <option value="APPROVED">Đồng ý — chuyển trưởng khoa xem xét</option>
+            <option value="REJECTED">Từ chối — trả người đề xuất sửa lại</option>
+        </select>
+        <label for="comment" class="form-label">Nhận xét / lý do từ chối</label>
+        <textarea id="comment" th:field="*{comment}" maxlength="4000" rows="5" class="form-control" aria-describedby="commentHelp"></textarea>
+        <p id="commentHelp" class="form-text">Bắt buộc nhập lý do khi từ chối. Tối đa 4000 ký tự.</p>
+        <button type="submit" class="btn btn-primary align-self-start">Lưu sơ duyệt</button>
+    </form>
+</main>
+</body></html>
