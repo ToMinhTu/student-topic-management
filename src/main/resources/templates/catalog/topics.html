@@ -5,10 +5,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Tra cứu đề tài đã công bố</title>
+<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
 </head>
 <body>
-<main layout:fragment="content" class="container-fluid py-4">
-    <h1 class="h3 mb-4">Tra cứu đề tài đã công bố</h1>
+<main layout:fragment="content" class="part-b-page">
+    <div class="b-page-heading"><h1 class="page-title-tab mb-0">Tra cứu đề tài đã công bố</h1></div>
 
     <form method="get" th:action="@{/catalog/topics}" class="card card-body mb-4">
         <div class="row g-3 align-items-end">
@@ -38,7 +39,7 @@
             </div>
             <div class="col-12 d-flex gap-2">
                 <input type="hidden" name="size" th:value="${filter.size}">
-                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                <button type="submit" class="btn btn-theme">Tìm kiếm</button>
                 <a th:href="@{/catalog/topics}" class="btn btn-outline-secondary">Xóa lọc</a>
             </div>
         </div>
@@ -53,7 +54,7 @@
     </div>
 
     <div th:unless="${topics.empty}" class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
+        <div class="b-table-scroll"><table class="table table-bordered table-striped align-middle">
             <caption>Danh sách đề tài đã công bố</caption>
             <thead>
             <tr>
@@ -76,7 +77,7 @@
                     th:text="${topic.requirements ?: 'Không có'}"></td>
             </tr>
             </tbody>
-        </table>
+        </table></div>
     </div>
 
     <nav aria-label="Phân trang đề tài"
