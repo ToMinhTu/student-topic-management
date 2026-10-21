@@ -29,12 +29,32 @@
 
             <th:block sec:authorize="hasRole('ADMIN')">
                 <div class="menu-header">Quản trị hệ thống</div>
-                <li class="nav-item"><a th:href="@{/admin/departments}" class="nav-link"><i
-                            class="bi bi-diagram-3 me-2"></i>Bộ Môn</a></li>
-                <li class="nav-item"><a th:href="@{/admin/users}" class="nav-link"><i
-                            class="bi bi-people me-2"></i>Người dùng</a></li>
-                <li class="nav-item"><a th:href="@{/management/announcements}" class="nav-link"><i
-                            class="bi bi-megaphone me-2"></i>QL Thông báo</a></li>
+                <li class="nav-item">
+                    <a th:href="@{/admin/departments}" class="nav-link">
+                        <i class="bi bi-diagram-3 me-2"></i>Bộ Môn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/admin/users}" class="nav-link">
+                        <i class="bi bi-people me-2"></i>Người dùng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/management/announcements}" class="nav-link">
+                        <i class="bi bi-megaphone me-2"></i>QL Thông báo
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/admin/audit-logs}" class="nav-link">
+                        <i class="bi bi-clock-history me-2"></i>Nhật ký hệ thống
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/admin/mail-jobs}" class="nav-link">
+                        <i class="bi bi-envelope-paper me-2"></i>QL Email Outbox
+                    </a>
+                </li>
+
             </th:block>
 
             <th:block sec:authorize="hasRole('DEAN')">
@@ -61,8 +81,8 @@
                             class="bi bi-journal-text me-2"></i>Đăng ký đề tài</a></li>
             </th:block>
             <th:block sec:authorize="hasAnyRole('LECTURER', 'STUDENT')">
-                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i
-                    class="bi bi-lightbulb me-2"></i>Đề xuất đề tài</a></li>
+                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i class="bi bi-lightbulb me-2"></i>Đề
+                        xuất đề tài</a></li>
             </th:block>
         </ul>
     </nav>

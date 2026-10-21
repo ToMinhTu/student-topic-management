@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Hàng đợi Email</title>
+    <!-- css rieng -->
+    <th:block layout:fragment="css">
+        <!-- link, style, etc -->
+        <style></style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div class="page-title-tab mb-0">HÀNG ĐỢI GỬI EMAIL (OUTBOX)</div>
+        </div>
+        <div class="content-card p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 80px;">ID</th>
+                            <th>Người nhận</th>
+                            <th>Tiêu đề</th>
+                            <th>Trạng thái</th>
+                            <th class="text-center">Số lần thử</th>
+                            <th>Thời gian (Gửi / Lần tới)</th>
+                            <th class="pe-4 text-center" style="width: 120px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Empty list -->
+                        <tr th:if="${#lists.isEmpty(jobs)}">
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>Chưa có yêu cầu gửi email nào trong hàng
+                                đợi.
+                            </td>
+                        </tr>
+                        <!-- loop -->
+                        <tr th:each="job : ${jobs}">
+                            <td class="ps-4 text-muted" th:text="${job.id}"></td>
+                            <td class="fw-bold text-theme" th:text="${job.recipientEmail}"></td>
+                            <td th:text="${job.subject}"></td>
+                            <td>
+                                <span th:if="${job.status == 'SENT'}" class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>SENT
+                                </span>
+                                <span th:if="${job.status == 'PENDING'}" class="badge bg-warning text-dark">
+                                    <i class="bi bi-hourglass-split me-1"></i>PENDING
+                                </span>
+                                <span th:if="${job.status == 'PROCESSING'}" class="badge bg-info text-dark">
+                                    <i class="bi bi-arrow-repeat me-1"></i>PROCESSING
+                                </span>
+                                <span th:if="${job.status == 'FAILED'}" class="badge bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>FAILED
+                                </span>
+                            </td>
+                            <td class="text-center" th:text="${job.attempts}"></td>
+                            <td>
+                                <!-- gio gui neu da SENT -->
+                                <span th:if="${job.sentAt != null}" class="text-muted small"
+                                    th:text="${#temporals.format(job.sentAt, 'dd/MM/yyyy HH:mm:ss')}"></span>
+                                <!-- gio thu lai neu chua SENT -->
+                                <span th:if="${job.sentAt == null && job.nextAttemptAt != null}"
+                                    class="text-muted small"
+                                    th:text="${#temporals.format(job.nextAttemptAt, 'dd/MM/yyyy HH:mm:ss')}"></span>
+                            </td>
+                            <td class="pe-4 text-center">
+                                <!-- nut thu lai, chi hien khi failed -->
+                                <form th:if="${job.status == 'FAILED'}"
+                                    th:action="@{/admin/mail-jobs/{id}/retry(id=${job.id})}" method="post">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" title="Thử lại ngay"
+                                        onclick="window.confirmAction(this.closest('form'), 'Bạn có chắc chắn muốn đưa email này vào hàng đợi gửi lại?', 'Xác nhận thử lại', 'Đồng ý')">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Js rieng -->
+    <th:block layout:fragment="js">
+        <!-- src, script, etc -->
+        <script></script>
+    </th:block>
+</body>
+
+</html>
