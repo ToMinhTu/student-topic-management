@@ -1,51 +1,43 @@
-
 <!DOCTYPE html>
-<html lang="vi"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <body>
-    <nav th:fragment="sidebar"
-         id="app-sidebar"
-         sec:authorize="isAuthenticated()">
+    <nav th:fragment="sidebar" id="app-sidebar" sec:authorize="isAuthenticated()">
 
         <!-- LOGO -->
         <a class="logo-area" th:href="@{/}">
-            <i class="bi bi-shield-shaded"
-               style="font-size: 3.5rem;"></i>
-            <h5 class="fw-bold mt-2 mb-0"
-                style="letter-spacing: 1px;">
+            <i class="bi bi-shield-shaded" style="font-size: 3.5rem;"></i>
+            <h5 class="fw-bold mt-2 mb-0" style="letter-spacing: 1px;">
                 HCM-UTE
             </h5>
         </a>
 
         <!-- THONG TIN NGUOI DUNG -->
-        <div class="user-info">
-            <img th:src="@{/images/default-avatar.png}"
-                 alt="User Avatar"
-                 style="background: white;">
+        <div class="user-info d-flex flex-column align-items-center pb-3">
+            <!-- Avatar -->
+            <div class="avatar-wrapper mb-2 mt-2"
+                style="width: 75px; height: 75px; padding: 2px; border-radius: 50%; background: white;">
+                <img th:src="@{/images/default-avatar.png}" alt="User Avatar" class="w-100 h-100 rounded-circle"
+                    style="object-fit: cover; border: 1px solid #dee2e6; background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);">
+            </div>
 
-            <h6 class="mb-1" sec:authentication="name">
+            <h6 class="mb-1 fw-bold text-white" style="font-size: 1rem;" sec:authentication="name">
                 Nguyễn Văn A
             </h6>
 
-            <small sec:authorize="hasRole('ADMIN')"
-                   style="color: #9ca3af;">
+            <!-- Role hien thi -->
+            <small sec:authorize="hasRole('ADMIN')" style="color: #9ca3af; font-size: 0.85rem;">
                 Quản trị viên
             </small>
-
-            <small sec:authorize="hasRole('DEAN') and !hasRole('ADMIN')"
-                   style="color: #9ca3af;">
+            <small sec:authorize="hasRole('DEAN') and !hasRole('ADMIN')" style="color: #9ca3af; font-size: 0.85rem;">
                 Trưởng khoa
             </small>
-
             <small sec:authorize="hasRole('LECTURER') and !hasAnyRole('ADMIN', 'DEAN')"
-                   style="color: #9ca3af;">
+                style="color: #9ca3af; font-size: 0.85rem;">
                 Giảng viên
             </small>
-
             <small sec:authorize="hasRole('STUDENT') and !hasAnyRole('ADMIN', 'DEAN', 'LECTURER')"
-                   style="color: #9ca3af;">
+                style="color: #9ca3af; font-size: 0.85rem;">
                 Sinh viên
             </small>
         </div>
@@ -194,4 +186,5 @@
         </ul>
     </nav>
 </body>
+
 </html>
