@@ -187,13 +187,30 @@
     </div>
 
     <!-- HUONG DAN TRUONG NHOM -->
+
+    <!-- C02: Thong bao cho truong nhom khi nhom chua khoa -->
     <div class="alert alert-info"
-         th:if="${canViewMembers == true and isLeader == true}">
+        th:if="${canViewMembers == true
+                and isLeader == true
+                and group.status.name() == 'FORMING'}">
 
         <i class="bi bi-info-circle me-2"></i>
         Bạn đang là trưởng nhóm.
         Nếu muốn rời nhóm, bạn cần chuyển quyền
         trưởng nhóm cho thành viên khác trước.
+
+    </div>
+
+    <!-- C04: Thong bao khi nhom da duoc khoa -->
+    <div class="alert alert-warning"
+        th:if="${canViewMembers == true
+                and group.status.name() == 'LOCKED'}">
+
+        <i class="bi bi-lock-fill me-2"></i>
+        <strong>Nhóm đã được khóa.</strong>
+        Đăng ký đề tài đã được duyệt.
+        Không thể thay đổi thành viên hoặc
+        chuyển quyền trưởng nhóm.
 
     </div>
 
