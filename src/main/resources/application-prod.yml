@@ -1,6 +1,18 @@
 spring:
   thymeleaf:
     cache: true # bat cache de web load nhanh
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: lax
 logging:
   level:
     root: INFO # chi log nhung thong tin co ban va loi
+    com.example.student_topic_management: INFO

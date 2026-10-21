@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS student_topic_management CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-USE student_topic_management;
+-- CREATE DATABASE IF NOT EXISTS student_topic_management CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- USE student_topic_management;
 SET NAMES utf8mb4;
 SET time_zone = '+00:00';
 
