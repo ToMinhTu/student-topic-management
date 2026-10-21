@@ -5,46 +5,30 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <body>
-
     <nav th:fragment="sidebar"
          id="app-sidebar"
          sec:authorize="isAuthenticated()">
 
-        <!-- ===================================== -->
         <!-- LOGO -->
-        <!-- ===================================== -->
-
         <a class="logo-area" th:href="@{/}">
-
-            <!-- Anh logo neu co -->
-            <!-- <img th:src="@{/images/logo.png}" alt="Logo"> -->
-
             <i class="bi bi-shield-shaded"
                style="font-size: 3.5rem;"></i>
-
             <h5 class="fw-bold mt-2 mb-0"
                 style="letter-spacing: 1px;">
                 HCM-UTE
             </h5>
-
         </a>
 
-        <!-- ===================================== -->
         <!-- THONG TIN NGUOI DUNG -->
-        <!-- ===================================== -->
-
         <div class="user-info">
-
             <img th:src="@{/images/default-avatar.png}"
                  alt="User Avatar"
                  style="background: white;">
 
-            <h6 class="mb-1"
-                sec:authentication="name">
+            <h6 class="mb-1" sec:authentication="name">
                 Nguyễn Văn A
             </h6>
 
-            <!-- Hien thi vai tro phu hop -->
             <small sec:authorize="hasRole('ADMIN')"
                    style="color: #9ca3af;">
                 Quản trị viên
@@ -64,237 +48,150 @@
                    style="color: #9ca3af;">
                 Sinh viên
             </small>
-
         </div>
 
-        <!-- ===================================== -->
         <!-- MENU DIEU HUONG -->
-        <!-- ===================================== -->
-
         <ul class="nav flex-column mb-auto mt-2">
 
-            <!-- ================================= -->
             <!-- TRANG CA NHAN -->
-            <!-- ================================= -->
-
-            <div class="menu-header">
-                Trang cá nhân
-            </div>
+            <div class="menu-header">Trang cá nhân</div>
 
             <li class="nav-item">
-
-                <a th:href="@{/}"
-                   class="nav-link">
-
+                <a th:href="@{/}" class="nav-link">
                     <i class="bi bi-house-door me-2"></i>
                     Trang chủ
-
                 </a>
-
             </li>
 
             <li class="nav-item">
-
-                <a th:href="@{/announcements}"
-                   class="nav-link">
-
+                <a th:href="@{/announcements}" class="nav-link">
                     <i class="bi bi-bell me-2"></i>
                     Thông báo
-
                 </a>
-
             </li>
 
-            <!-- ================================= -->
-            <!-- ADMIN - QUAN TRI HE THONG -->
-            <!-- ================================= -->
-
+            <!-- ADMIN: QUAN TRI HE THONG -->
             <th:block sec:authorize="hasRole('ADMIN')">
 
-                <div class="menu-header">
-                    Quản trị hệ thống
-                </div>
+                <div class="menu-header">Quản trị hệ thống</div>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/admin/departments}"
-                       class="nav-link">
-
+                    <a th:href="@{/admin/departments}" class="nav-link">
                         <i class="bi bi-diagram-3 me-2"></i>
                         Bộ Môn
-
                     </a>
-
                 </li>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/admin/users}"
-                       class="nav-link">
-
+                    <a th:href="@{/admin/users}" class="nav-link">
                         <i class="bi bi-people me-2"></i>
                         Người dùng
-
                     </a>
-
                 </li>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/management/announcements}"
-                       class="nav-link">
-
+                    <a th:href="@{/management/announcements}" class="nav-link">
                         <i class="bi bi-megaphone me-2"></i>
                         QL Thông báo
-
                     </a>
+                </li>
 
+                <!-- Chuc nang moi tu main -->
+                <li class="nav-item">
+                    <a th:href="@{/admin/audit-logs}" class="nav-link">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Nhật ký hệ thống
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a th:href="@{/admin/mail-jobs}" class="nav-link">
+                        <i class="bi bi-envelope-paper me-2"></i>
+                        QL Email Outbox
+                    </a>
                 </li>
 
             </th:block>
 
-            <!-- ================================= -->
-            <!-- DEAN - NGHIEP VU KHOA -->
-            <!-- ================================= -->
-
+            <!-- DEAN: NGHIEP VU KHOA -->
             <th:block sec:authorize="hasRole('DEAN')">
 
-                <div class="menu-header">
-                    Nghiệp vụ khoa
-                </div>
+                <div class="menu-header">Nghiệp vụ khoa</div>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/dean/topics/supervisors}"
-                       class="nav-link">
-
+                    <a th:href="@{/dean/topics/supervisors}" class="nav-link">
                         <i class="bi bi-person-workspace me-2"></i>
                         Phân công GVHD
-
                     </a>
-
                 </li>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/dean/rounds}"
-                       class="nav-link">
-
+                    <a th:href="@{/dean/rounds}" class="nav-link">
                         <i class="bi bi-calendar-check me-2"></i>
                         QL Đăng ký
-
                     </a>
-
                 </li>
 
-                <!-- C04 - Duyet dang ky de tai -->
-
                 <li class="nav-item">
-
-                    <a th:href="@{/dean/registrations}"
-                       class="nav-link">
-
+                    <a th:href="@{/dean/registrations}" class="nav-link">
                         <i class="bi bi-clipboard-check me-2"></i>
                         Duyệt đăng ký đề tài
-
                     </a>
-
                 </li>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/councils}"
-                       class="nav-link">
-
+                    <a th:href="@{/councils}" class="nav-link">
                         <i class="bi bi-journal-bookmark me-2"></i>
                         Hội đồng
-
                     </a>
-
                 </li>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/management/announcements}"
-                       class="nav-link">
-
+                    <a th:href="@{/management/announcements}" class="nav-link">
                         <i class="bi bi-megaphone me-2"></i>
                         Thông báo khoa
-
                     </a>
-
                 </li>
 
             </th:block>
 
-            <!-- ================================= -->
-            <!-- DAO TAO - ADMIN VA STUDENT -->
-            <!-- ================================= -->
-
+            <!-- DAO TAO: ADMIN VA STUDENT -->
             <th:block sec:authorize="hasAnyRole('STUDENT', 'ADMIN')">
 
-                <div class="menu-header">
-                    Đào tạo
-                </div>
-
-                <!-- C01 + C02 - Quan ly nhom sinh vien -->
+                <div class="menu-header">Đào tạo</div>
 
                 <li class="nav-item">
-
-                    <a th:href="@{/groups}"
-                       class="nav-link">
-
+                    <a th:href="@{/groups}" class="nav-link">
                         <i class="bi bi-collection me-2"></i>
                         Nhóm sinh viên
-
                     </a>
-
                 </li>
 
-                <!-- C03 - CHI SINH VIEN MOI THAY DANG KY DE TAI -->
-
+                <!-- C03: Chi STUDENT duoc thay dang ky de tai -->
                 <th:block sec:authorize="hasRole('STUDENT')">
-
                     <li class="nav-item">
-
-                        <a th:href="@{/topics}"
-                           class="nav-link">
-
+                        <a th:href="@{/topics}" class="nav-link">
                             <i class="bi bi-journal-text me-2"></i>
                             Đăng ký đề tài
-
                         </a>
-
                     </li>
-
                 </th:block>
 
             </th:block>
 
-            <!-- ================================= -->
-            <!-- DE XUAT DE TAI -->
-            <!-- LECTURER VA STUDENT -->
-            <!-- ================================= -->
-
+            <!-- DE XUAT DE TAI: LECTURER VA STUDENT -->
             <th:block sec:authorize="hasAnyRole('LECTURER', 'STUDENT')">
 
                 <li class="nav-item">
-
-                    <a th:href="@{/topics/my}"
-                       class="nav-link">
-
+                    <a th:href="@{/topics/my}" class="nav-link">
                         <i class="bi bi-lightbulb me-2"></i>
                         Đề xuất đề tài
-
                     </a>
-
                 </li>
 
             </th:block>
 
         </ul>
-
     </nav>
-
 </body>
 </html>
