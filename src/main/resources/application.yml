@@ -37,3 +37,11 @@ server:
         same-site: lax
 app:
   public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    worker-enabled: ${MAIL_WORKER_ENABLED:false}
+    from: ${MAIL_FROM:no-reply@hcmute.edu.vn}
+    max-attempts: ${MAIL_MAX_ATTEMPTS:5}
+    lease-seconds: ${MAIL_LEASE_SECONDS:300}
+    fixed-delay-ms: ${MAIL_FIXED_DELAY_MS:10000}
+    batch-size: ${MAIL_BATCH_SIZE:10}
