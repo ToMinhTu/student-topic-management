@@ -463,7 +463,36 @@ public class GroupController {
                 }
             }
         }
+        // =====================================
+        // C05 - LIEN KET BAO CAO PDF CUA NHOM
+        // =====================================
 
+        Long reportRegistrationId = null;
+
+        // Chi sinh vien dang la thanh vien cua nhom moi duoc xem
+        if (isStudent && myMembership != null) {
+
+        List<Long> approvedRegistrations = jdbc.queryForList(
+                """
+                SELECT id
+                FROM topic_registrations
+                WHERE group_id = ?
+                AND round_id = ?
+                AND status = 'APPROVED'
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                Long.class,
+                group.getId(),
+                group.getRoundId()
+        );
+
+        if (!approvedRegistrations.isEmpty()) {
+                reportRegistrationId = approvedRegistrations.get(0);
+        }
+        }
+
+        model.addAttribute("reportRegistrationId", reportRegistrationId);
         // =====================================
         // TRUYEN DU LIEU SANG THYMELEAF
         // =====================================

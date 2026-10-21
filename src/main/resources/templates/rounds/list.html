@@ -288,25 +288,143 @@
             color: #cbd5e1;
             margin-bottom: 12px;
         }
+
+        /* ===== GIAO DIỆN ĐỒNG BỘ TRANG DANH SÁCH NHÓM SINH VIÊN ===== */
+        /* Không đụng vào sidebar/layout chung của hệ thống */
+        main[layout\:fragment="content"] {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+            display: block;
+        }
+        .page-container {
+            width: 100%;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 15px 18px 40px !important;
+            box-sizing: border-box;
+        }
+        .rounds-heading-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 15px;
+            min-height: 42px;
+        }
+        .rounds-ribbon {
+            display: inline-flex;
+            align-items: center;
+            min-height: 38px;
+            min-width: 275px;
+            max-width: 100%;
+            margin: 0;
+            padding: 9px 32px 9px 16px;
+            clip-path: polygon(0 0, 100% 0, calc(100% - 19px) 100%, 0 100%);
+            background: #173f35;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 750;
+            letter-spacing: .15px;
+            line-height: 1.2;
+        }
+        .btn-create-round {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex-shrink: 0;
+            border: 0;
+            border-radius: 5px;
+            padding: 8px 12px;
+            background: #1670ed;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .btn-create-round:hover {
+            background: #0957c7;
+            color: #fff;
+        }
+        .custom-card {
+            width: 100%;
+            max-width: none;
+            padding: 17px;
+            border: 1px solid #e8eaef;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .035);
+            overflow: hidden;
+        }
+        .rounds-card-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 13px;
+            color: #323d3a;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .rounds-card-title i { font-size: 16px; }
+        .custom-card .table-responsive {
+            width: 100%;
+            max-width: none;
+            overflow-x: auto;
+        }
+        .custom-table {
+            width: 100%;
+            min-width: 760px;
+            border: 1px solid #e6e8ef;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        .custom-table thead th {
+            background: #f4f5f8;
+            color: #27323a;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+            padding: 12px 13px;
+            border: 1px solid #e6e8ef;
+        }
+        .custom-table tbody td {
+            padding: 12px 13px;
+            color: #263238;
+            font-size: 13px;
+            border: 1px solid #e6e8ef;
+        }
+        .custom-table tbody tr:hover { background-color: #f8faf9; }
+        .custom-table thead th:nth-child(2) { width: 30%; }
+        .custom-table thead th:nth-child(3) { width: 23%; }
+        .custom-table thead th:nth-child(5) { width: 22% !important; }
+        .status-badge, .type-badge { font-size: 12px; }
+        .btn-table { font-size: 12px; border-radius: 4px; }
+        .btn-table-view { background: #137b54; border-color: #137b54; color: #fff; }
+        .btn-table-view:hover { background: #0f6847; border-color: #0f6847; color: #fff; }
+        .pagination-container { padding: 14px 0 0; border-top: 0; }
+        @media (max-width: 680px) {
+            .page-container { padding: 12px !important; }
+            .rounds-heading-bar { align-items: stretch; flex-direction: column; }
+            .rounds-ribbon { font-size: 14px; min-width: 0; width: fit-content; }
+            .btn-create-round { align-self: flex-start; }
+            .custom-card { padding: 12px; }
+        }
     </style>
 </head>
 
 <body>
 
 <main layout:fragment="content">
-<div class="page-container px-3 mt-4">
+<div class="page-container">
 
-    <!-- Header -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 page-header">
-        <div>
-            <h2 class="page-title mb-1">Quản lý đợt đăng ký</h2>
-            <div class="page-subtitle">Theo dõi, cấu hình lịch trình và điều phối các đợt đăng ký đề tài khoa học</div>
-        </div>
-        <div>
-            <a th:href="@{/dean/rounds/new}" class="btn-primary-custom">
-                <i class="bi bi-plus-lg"></i> Tạo đợt mới
-            </a>
-        </div>
+    <!-- Tiêu đề dạng dải xanh giống trang Danh sách nhóm sinh viên -->
+    <div class="rounds-heading-bar">
+        <h2 class="rounds-ribbon">QUẢN LÝ ĐỢT ĐĂNG KÝ</h2>
+        <a th:href="@{/dean/rounds/new}" class="btn-create-round">
+            <i class="bi bi-plus-circle"></i> Tạo đợt mới
+        </a>
     </div>
 
     <!-- Alert Messages -->
@@ -324,6 +442,10 @@
 
     <!-- Main Table Card -->
     <div class="custom-card">
+        <div class="rounds-card-title">
+            <i class="bi bi-calendar3"></i>
+            <span>Danh sách đợt đăng ký</span>
+        </div>
         <div class="table-responsive">
             <table class="custom-table">
                 <thead>
