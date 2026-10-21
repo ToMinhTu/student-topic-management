@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Nộp báo cáo PDF</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            margin: 0;
+            padding: 30px;
+            color: #243247;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+        }
+
+        .success {
+            color: #166534;
+            background: #dcfce7;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .error {
+            color: #991b1b;
+            background: #fee2e2;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .muted {
+            color: #64748b;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="card">
+        <h1>Nộp báo cáo PDF</h1>
+
+        <p>
+            Mã hồ sơ đăng ký:
+            <strong th:text="${registrationId}">1</strong>
+        </p>
+
+        <a class="btn" th:href="@{/groups}">
+            Quay lại danh sách nhóm
+        </a>
+    </div>
+
+    <!-- Thong bao -->
+    <div class="card" th:if="${success != null}">
+        <div class="success" th:text="${success}"></div>
+    </div>
+
+    <div class="card" th:if="${error != null}">
+        <div class="error" th:text="${error}"></div>
+    </div>
+
+    <!-- Upload PDF - Chi truong nhom moi duoc thay -->
+    <div class="card" th:if="${canUpload}">
+        <h2>Nộp phiên bản báo cáo mới</h2>
+
+        <p class="muted">
+            Chỉ trưởng nhóm được nộp báo cáo.
+            File phải có định dạng PDF và dung lượng tối đa 10 MB.
+        </p>
+
+        <form
+            th:action="@{/reports/{id}/upload(id=${registrationId})}"
+            method="post"
+            enctype="multipart/form-data">
+
+            <input
+                type="file"
+                name="file"
+                accept=".pdf,application/pdf"
+                required>
+
+            <button class="btn" type="submit">
+                Nộp báo cáo
+            </button>
+        </form>
+    </div>
+
+    <!-- Danh sach bao cao -->
+    <div class="card">
+        <h2>Lịch sử các phiên bản báo cáo</h2>
+
+        <p class="muted"
+           th:if="${#lists.isEmpty(reports)}">
+            Chưa có báo cáo nào được nộp.
+        </p>
+
+        <div class="table-wrapper"
+             th:unless="${#lists.isEmpty(reports)}">
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Phiên bản</th>
+                    <th>Tên file</th>
+                    <th>Dung lượng</th>
+                    <th>Ngày nộp</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="report : ${reports}">
+                    <td th:text="${report.versionNo()}"></td>
+
+                    <td th:text="${report.originalName()}"></td>
+
+                    <td th:text="${report.sizeBytes() + ' bytes'}"></td>
+
+                    <td th:text="${report.createdAt()}"></td>
+
+                    <td>
+                        <a class="btn"
+                           th:href="@{/reports/files/{id}/download(id=${report.id()})}">
+                            Tải PDF
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

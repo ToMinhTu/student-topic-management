@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,97 +15,103 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
-@EnableWebSecurity
-@EnableMethodSecurity // @PreAuthorize("hasRole('ADMIN')")
+@EnableMethodSecurity
 public class SecurityConfig {
 
-        @Bean
-        public PasswordEncoder passwordEncoder() {
-                return new BCryptPasswordEncoder(12); // Ma hoa chuan pass Bcrypt
-        }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
 
-        @Bean
-        public DaoAuthenticationProvider authenticationProvider(
-                        UserDetailsService userDetailsService,
-                        PasswordEncoder encoder) {
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(
+            UserDetailsService userDetailsService,
+            PasswordEncoder encoder) {
 
-                var provider = new DaoAuthenticationProvider(userDetailsService);
-                provider.setPasswordEncoder(encoder);
-                return provider;
-        }
+        var provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(encoder);
+        return provider;
+    }
 
-        @Bean
-        public SessionRegistry sessionRegistry() {
-                return new SessionRegistryImpl();
-        }
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
 
-        @Bean
-        public HttpSessionEventPublisher httpSessionEventPublisher() {
-                return new HttpSessionEventPublisher();
-        }
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(
-                        HttpSecurity http,
-                        DaoAuthenticationProvider provider) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            DaoAuthenticationProvider provider) throws Exception {
 
-                http.authenticationProvider(provider);
+        http.authenticationProvider(provider);
 
-                http.authorizeHttpRequests(auth -> auth
-                                // Duong dan cong khai
-                                .requestMatchers(
-                                                "/login",
-                                                "/error",
-                                                "/vendor/**",
-                                                "/css/**",
-                                                "/images/**")
-                                .permitAll()
+        http.authorizeHttpRequests(auth -> auth
+                // Duong dan cong khai
+                .requestMatchers(
+                        "/login",
+                        "/error",
+                        "/vendor/**",
+                        "/css/**"
+                ).permitAll()
 
-                                // Quan ly thong bao
-                                .requestMatchers("/management/announcements/**")
-                                .hasAnyRole("ADMIN", "DEAN")
+                // Quan ly thong bao
+                .requestMatchers("/management/announcements/**")
+                .hasAnyRole("ADMIN", "DEAN")
 
-                                // B02 - De xuat de tai
-                                .requestMatchers("/topics", "/topics/**")
-                                .hasAnyRole("LECTURER", "STUDENT")
+                // B02 - De xuat de tai
+                .requestMatchers("/topics", "/topics/**")
+                .hasAnyRole("LECTURER", "STUDENT")
 
-                                // Chuc nang hoi dong tu main
-                                .requestMatchers("/councils/**")
-                                .hasAnyRole("DEAN", "DEPARTMENT_HEAD", "LECTURER")
+                // Chuc nang hoi dong tu main
+                .requestMatchers("/councils/**")
+                .hasAnyRole("DEAN", "DEPARTMENT_HEAD", "LECTURER")
 
-                                // Phan quyen cac vai tro
-                                .requestMatchers("/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/dean/**").hasRole("DEAN")
-                                .requestMatchers("/department/**").hasRole("DEPARTMENT_HEAD")
-                                .requestMatchers("/lecturer/**").hasRole("LECTURER")
-                                .requestMatchers("/student/**").hasRole("STUDENT")
+                // D2 - sinh vien chi xem, giang vien/co quan ly duoc thao tac
+                .requestMatchers(HttpMethod.GET, "/defenses", "/defenses/{id}")
+                .hasAnyRole("STUDENT", "LECTURER", "DEAN", "DEPARTMENT_HEAD")
+                .requestMatchers(HttpMethod.GET, "/defenses/new", "/defenses/{id}/edit")
+                .hasAnyRole("LECTURER", "DEAN", "DEPARTMENT_HEAD")
+                .requestMatchers(HttpMethod.POST, "/defenses/save", "/defenses/update", "/defenses/{id}/delete")
+                .hasAnyRole("LECTURER", "DEAN", "DEPARTMENT_HEAD")
 
-                                // Cac URL khac phai dang nhap
-                                .anyRequest().authenticated());
+                // Phan quyen cac vai tro
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/dean/**").hasRole("DEAN")
+                .requestMatchers("/department/**").hasRole("DEPARTMENT_HEAD")
+                .requestMatchers("/lecturer/**").hasRole("LECTURER")
+                .requestMatchers("/student/**").hasRole("STUDENT")
 
-                http.formLogin(login -> login
-                                .loginPage("/login")
-                                .loginProcessingUrl("/login")
-                                .defaultSuccessUrl("/", true) // Redirect ve "/" sau khi login success
-                                .failureUrl("/login?error=true")
-                                .permitAll());
+                // Cac URL khac phai dang nhap
+                .anyRequest().authenticated()
+        );
 
-                http.sessionManagement(session -> session
-                                .maximumSessions(-1)
-                                .sessionRegistry(sessionRegistry())
-                                .expiredUrl("/login?expired=true"));
+        http.formLogin(login -> login
+                .loginPage("/login")
+                .defaultSuccessUrl("/", true)
+                .failureUrl("/login?error")
+                .permitAll()
+        );
 
-                http.logout(logout -> logout
-                                .logoutUrl("/logout")
-                                .logoutSuccessUrl("/login?logout=true")
-                                .invalidateHttpSession(true)
-                                .deleteCookies("JSESSIONID")
-                                .permitAll());
+        http.sessionManagement(session -> session
+                .maximumSessions(-1)
+                .sessionRegistry(sessionRegistry())
+                .expiredUrl("/login?expired")
+        );
 
-                http.exceptionHandling(errors -> errors
-                                .accessDeniedPage("/access-denied"));
+        http.logout(logout -> logout
+                .logoutSuccessUrl("/login?logout")
+        );
 
-                // Giu nguyen CSRF mac dinh
-                return http.build();
-        }
+        http.exceptionHandling(errors -> errors
+                .accessDeniedPage("/access-denied")
+        );
+
+        // Giu nguyen CSRF mac dinh
+        return http.build();
+    }
 }

@@ -8,52 +8,71 @@
     <th:block layout:fragment="css">
         <!-- link, style, etc -->
         <style>
+            body {
+                margin: 0;
+                background: #f4f6f9;
+                color: #263238;
+                font-family: Arial, sans-serif
+            }
 
+            .container {
+                max-width: 1000px;
+                margin: 40px auto;
+                padding: 40px;
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, .08)
+            }
         </style>
     </th:block>
 </head>
 
-<body>
-    <div layout:fragment="content">
-        <h2>Quản lý Bản Nháp Thông Báo</h2>
-        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
-        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
-        <a th:href="@{/management/announcements/new}" class="btn btn-primary mb-3">+ Soạn thông báo mới</a>
+<body class="py-4">
+    <main layout:fragment="content">
+        <div class="container">
+            <h2>Quản lý Bản Nháp Thông Báo</h2>
+            <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+            <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+            <a th:href="@{/management/announcements/new}" class="btn btn-primary mb-3" style="background: #173b34;">+
+                Soạn
+                thông báo mới</a>
 
-        <table class="table table-bordered bg-white shadow-sm align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th style="width: 50px;">ID</th>
-                    <th>Tiêu đề (Nháp)</th>
-                    <th>Người tạo</th>
-                    <th>Ngày tạo (UTC)</th>
-                    <th class="text-center" style="width: 220px;">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="draft : ${drafts}">
-                    <td th:text="${draft.id}"></td>
-                    <td th:text="${draft.title}" class="fw-bold"></td>
-                    <td th:text="${draft.author.fullname}"></td>
-                    <td th:text="${draft.createdAt}"></td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <a th:href="@{/management/announcements/{id}/edit(id=${draft.id})}"
-                                class="btn btn-sm btn-warning">Sửa</a>
-                            <form th:action="@{/management/announcements/{id}/delete(id=${draft.id})}" method="post"
-                                onsubmit="return confirm('Xóa bản nháp này?');">
-                                <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
-                            </form>
-                            <form th:action="@{/management/announcements/{id}/publish(id=${draft.id})}" method="post"
-                                onsubmit="return confirm('Xác nhận Công bố toàn trường? Sau khi công bố sẽ không thể Sửa/Xóa nữa.');">
-                                <button type="submit" class="btn btn-success btn-sm">Công bố</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+            <table class="table table-bordered bg-white shadow-sm align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 50px;">ID</th>
+                        <th>Tiêu đề (Nháp)</th>
+                        <th>Người tạo</th>
+                        <th>Ngày tạo (UTC)</th>
+                        <th class="text-center" style="width: 220px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="draft : ${drafts}">
+                        <td th:text="${draft.id}"></td>
+                        <td th:text="${draft.title}" class="fw-bold"></td>
+                        <td th:text="${draft.author.fullname}"></td>
+                        <td th:text="${draft.createdAt}"></td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a th:href="@{/management/announcements/{id}/edit(id=${draft.id})}"
+                                    class="btn btn-sm btn-warning">Sửa</a>
+                                <form th:action="@{/management/announcements/{id}/delete(id=${draft.id})}" method="post"
+                                    onsubmit="return confirm('Xóa bản nháp này?');">
+                                    <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                </form>
+                                <form th:action="@{/management/announcements/{id}/publish(id=${draft.id})}"
+                                    method="post"
+                                    onsubmit="return confirm('Xác nhận Công bố toàn trường? Sau khi công bố sẽ không thể Sửa/Xóa nữa.');">
+                                    <button type="submit" class="btn btn-success btn-sm">Công bố</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
 
     <!-- Js rieng -->
     <th:block layout:fragment="js">

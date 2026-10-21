@@ -12,6 +12,8 @@ import jakarta.validation.constraints.Size;
 
 public class DefenseForm {
 
+    private Long id;
+
     @NotNull(message = "Mã hồ sơ không được để trống")
     @Positive(message = "Mã hồ sơ phải là số dương")
     private Long registrationId;
@@ -31,6 +33,14 @@ public class DefenseForm {
     @NotBlank(message = "Địa điểm không được để trống")
     @Size(max = 200, message = "Địa điểm tối đa 200 ký tự")
     private String location;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public Long getRegistrationId() {
         return registrationId;

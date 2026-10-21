@@ -5,7 +5,7 @@ spring:
     import: optional:file:.env[.properties] # auto nap file .env
   # MySQL
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}?connectionTimeZone=UTC
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}?connectionTimeZone=UTC&sslMode=REQUIRED
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   # Jpa/Hibernate

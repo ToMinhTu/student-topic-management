@@ -72,6 +72,7 @@ public class GroupController {
     public record GroupView(
             Long id,
             Long roundId,
+            String roundName,
             String name,
             String status,
             long memberCount
@@ -126,6 +127,14 @@ public class GroupController {
         model.addAttribute("rounds", rounds);
     }
 
+    private String findRoundName(Long roundId) {
+        return jdbc.query(
+                "SELECT name FROM registration_rounds WHERE id = ?",
+                (rs, rowNum) -> rs.getString("name"),
+                roundId
+        ).stream().findFirst().orElse("Không xác định");
+    }
+
     // =====================================
     // C01.1 - DANH SACH NHOM
     // GET /groups
@@ -139,6 +148,7 @@ public class GroupController {
                 .map(group -> new GroupView(
                         group.getId(),
                         group.getRoundId(),
+                        findRoundName(group.getRoundId()),
                         group.getName(),
                         group.getStatus().name(),
                         memberRepository
@@ -469,6 +479,7 @@ public class GroupController {
         // =====================================
 
         model.addAttribute("group", group);
+        model.addAttribute("roundName", findRoundName(group.getRoundId()));
         model.addAttribute("members", members);
 
         model.addAttribute(
