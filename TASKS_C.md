@@ -1,9 +1,6 @@
 Phần C – Quản lý nhóm sinh viên và đăng ký đề tài
 Người thực hiện: Khải
 Nhánh Git: Khai
-Cập nhật: 20/10/2026
-Pull Request: #18 – Phần C
-Trạng thái: Đã hoàn thành C01, C02, C03 và C04.1–C04.3 (xử lý từ chối). Chưa hoàn thành đăng ký lại sau từ chối, C04.4, C05 và kiểm thử tích hợp toàn dự án. Các thay đổi C04.3 đang nằm ở máy cục bộ, chưa commit/push.
 
 1. Quản lý nhóm sinh viên (C01)
 - [x] C01.3 – Sinh viên tạo nhóm mới.
@@ -276,10 +273,6 @@ C04.4 – Hủy đăng ký
 - C03–C04.2: `6f15a51`.
 - Cập nhật sidebar/TASKS_C trước đó: `ace49d3`.
 - C05 – PDF Report Upload & Download: `765b630`.
-
-### Pull Request
-- PR #18: https://github.com/ToMinhTu/student-topic-management/pull/18
-- PR #22: https://github.com/ToMinhTu/student-topic-management/pull/22
 
 ### Trạng thái hiện tại
 - [x] Code C05 đã commit trên nhánh `Khai`.
