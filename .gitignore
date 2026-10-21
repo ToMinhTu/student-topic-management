@@ -33,3 +33,6 @@ build/
 .vscode/
 
 .env
+
+# C05 - Uploaded report files
+/uploads/

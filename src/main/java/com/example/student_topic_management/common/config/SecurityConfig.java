@@ -73,6 +73,10 @@ public class SecurityConfig {
                                 .requestMatchers("/councils/**")
                                 .hasAnyRole("DEAN", "DEPARTMENT_HEAD", "LECTURER")
 
+                                // C05 - Nop va tai bao cao PDF
+                                .requestMatchers("/reports", "/reports/**")
+                                .hasRole("STUDENT")
+
                                 // Phan quyen cac vai tro
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/dean/**").hasRole("DEAN")
