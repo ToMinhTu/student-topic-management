@@ -1,3 +1,237 @@
-<!DOCTYPE html><html lang="vi" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Tạo hội đồng</title><style>body{margin:0;background:#f4f6f9;color:#263238;font-family:Arial,sans-serif}.container{max-width:1000px;margin:40px auto;padding:30px;background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08)}h1{color:#1d4ed8;margin-top:0}h2{margin-top:30px;color:#263238}.card{background:#f8fafc;border-radius:8px;padding:20px;margin:20px 0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;margin-top:15px}th,td{padding:13px;border-bottom:1px solid #e2e8f0;text-align:left}th{background:#eff6ff;color:#173b66}.btn{display:inline-block;padding:10px 16px;border-radius:6px;text-decoration:none;border:0;cursor:pointer;font-size:15px}.primary{background:#2563eb;color:#fff}.secondary{background:#64748b;color:#fff}.success{background:#15803d;color:#fff}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.form-row{margin:18px 0}.form-row label{display:block;font-weight:bold;margin-bottom:7px}.form-control,.form-select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px;box-sizing:border-box}.error{color:#b91c1c;margin-top:5px}.notice{padding:12px;background:#eff6ff;color:#1e40af;border-radius:6px;margin:15px 0}</style></head><body>
 
-<div th:replace="~{fragments/navbar :: navbar}"></div><div class="container"><h1>Tạo hội đồng</h1><p class="notice">Hội đồng phải thuộc một đợt đăng ký đã tồn tại.</p><form th:action="@{/councils/save}" th:object="${councilForm}" method="post"><input type="hidden" th:field="*{id}"><div class="form-row"><label for="roundId">Mã đợt đăng ký</label><input id="roundId" class="form-control" type="number" th:field="*{roundId}"><div class="error" th:if="${#fields.hasErrors('roundId')}" th:errors="*{roundId}"></div></div><div class="form-row"><label for="name">Tên hội đồng</label><input id="name" class="form-control" type="text" th:field="*{name}" placeholder="Ví dụ: Hội đồng bảo vệ D1"><div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div></div><div class="actions"><button class="btn primary" type="submit">Lưu hội đồng</button><a class="btn secondary" href="/councils">Quay lại</a></div></form></div></body></html>
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo / sửa hội đồng</title>
+
+    <style layout:fragment="css">
+        .council-form-page {
+            width: 100%;
+            padding: 24px;
+            box-sizing: border-box;
+            color: #263238;
+        }
+
+        .council-form-page .page-title {
+            display: inline-block;
+            padding: 12px 45px 12px 20px;
+            margin-bottom: 22px;
+            background: #173e34;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            clip-path: polygon(
+                0 0, 100% 0,
+                calc(100% - 20px) 100%,
+                0 100%
+            );
+        }
+
+        .council-form-page .form-card {
+            width: 100%;
+            background: white;
+            padding: 28px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .council-form-page .notice {
+            padding: 14px 18px;
+            margin-bottom: 25px;
+            background: #eff6ff;
+            border-radius: 6px;
+            color: #1e40af;
+        }
+
+        .council-form-page .form-row-custom {
+            margin-bottom: 22px;
+        }
+
+        .council-form-page .form-label-custom {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .council-form-page .form-control-custom {
+            display: block;
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+
+        .council-form-page .form-control-custom:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+        }
+
+        .council-form-page .field-error {
+            color: #b91c1c;
+            margin-top: 6px;
+            font-size: 13px;
+        }
+
+        .council-form-page .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 28px;
+        }
+
+        .council-form-page .council-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .council-form-page .btn-save {
+            background: #2563eb;
+            color: white;
+        }
+
+        .council-form-page .btn-back {
+            background: #64748b;
+            color: white;
+        }
+
+        .council-form-page .council-btn:hover {
+            filter: brightness(0.9);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .council-form-page {
+                padding: 14px 12px;
+            }
+
+            .council-form-page .form-card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+
+    <div class="council-form-page">
+
+        <div class="page-title"
+             th:text="${councilForm.id == null} ? 'TẠO HỘI ĐỒNG MỚI' : 'CHỈNH SỬA HỘI ĐỒNG'">
+            TẠO HỘI ĐỒNG MỚI
+        </div>
+
+        <section class="form-card">
+
+            <h2 class="h5 fw-bold mb-3">
+                <i class="bi bi-people"></i>
+                Thông tin hội đồng
+            </h2>
+
+            <div class="notice">
+                Hội đồng phải thuộc một đợt đăng ký đã tồn tại.
+            </div>
+
+            <form th:action="@{/councils/save}"
+                  th:object="${councilForm}"
+                  method="post">
+
+                <input type="hidden" th:field="*{id}">
+
+                <!-- Mã đợt -->
+                <div class="form-row-custom">
+
+                    <label class="form-label-custom"
+                           for="roundId">
+                        Mã đợt đăng ký
+                    </label>
+
+                    <input class="form-control-custom"
+                           id="roundId"
+                           type="number"
+                           min="1"
+                           th:field="*{roundId}"
+                           placeholder="Nhập mã đợt đăng ký"
+                           required>
+
+                    <div class="field-error"
+                         th:if="${#fields.hasErrors('roundId')}"
+                         th:errors="*{roundId}">
+                    </div>
+
+                </div>
+
+                <!-- Tên hội đồng -->
+                <div class="form-row-custom">
+
+                    <label class="form-label-custom"
+                           for="name">
+                        Tên hội đồng
+                    </label>
+
+                    <input class="form-control-custom"
+                           id="name"
+                           type="text"
+                           th:field="*{name}"
+                           placeholder="Ví dụ: Hội đồng bảo vệ D1"
+                           required>
+
+                    <div class="field-error"
+                         th:if="${#fields.hasErrors('name')}"
+                         th:errors="*{name}">
+                    </div>
+
+                </div>
+
+                <!-- Nút chức năng -->
+                <div class="action-buttons">
+
+                    <button class="council-btn btn-save"
+                            type="submit">
+
+                        <i class="bi bi-save"></i>
+                        Lưu hội đồng
+
+                    </button>
+
+                    <a class="council-btn btn-back"
+                       th:href="@{/councils}">
+
+                        <i class="bi bi-arrow-left"></i>
+                        Quay lại
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+</main>
+
+</body>
+</html>

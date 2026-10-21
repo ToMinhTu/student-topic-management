@@ -1,3 +1,297 @@
-<!DOCTYPE html><html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"><head><meta charset="UTF-8"><title>Danh sách hội đồng</title><style>body{margin:0;background:#f4f6f9;color:#263238;font-family:Arial,sans-serif}.container{max-width:1000px;margin:40px auto;padding:30px;background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08)}h1{color:#1d4ed8;margin-top:0}h2{margin-top:30px;color:#263238}.card{background:#f8fafc;border-radius:8px;padding:20px;margin:20px 0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;margin-top:15px}th,td{padding:13px;border-bottom:1px solid #e2e8f0;text-align:left}th{background:#eff6ff;color:#173b66}.btn{display:inline-block;padding:10px 16px;border-radius:6px;text-decoration:none;border:0;cursor:pointer;font-size:15px}.primary{background:#2563eb;color:#fff}.secondary{background:#64748b;color:#fff}.success{background:#15803d;color:#fff}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.form-row{margin:18px 0}.form-row label{display:block;font-weight:bold;margin-bottom:7px}.form-control,.form-select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px;box-sizing:border-box}.error{color:#b91c1c;margin-top:5px}.notice{padding:12px;background:#eff6ff;color:#1e40af;border-radius:6px;margin:15px 0}</style></head><body>
 
-<div th:replace="~{fragments/navbar :: navbar}"></div><div class="container"><h1>Danh sách hội đồng</h1><p class="notice">Hội đồng được tạo theo từng đợt đăng ký và dùng để tổ chức bảo vệ đồ án.</p><div class="actions"><a sec:authorize="hasAnyRole('DEAN','DEPARTMENT_HEAD')" class="btn primary" href="/councils/new">+ Tạo hội đồng mới</a><a class="btn secondary" href="/dean/rounds">Quay lại đợt đăng ký</a></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Tên hội đồng</th><th>Đợt</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody><tr th:each="council : ${councils}"><td th:text="${council.id}"></td><td th:text="${council.name}"></td><td th:text="${council.roundId}"></td><td th:text="${council.status}"></td><td><a sec:authorize="hasAnyRole('DEAN','DEPARTMENT_HEAD')" th:href="@{/councils/{id}/edit(id=${council.id})}">Sửa</a> <span> | </span><a th:href="@{/councils/{id}/members(id=${council.id})}">Thành viên</a></td></tr><tr th:if="${#lists.isEmpty(councils)}"><td colspan="5">Chưa có hội đồng.</td></tr></tbody></table></div></div></body></html>
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách hội đồng</title>
+
+    <style layout:fragment="css">
+        .councils-page {
+            width: 100%;
+            max-width: none;
+            padding: 24px;
+            box-sizing: border-box;
+            color: #263238;
+        }
+
+        .councils-page .page-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .councils-page .ribbon-title {
+            display: inline-flex;
+            align-items: center;
+            min-height: 42px;
+            padding: 8px 45px 8px 18px;
+            background: #173e34;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            clip-path: polygon(
+                0 0,
+                100% 0,
+                calc(100% - 20px) 100%,
+                0 100%
+            );
+        }
+
+        .councils-page .council-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .councils-page .card-title {
+            margin: 0 0 14px;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .councils-page .notice {
+            padding: 12px 16px;
+            background: #eff6ff;
+            color: #1e40af;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .councils-page .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .councils-page .council-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 14px;
+            border-radius: 5px;
+            border: none;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .councils-page .btn-create {
+            background: #2563eb;
+            color: white;
+        }
+
+        .councils-page .btn-back {
+            background: #64748b;
+            color: white;
+        }
+
+        .councils-page .btn-edit {
+            background: #d97706;
+            color: white;
+        }
+
+        .councils-page .btn-members {
+            background: #07805b;
+            color: white;
+        }
+
+        .councils-page .council-btn:hover {
+            filter: brightness(0.9);
+            color: white;
+        }
+
+        .councils-page .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .councils-page .councils-table {
+            width: 100%;
+            min-width: 750px;
+            border-collapse: collapse;
+        }
+
+        .councils-page .councils-table th,
+        .councils-page .councils-table td {
+            padding: 13px 15px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .councils-page .councils-table th {
+            background: #f3f4f6;
+            font-weight: 700;
+        }
+
+        .councils-page .councils-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .councils-page .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .councils-page .empty-message {
+            padding: 30px !important;
+            text-align: center !important;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .councils-page {
+                padding: 14px 12px;
+            }
+
+            .councils-page .ribbon-title {
+                font-size: 15px;
+            }
+
+            .councils-page .council-card {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+
+    <div class="councils-page">
+
+        <!-- Thanh tiêu đề -->
+        <div class="page-top">
+
+            <div class="ribbon-title">
+                DANH SÁCH HỘI ĐỒNG
+            </div>
+
+            <div class="action-buttons">
+
+                <a sec:authorize="hasAnyRole('DEAN','DEPARTMENT_HEAD')"
+                   class="council-btn btn-create"
+                   th:href="@{/councils/new}">
+                    <i class="bi bi-plus-circle"></i>
+                    Tạo hội đồng mới
+                </a>
+
+                <a class="council-btn btn-back"
+                   th:href="@{/dean/rounds}">
+                    <i class="bi bi-arrow-left"></i>
+                    Quay lại đợt đăng ký
+                </a>
+
+            </div>
+        </div>
+
+        <!-- Nội dung -->
+        <section class="council-card">
+
+            <h2 class="card-title">
+                <i class="bi bi-people"></i>
+                Danh sách hội đồng
+            </h2>
+
+            <div class="notice">
+                Hội đồng được tạo theo từng đợt đăng ký
+                và dùng để tổ chức bảo vệ đồ án.
+            </div>
+
+            <div class="table-wrapper">
+
+                <table class="councils-table">
+
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên hội đồng</th>
+                        <th>Đợt</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="council : ${councils}">
+
+                        <td th:text="${council.id}">1</td>
+
+                        <td th:text="${council.name}">
+                            Hội đồng bảo vệ
+                        </td>
+
+                        <td th:text="${council.roundId}">
+                            1
+                        </td>
+
+                        <td>
+                            <span class="status-badge"
+                                  th:text="${council.status}">
+                                ACTIVE
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="action-buttons">
+
+                                <a sec:authorize="hasAnyRole('DEAN','DEPARTMENT_HEAD')"
+                                   class="council-btn btn-edit"
+                                   th:href="@{/councils/{id}/edit(id=${council.id})}">
+
+                                    <i class="bi bi-pencil"></i>
+                                    Sửa
+                                </a>
+
+                                <a class="council-btn btn-members"
+                                   th:href="@{/councils/{id}/members(id=${council.id})}">
+
+                                    <i class="bi bi-people-fill"></i>
+                                    Thành viên
+                                </a>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Chưa có hội đồng -->
+                    <tr th:if="${#lists.isEmpty(councils)}">
+                        <td colspan="5" class="empty-message">
+                            <i class="bi bi-inbox"></i>
+                            Chưa có hội đồng nào.
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+</body>
+</html>

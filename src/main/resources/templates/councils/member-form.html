@@ -1,3 +1,279 @@
-<!DOCTYPE html><html lang="vi" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>Thêm thành viên hội đồng</title><style>body{margin:0;background:#f4f6f9;color:#263238;font-family:Arial,sans-serif}.container{max-width:1000px;margin:40px auto;padding:30px;background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08)}h1{color:#1d4ed8;margin-top:0}h2{margin-top:30px;color:#263238}.card{background:#f8fafc;border-radius:8px;padding:20px;margin:20px 0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;margin-top:15px}th,td{padding:13px;border-bottom:1px solid #e2e8f0;text-align:left}th{background:#eff6ff;color:#173b66}.btn{display:inline-block;padding:10px 16px;border-radius:6px;text-decoration:none;border:0;cursor:pointer;font-size:15px}.primary{background:#2563eb;color:#fff}.secondary{background:#64748b;color:#fff}.success{background:#15803d;color:#fff}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.form-row{margin:18px 0}.form-row label{display:block;font-weight:bold;margin-bottom:7px}.form-control,.form-select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px;box-sizing:border-box}.error{color:#b91c1c;margin-top:5px}.notice{padding:12px;background:#eff6ff;color:#1e40af;border-radius:6px;margin:15px 0}</style></head><body>
 
-<div th:replace="~{fragments/navbar :: navbar}"></div><div class="container"><h1>Thêm thành viên hội đồng</h1><div class="notice">Hội đồng: <b th:text="${council.name}"></b></div><form th:action="@{/councils/{id}/members/save(id=${council.id})}" th:object="${memberForm}" method="post"><div class="form-row"><label for="lecturerId">Mã giảng viên</label><input id="lecturerId" class="form-control" type="number" th:field="*{lecturerId}"><div class="error" th:if="${#fields.hasErrors('lecturerId')}" th:errors="*{lecturerId}"></div></div><div class="form-row"><label for="slotNo">Vị trí trong hội đồng</label><select id="slotNo" class="form-select" th:field="*{slotNo}"><option value="">-- Chọn vị trí --</option><option value="1">1 - Chủ tịch</option><option value="2">2 - Thư ký</option><option value="3">3 - Ủy viên</option><option value="4">4 - Ủy viên</option><option value="5">5 - Ủy viên</option></select><div class="error" th:if="${#fields.hasErrors('slotNo')}" th:errors="*{slotNo}"></div></div><div class="actions"><button class="btn primary" type="submit">Lưu thành viên</button><a class="btn secondary" th:href="@{/councils/{id}/members(id=${council.id})}">Quay lại</a></div></form></div></body></html>
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm thành viên hội đồng</title>
+
+    <style layout:fragment="css">
+        .member-form-page {
+            width: 100%;
+            padding: 24px;
+            box-sizing: border-box;
+            color: #263238;
+        }
+
+        .member-form-page .page-title {
+            display: inline-flex;
+            align-items: center;
+            min-height: 46px;
+            padding: 10px 45px 10px 20px;
+            margin-bottom: 22px;
+            background: #173e34;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            clip-path: polygon(
+                0 0,
+                100% 0,
+                calc(100% - 20px) 100%,
+                0 100%
+            );
+        }
+
+        .member-form-page .form-card {
+            width: 100%;
+            background: white;
+            padding: 26px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            box-sizing: border-box;
+        }
+
+        .member-form-page .card-heading {
+            font-size: 18px;
+            font-weight: 700;
+            color: #263238;
+            margin: 0 0 20px;
+        }
+
+        .member-form-page .notice {
+            background: #eff6ff;
+            color: #1e40af;
+            border-radius: 6px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+        }
+
+        .member-form-page .form-row-custom {
+            margin-bottom: 22px;
+        }
+
+        .member-form-page .form-label-custom {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        .member-form-page .form-control-custom {
+            display: block;
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .member-form-page .form-control-custom:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+        }
+
+        .member-form-page .field-error {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #b91c1c;
+        }
+
+        .member-form-page .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 26px;
+        }
+
+        .member-form-page .council-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .member-form-page .btn-save {
+            background: #2563eb;
+            color: white;
+        }
+
+        .member-form-page .btn-back {
+            background: #64748b;
+            color: white;
+        }
+
+        .member-form-page .council-btn:hover {
+            filter: brightness(0.9);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .member-form-page {
+                padding: 14px 12px;
+            }
+
+            .member-form-page .form-card {
+                padding: 16px;
+            }
+
+            .member-form-page .page-title {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+
+    <div class="member-form-page">
+
+        <!-- Tiêu đề -->
+        <div class="page-title">
+            THÊM THÀNH VIÊN HỘI ĐỒNG
+        </div>
+
+        <!-- Biểu mẫu -->
+        <section class="form-card">
+
+            <h2 class="card-heading">
+                <i class="bi bi-person-plus"></i>
+                Thông tin thành viên hội đồng
+            </h2>
+
+            <div class="notice">
+                Hội đồng:
+                <strong th:text="${council.name}">
+                    Hội đồng bảo vệ C6
+                </strong>
+            </div>
+
+            <form th:action="@{/councils/{id}/members/save(id=${council.id})}"
+                  th:object="${memberForm}"
+                  method="post">
+
+                <!-- Mã giảng viên -->
+                <div class="form-row-custom">
+
+                    <label for="lecturerId"
+                           class="form-label-custom">
+                        Mã giảng viên
+                    </label>
+
+                    <input id="lecturerId"
+                           class="form-control-custom"
+                           type="number"
+                           min="1"
+                           th:field="*{lecturerId}"
+                           placeholder="Nhập mã giảng viên"
+                           required>
+
+                    <div class="field-error"
+                         th:if="${#fields.hasErrors('lecturerId')}"
+                         th:errors="*{lecturerId}">
+                    </div>
+
+                </div>
+
+                <!-- Vai trò hội đồng -->
+                <div class="form-row-custom">
+
+                    <label for="slotNo"
+                           class="form-label-custom">
+                        Vị trí trong hội đồng
+                    </label>
+
+                    <select id="slotNo"
+                            class="form-control-custom"
+                            th:field="*{slotNo}"
+                            required>
+
+                        <option value="">
+                            -- Chọn vị trí --
+                        </option>
+
+                        <option value="1">
+                            1 - Chủ tịch
+                        </option>
+
+                        <option value="2">
+                            2 - Thư ký
+                        </option>
+
+                        <option value="3">
+                            3 - Ủy viên
+                        </option>
+
+                        <option value="4">
+                            4 - Ủy viên
+                        </option>
+
+                        <option value="5">
+                            5 - Ủy viên
+                        </option>
+
+                    </select>
+
+                    <div class="field-error"
+                         th:if="${#fields.hasErrors('slotNo')}"
+                         th:errors="*{slotNo}">
+                    </div>
+
+                </div>
+
+                <!-- Nút chức năng -->
+                <div class="action-buttons">
+
+                    <button class="council-btn btn-save"
+                            type="submit">
+
+                        <i class="bi bi-save"></i>
+                        Lưu thành viên
+
+                    </button>
+
+                    <a class="council-btn btn-back"
+                       th:href="@{/councils/{id}/members(id=${council.id})}">
+
+                        <i class="bi bi-arrow-left"></i>
+                        Quay lại
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+</main>
+
+</body>
+</html>
