@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 class LecturerRegistrationControllerTest {
     @Configuration
     @EnableWebMvc
+    @org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
     @Import({SecurityConfig.class, LecturerRegistrationController.class, SidebarPreviewController.class})
     static class Config {
         @Bean UserDetailsService userDetailsService() { return mock(UserDetailsService.class); }
