@@ -13,7 +13,7 @@
 <main layout:fragment="content" class="part-b-page topics-page">
     <div class="topics-heading">
         <div>
-            <h1><i class="bi bi-lightbulb me-2" aria-hidden="true"></i>Đề tài của tôi</h1>
+            <h1>Quản lý đề xuất đề tài</h1>
             <p>Theo dõi và quản lý các đề xuất đề tài của bạn.</p>
         </div>
         <a class="btn btn-theme" th:href="@{/topics/new}"><i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Tạo đề xuất mới</a>
@@ -30,13 +30,13 @@
                 <thead><tr><th scope="col">ID</th><th scope="col">Mã đề tài</th><th scope="col">Tên đề tài</th><th scope="col">Trạng thái</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
                 <tbody>
                 <tr th:each="topic : ${topics.content}">
-                    <td class="topics-id" th:text="${topic.id}"></td>
+                    <td class="topics-id"><span th:text="${'#' + topic.id}"></span></td>
                     <td><span class="topics-code" th:text="${topic.code}"></span></td>
                     <td class="topics-title" th:text="${topic.title}"></td>
                     <td><span class="topic-status" th:attr="data-status=${topic.status}" th:switch="${topic.status.name()}">
                         <span th:case="'DRAFT'">Bản nháp</span><span th:case="'SUBMITTED'">Chờ xét duyệt</span><span th:case="'APPROVED'">Đã phê duyệt</span><span th:case="'PUBLISHED'">Đã công bố</span><span th:case="'REJECTED'">Bị từ chối</span><span th:case="*" th:text="${topic.status}"></span>
                     </span></td>
-                    <td class="text-end"><a class="btn btn-sm btn-outline-primary text-nowrap" th:href="@{/topics/{id}(id=${topic.id})}" th:attr="aria-label=${'Xem chi tiết đề tài ' + topic.code}"><i class="bi bi-eye me-1" aria-hidden="true"></i>Chi tiết</a></td>
+                    <td class="text-end"><a class="btn topics-view text-nowrap" th:href="@{/topics/{id}(id=${topic.id})}" th:attr="aria-label=${'Xem chi tiết đề tài ' + topic.code}"><i class="bi bi-eye me-1" aria-hidden="true"></i>Chi tiết</a></td>
                 </tr>
                 <tr th:if="${topics.empty}"><td colspan="5"><div class="empty-box"><i class="bi bi-journal-plus empty-icon d-block" aria-hidden="true"></i><strong>Bạn chưa có đề xuất nào</strong><p class="text-muted mb-0 mt-2">Chọn “Tạo đề xuất mới” để bắt đầu.</p></div></td></tr>
                 </tbody>
