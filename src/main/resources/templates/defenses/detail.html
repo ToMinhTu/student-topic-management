@@ -1,7 +1,8 @@
 <!-- toan-D2 -->
 <!-- toan-D2 - thêm chức năng quản lý lịch bảo vệ -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html  lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
     <meta charset="UTF-8">
@@ -9,7 +10,7 @@
 </head>
 
 <body>
-
+<div layout:fragment="content" class="container py-4">
     <h1>Chi tiết lịch bảo vệ</h1>
 
     <p>ID lịch bảo vệ:
@@ -41,7 +42,7 @@
     </p>
 
     <a href="/defenses">Quay lại danh sách</a>
-
+</div>
 </body>
 
 </html>

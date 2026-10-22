@@ -1,60 +1,70 @@
-<!-- toan-D2 -->
-<!-- toan-D2 - thêm chức năng quản lý lịch bảo vệ -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Danh sách lịch bảo vệ</title>
+    <title>Lịch bảo vệ</title>
 </head>
 
 <body>
-
-    <h1>Danh sách lịch bảo vệ</h1>
-
-    <a href="/defenses/new">
-        Tạo lịch bảo vệ mới
-    </a>
-
-    <br><br>
-
-    <table border="1">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Hồ sơ</th>
-                <th>Đợt</th>
-                <th>Hội đồng</th>
-                <th>Thời gian</th>
-                <th>Địa điểm</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            <tr th:each="defense : ${defenses}">
-                <td th:text="${defense.id}"></td>
-                <td th:text="${defense.registrationId}"></td>
-                <td th:text="${defense.roundId}"></td>
-                <td th:text="${defense.councilId}"></td>
-                <td th:text="${defense.scheduledAt}"></td>
-                <td th:text="${defense.location}"></td>
-                <td>
-                    <a th:href="@{/defenses/{id}(id=${defense.id})}">
-                        Xem chi tiết
-                    </a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <br>
-
-    <a href="/councils">
-        Quay lại hội đồng
-    </a>
-
+    <div layout:fragment="content" class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="bi bi-calendar2-check me-2"></i>Lịch bảo vệ</h2>
+                <p class="text-muted mb-0">Quản lý lịch và theo dõi trạng thái buổi bảo vệ</p>
+            </div>
+            <a th:href="@{/defenses/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Tạo lịch bảo vệ</a>
+        </div>
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3"><strong>Danh sách lịch bảo vệ</strong></div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Hồ sơ</th>
+                            <th>Đợt</th>
+                            <th>Hội đồng</th>
+                            <th>Thời gian</th>
+                            <th>Địa điểm</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="defense : ${defenses}">
+                            <td th:text="${defense.id}"></td>
+                            <td th:text="${'HS-' + defense.registrationId}"></td>
+                            <td th:text="${defense.roundId}"></td>
+                            <td th:text="${'HĐ-' + defense.councilId}"></td>
+                            <td th:text="${#temporals.format(defense.scheduledAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${defense.location}"></td>
+                            <td><span class="badge"
+                                    th:classappend="${defense.status == 'DONE' ? 'text-bg-success' : defense.status == 'CANCELLED' ? 'text-bg-danger' : 'text-bg-warning'}"
+                                    th:text="${defense.status}"></span></td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                    th:href="@{/defenses/{id}(id=${defense.id})}"><i class="bi bi-eye me-1"></i>Chi
+                                    tiết</a>
+                                <!-- Only enable this action when the backend supports completion and supplies eligible IDs. -->
+                                <form th:if="${completableDefenseIds != null and completableDefenseIds.contains(defense.id)}"
+                                    th:action="@{/defenses/{id}/complete(id=${defense.id})}" method="post"
+                                    class="d-inline" onsubmit="return confirm('Xác nhận buổi bảo vệ đã kết thúc?')">
+                                    <button type="submit" class="btn btn-sm btn-success"><i
+                                            class="bi bi-check-circle me-1"></i>Kết thúc</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(defenses)}">
+                            <td colspan="8" class="text-center text-muted py-5">Chưa có lịch bảo vệ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

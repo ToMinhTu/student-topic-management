@@ -1,7 +1,8 @@
 <!-- toan-D3 -->
 <!-- toan-D3 - thêm chức năng nhập điểm -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
     <meta charset="UTF-8">
@@ -9,48 +10,57 @@
 </head>
 
 <body>
+    <div layout:fragment="content" class="container-fluid py-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h2><i class="bi bi-clipboard2-check me-2" aria-hidden="true"></i>Danh sách phiếu chấm</h2>
+                <p class="text-muted mb-0">Theo dõi điểm số, nhận xét và thời gian nộp phiếu chấm.</p>
+            </div>
+            <a th:href="@{/evaluations/new}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nhập điểm mới
+            </a>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3"><strong>Phiếu chấm điểm</strong></div>
+            <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Mã phân công</th>
+                    <th scope="col">Điểm</th>
+                    <th scope="col">Nhận xét</th>
+                    <th scope="col">Thời gian nộp</th>
+                    <th scope="col" class="text-end">Thao tác</th>
+                </tr>
+            </thead>
 
-<h1>Danh sách phiếu chấm</h1>
-
-<a href="/evaluations/new">
-    Nhập điểm mới
-</a>
-
-<br><br>
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Mã phân công</th>
-            <th>Điểm</th>
-            <th>Nhận xét</th>
-            <th>Thời gian nộp</th>
-            <th>Thao tác</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        <tr th:each="evaluation : ${evaluations}">
-            <td th:text="${evaluation.id}"></td>
-            <td th:text="${evaluation.assignmentId}"></td>
-            <td th:text="${evaluation.score}"></td>
-            <td th:text="${evaluation.comments}"></td>
-            <td th:text="${evaluation.submittedAt}"></td>
-            <td>
-                <a th:href="@{/evaluations/{id}(id=${evaluation.id})}">
-                    Xem chi tiết
-                </a>
-            </td>
-        </tr>
-    </tbody>
-</table>
-
-<br>
-
-<a href="/defenses">
-    Quay lại lịch bảo vệ
-</a>
-
+            <tbody>
+                <tr th:each="evaluation : ${evaluations}">
+                    <td th:text="${evaluation.id}"></td>
+                    <td th:text="${evaluation.assignmentId}"></td>
+                    <td><span class="badge text-bg-primary" th:text="${evaluation.score + ' / 10'}"></span></td>
+                    <td class="text-break" th:text="${#strings.isEmpty(evaluation.comments) ? 'Chưa có nhận xét' : evaluation.comments}"></td>
+                    <td class="text-nowrap" th:text="${evaluation.submittedAt == null ? 'Chưa nộp' : #temporals.format(evaluation.submittedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{/evaluations/{id}(id=${evaluation.id})}">
+                            <i class="bi bi-eye me-1" aria-hidden="true"></i>Xem chi tiết
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(evaluations)}">
+                    <td colspan="6" class="text-center text-muted py-5">
+                        <i class="bi bi-clipboard-x fs-2 d-block mb-2" aria-hidden="true"></i>Chưa có phiếu chấm
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+            </div>
+        </div>
+        <a th:href="@{/defenses}" class="btn btn-outline-secondary mt-4">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay lại lịch bảo vệ
+        </a>
+    </div>
 </body>
+
 </html>

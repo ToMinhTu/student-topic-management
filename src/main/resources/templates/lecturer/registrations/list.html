@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Duyệt đăng ký nhóm</title></head>
+<body>
+<div layout:fragment="content" class="container-fluid py-4">
+    <div class="mb-4">
+        <h2><i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>Duyệt đăng ký nhóm</h2>
+        <p class="text-muted mb-0">Chỉ hiển thị hồ sơ thuộc đề tài bạn được phân công hướng dẫn.</p>
+    </div>
+    <div class="alert alert-success" role="status" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" th:action="@{/lecturer/registrations}" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="roundId" class="form-label">Đợt đăng ký</label>
+                    <select id="roundId" name="roundId" class="form-select">
+                        <option value="">Tất cả đợt</option>
+                        <option th:each="round : ${rounds}" th:value="${round.id}" th:text="${round.name}"
+                                th:selected="${selectedRoundId == round.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Trạng thái</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">Chờ duyệt</option>
+                        <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">Đã duyệt</option>
+                        <option value="REJECTED" th:selected="${selectedStatus == 'REJECTED'}">Từ chối</option>
+                        <option value="CANCELLED" th:selected="${selectedStatus == 'CANCELLED'}">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Lọc danh sách</button>
+                    <a th:href="@{/lecturer/registrations}" class="btn btn-outline-secondary">Bỏ lọc</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between">
+            <strong>Hồ sơ đăng ký</strong>
+            <span class="text-muted" th:text="${registrations.totalElements + ' hồ sơ'}"></span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr>
+                    <th scope="col">Mã hồ sơ</th><th scope="col">Nhóm</th><th scope="col">Đề tài</th>
+                    <th scope="col">Đợt</th><th scope="col">Ngày gửi</th><th scope="col">Trạng thái</th>
+                    <th scope="col">Thao tác</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="r : ${registrations.content}">
+                    <td th:text="${r.id}"></td>
+                    <td th:text="${r.groupName}"></td>
+                    <td><strong th:text="${r.topicCode}"></strong><div class="small text-muted" th:text="${r.topicTitle}"></div></td>
+                    <td th:text="${r.roundName}"></td>
+                    <td class="text-nowrap" th:text="${#temporals.format(r.submittedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:switch="${r.status}">
+                        <span th:case="'PENDING'" class="badge text-bg-warning">Chờ duyệt</span>
+                        <span th:case="'APPROVED'" class="badge text-bg-success">Đã duyệt</span>
+                        <span th:case="'REJECTED'" class="badge text-bg-danger">Từ chối</span>
+                        <span th:case="'CANCELLED'" class="badge text-bg-secondary">Đã hủy</span>
+                        <span th:case="*" th:text="${r.status}"></span>
+                    </td>
+                    <td>
+                        <div th:if="${r.status == 'PENDING'}">
+                            <form th:action="@{/lecturer/registrations/{id}/approve(id=${r.id})}" method="post">
+                                <button type="submit" class="btn btn-sm btn-success mb-2"
+                                        th:aria-label="${'Duyệt hồ sơ ' + r.id}">Duyệt hồ sơ</button>
+                            </form>
+                            <details>
+                                <summary class="text-danger">Từ chối hồ sơ</summary>
+                                <form th:action="@{/lecturer/registrations/{id}/reject(id=${r.id})}" method="post" class="mt-2">
+                                    <label th:for="${'reason-' + r.id}" class="form-label">Lý do từ chối</label>
+                                    <textarea th:id="${'reason-' + r.id}" name="reason" class="form-control mb-2"
+                                              rows="3" required maxlength="1000"></textarea>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Xác nhận từ chối</button>
+                                </form>
+                            </details>
+                        </div>
+                        <span th:unless="${r.status == 'PENDING'}" class="text-muted">Không có thao tác</span>
+                    </td>
+                </tr>
+                <tr th:if="${registrations.empty}">
+                    <td colspan="7" class="text-center text-muted py-5">
+                        <i class="bi bi-inbox fs-2 d-block mb-2" aria-hidden="true"></i>
+                        Không có hồ sơ phù hợp. Kiểm tra bộ lọc và phân công hướng dẫn của bạn.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <nav th:if="${registrations.totalPages > 0}" class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-2"
+             aria-label="Phân trang hồ sơ">
+            <a th:if="${registrations.hasPrevious()}" class="btn btn-sm btn-outline-primary"
+               th:href="@{/lecturer/registrations(roundId=${selectedRoundId},status=${selectedStatus},page=${registrations.number - 1})}">Trang trước</a>
+            <span th:text="${'Trang ' + (registrations.number + 1) + ' / ' + registrations.totalPages}"></span>
+            <a th:if="${registrations.hasNext()}" class="btn btn-sm btn-outline-primary"
+               th:href="@{/lecturer/registrations(roundId=${selectedRoundId},status=${selectedStatus},page=${registrations.number + 1})}">Trang sau</a>
+        </nav>
+    </div>
+</div>
+</body>
+</html>
