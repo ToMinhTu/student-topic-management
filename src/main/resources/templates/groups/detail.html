@@ -263,6 +263,7 @@
         <div class="container">
 
             <h2>Chi tiết nhóm sinh viên</h2>
+<div class="content-card mb-4" th:if="${reportRegistrationId != null}"><h5>Báo cáo PDF của nhóm</h5><a class="btn btn-primary" th:href="@{/reports/{id}(id=${reportRegistrationId})}">Xem và quản lý báo cáo PDF</a></div>
 
             <!-- =====================================
          THONG BAO THANH CONG

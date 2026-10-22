@@ -1,7 +1,8 @@
 <!-- toan-D3 -->
 <!-- toan-D3 - thêm chức năng nhập điểm -->
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
 
 <head>
     <meta charset="UTF-8">
@@ -9,47 +10,53 @@
 </head>
 
 <body>
-
-    <h1>Nhập phiếu chấm</h1>
-
-    <form th:action="@{/evaluations/save}" th:object="${evaluationForm}" method="post">
-
-        <label>Mã phân công:</label>
-        <input type="number" th:field="*{assignmentId}">
-
-        <p th:if="${#fields.hasErrors('assignmentId')}" th:errors="*{assignmentId}">
-        </p>
-
-        <br>
-
-        <label>Điểm:</label>
-        <input type="number" step="0.01" min="0" max="10" th:field="*{score}">
-
-        <p th:if="${#fields.hasErrors('score')}" th:errors="*{score}">
-        </p>
-
-        <br>
-
-        <label>Nhận xét:</label>
-        <textarea th:field="*{comments}" rows="5" cols="40">
-    </textarea>
-
-        <p th:if="${#fields.hasErrors('comments')}" th:errors="*{comments}">
-        </p>
-
-        <br><br>
-
-        <button type="submit">
-            Lưu phiếu chấm
-        </button>
-    </form>
-
-    <br>
-
-    <a href="/evaluations">
-        Quay lại danh sách
-    </a>
-
+    <div layout:fragment="content" class="container py-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h2><i class="bi bi-pencil-square me-2" aria-hidden="true"></i>Nhập phiếu chấm</h2>
+                <p class="text-muted mb-0">Nhập điểm theo thang 10 cho phân công chấm điểm của bạn.</p>
+            </div>
+            <a th:href="@{/evaluations}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay lại danh sách
+            </a>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3"><strong>Thông tin phiếu chấm</strong></div>
+            <div class="card-body p-4">
+                <form th:action="@{/evaluations/save}" th:object="${evaluationForm}" method="post">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="assignmentId" class="form-label fw-semibold">Mã phân công <span class="text-danger">(bắt buộc)</span></label>
+                            <input type="number" th:field="*{assignmentId}" class="form-control"
+                                th:errorclass="is-invalid" required aria-describedby="assignmentIdError">
+                            <div id="assignmentIdError" class="invalid-feedback" th:errors="*{assignmentId}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="score" class="form-label fw-semibold">Điểm <span class="text-danger">(bắt buộc)</span></label>
+                            <input type="number" step="0.01" min="0" max="10" th:field="*{score}"
+                                class="form-control" th:errorclass="is-invalid" required aria-describedby="scoreHelp scoreError">
+                            <div id="scoreHelp" class="form-text">Từ 0 đến 10, tối đa 2 chữ số thập phân.</div>
+                            <div id="scoreError" class="invalid-feedback" th:errors="*{score}"></div>
+                        </div>
+                        <div class="col-12">
+                            <label for="comments" class="form-label fw-semibold">Nhận xét</label>
+                            <textarea th:field="*{comments}" rows="6" maxlength="2000" class="form-control"
+                                th:errorclass="is-invalid" aria-describedby="commentsHelp commentsError"
+                                placeholder="Nhận xét về nội dung, cách trình bày và phần trả lời câu hỏi..."></textarea>
+                            <div id="commentsHelp" class="form-text">Không bắt buộc, tối đa 2.000 ký tự.</div>
+                            <div id="commentsError" class="invalid-feedback" th:errors="*{comments}"></div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-3 mt-4">
+                        <a th:href="@{/evaluations}" class="btn btn-outline-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Lưu phiếu chấm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -226,6 +226,88 @@ class DeanRegistrationServiceTest {
         });
     }
 
+    private void mockSupervisor(boolean assigned) {
+        mockValidConditions();
+        AppUser lecturer = mock(AppUser.class);
+        Role role = mock(Role.class);
+        when(role.getCode()).thenReturn("LECTURER");
+        when(lecturer.getRoles()).thenReturn(Set.of(role));
+        when(lecturer.getEnabled()).thenReturn(true);
+        when(lecturer.getId()).thenReturn(21L);
+        when(currentUserService.getCurrentUser()).thenReturn(lecturer);
+        when(jdbc.queryForList(contains("FROM topic_supervisors"), eq(Long.class), eq(1L), eq(21L)))
+                .thenReturn(assigned ? List.of(21L) : List.of());
+    }
+
+    @Test
+    void assignedLecturerCanApproveAndLockGroup() {
+        mockSupervisor(true);
+        service.approveAsSupervisor(1L);
+        verify(jdbc).update(contains("UPDATE topic_registrations"), eq(21L), any(), eq(1L));
+        verify(jdbc).update(contains("UPDATE student_groups"), eq(3L));
+        verify(jdbc).update(contains("INSERT INTO audit_logs"), eq(21L),
+                eq("REGISTRATION_APPROVED"), eq("TOPIC_REGISTRATION"), eq(1L), anyString());
+    }
+
+    @Test
+    void assignedLecturerCanRejectWithReasonWithoutLockingGroup() {
+        mockSupervisor(true);
+        service.rejectAsSupervisor(1L, "  Cần bổ sung  ");
+        verify(jdbc).update(contains("UPDATE topic_registrations"), eq(21L), any(),
+                eq("Cần bổ sung"), eq(1L));
+        verify(jdbc, never()).update(contains("UPDATE student_groups"), any(Object[].class));
+    }
+
+    @Test
+    void lecturerCannotApproveSomeoneElsesTopic() {
+        mockSupervisor(false);
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.approveAsSupervisor(1L));
+        verify(jdbc, never()).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void lecturerCannotRejectSomeoneElsesTopic() {
+        mockSupervisor(false);
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.rejectAsSupervisor(1L, "Lý do"));
+        verify(jdbc, never()).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void lecturerCannotUseUnrestrictedDeanEntryPoint() {
+        mockSupervisor(true);
+        assertThrows(IllegalStateException.class, () -> service.approveRegistration(1L));
+        assertThrows(IllegalStateException.class, () -> service.rejectRegistration(1L, "Lý do"));
+        verify(jdbc, never()).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void supervisorStillNeedsMatchingSnapshot() {
+        mockSupervisor(true);
+        differentMembers = 1;
+        assertThrows(IllegalStateException.class, () -> service.approveAsSupervisor(1L));
+        verify(jdbc, never()).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void supervisorCannotDecideAlreadyApprovedRegistration() {
+        mockSupervisor(true);
+        registrationStatus = "APPROVED";
+        assertThrows(IllegalStateException.class, () -> service.approveAsSupervisor(1L));
+        assertThrows(IllegalStateException.class, () -> service.rejectAsSupervisor(1L, "Lý do"));
+        verify(jdbc, never()).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void disabledSupervisorCannotDecide() {
+        mockSupervisor(true);
+        when(currentUserService.getCurrentUser().getEnabled()).thenReturn(false);
+        assertThrows(IllegalStateException.class, () -> service.approveAsSupervisor(1L));
+        assertThrows(IllegalStateException.class, () -> service.rejectAsSupervisor(1L, "Lý do"));
+        verify(jdbc, never()).update(anyString(), any(Object[].class));
+    }
+
     private void mockValidConditions() {
 
         mockDean();

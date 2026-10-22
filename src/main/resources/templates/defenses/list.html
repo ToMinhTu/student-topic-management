@@ -80,7 +80,7 @@
                         <td th:text="${defense.registrationId}"></td>
                         <td th:text="${roundNames[defense.roundId] ?: 'Không xác định'}"></td>
                         <td th:text="${councilNames[defense.councilId] ?: 'Không xác định'}"></td>
-                        <td th:text="${defense.scheduledAt}"></td>
+                        <td th:text="${#temporals.format(defense.scheduledAt, 'dd/MM/yyyy HH:mm')}"></td>
                         <td th:text="${defense.location}"></td>
                         <td><span class="badge bg-success" th:text="${defense.status}"></span></td>
                         <td class="text-nowrap">
@@ -94,7 +94,7 @@
                             </form>
                         </td>
                     </tr>
-                </tbody>
+                <tr th:if="${#lists.isEmpty(defenses)}"><td colspan="8" class="text-center text-muted py-5">Chưa có lịch bảo vệ</td></tr></tbody>
             </table>
 
             <br>
