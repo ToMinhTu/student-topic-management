@@ -41,10 +41,24 @@ mvn clean && mvn spring-boot:run
 mvn clean; mvn spring-boot:run
 ```
 
-Tài khoản:
+Tài khoản test local:
 | Role | Tài khoản | mật khẩu |
 |:-------------|:--------------:|--------------:|
 | ADMIN         |    admin      |         admin123 |
 | text         |     text       |          text |
 
-[Link Chạy Web](http://127.0.0.1:8080/)
+## Tài khoản và mật khẩu Demo deploy
+
+Mật khẩu chung cho tất cả tài khoản mẫu: **`Demo@123`**.
+
+| Tài khoản | Vai trò/chức năng |
+|---|---|
+| `admin` | ADMIN: Quản trị hệ thống. |
+| `dean_fit` | DEAN: Trưởng khoa (PGS.TS. Lê Trọng Khoa) - duyệt hồ sơ, công bố kết quả. |
+| `gv.minhan` | LECTURER, DEPARTMENT_HEAD: Trưởng bộ môn CNPM, GVHD chính nhiều đề tài. |
+| `gv.thanhbinh` | LECTURER: Đồng hướng dẫn đề tài KLTN-T11. |
+| `gv.hoangchau`, `gv.ngocdung`, `gv.thihanh` | LECTURER: Thành viên các Hội đồng H01, H02, H03. |
+| `gv.quockhanh` | LECTURER: Giảng viên phản biện (Reviewer) độc lập cho H01, H02. |
+| `gv.thanhdat` | LECTURER, DEPARTMENT_HEAD: Trưởng bộ môn HTTT, đề xuất các đề tài HTTT. |
+| `gv.minhlam` | LECTURER, DEPARTMENT_HEAD: Trưởng bộ môn Mạng máy tính & ATTT. |
+| `22110001` đến `22110024` | 24 sinh viên khóa 22 (ví dụ Nguyễn Minh Anh), chia làm 8 nhóm. |

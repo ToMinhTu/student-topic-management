@@ -1,32 +1,113 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout}">
+    layout:decorate="~{layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <title>Trang chủ</title>
     <!-- css rieng -->
     <th:block layout:fragment="css">
         <!-- link, style, etc -->
-        <!-- <style>
-            nav.navbar {
-                display: none !important;
+        <style>
+            .dashboard-card {
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                border-radius: 12px;
+                border: none;
             }
-        </style> -->
+
+            .dashboard-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+            }
+
+            .icon-box {
+                width: 60px;
+                height: 60px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-size: 1.8rem;
+            }
+        </style>
     </th:block>
 </head>
 
 <body>
     <div layout:fragment="content">
-        <h1>Chào mừng đến hệ thống</h1>
+        <div class="mb-4">
+            <h2 class="fw-bold text-theme">CHÀO MỪNG ĐẾN HỆ THỐNG</h2>
+            <p class="text-muted">Cổng thông tin Quản lý đề tài sinh viên - Trường Đại học Công nghệ Kỹ thuật HCM-UTE
+            </p>
+        </div>
 
-        <!-- NÚT BẤM TEST khoa user -->
-        <div class="mt-5 p-4 border rounded bg-white">
-            <h5 class="text-danger">Nhấn nút dưới đây để mô phỏng hành động admin tự khóa chính mình.</h5>
+        <div class="row g-4">
+            <!-- Danh cho student -->
+            <div class="col-md-4" sec:authorize="hasRole('STUDENT')">
+                <a th:href="@{/topics}" class="text-decoration-none">
+                    <div class="card dashboard-card bg-white shadow-sm h-100 p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-primary text-white me-3">
+                                <i class="bi bi-journal-text"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-dark fw-bold mb-1">Đăng ký đề tài</h5>
+                                <span class="text-muted small">Xem và đăng ký đề tài đợt này</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
 
-            <!-- Form POST sẽ tự động được Thymeleaf chèn CSRF Token -->
-            <form th:action="@{/admin/users/6/lock}" method="post">
-                <button type="submit" class="btn btn-danger">Tự khóa tài khoản Admin (ID: 6)</button>
-            </form>
+            <!-- Danh cho lecturer -->
+            <div class="col-md-4" sec:authorize="hasRole('LECTURER')">
+                <a th:href="@{/topics/my}" class="text-decoration-none">
+                    <div class="card dashboard-card bg-white shadow-sm h-100 p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-success text-white me-3">
+                                <i class="bi bi-lightbulb"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-dark fw-bold mb-1">Đề xuất đề tài</h5>
+                                <span class="text-muted small">Tạo đề tài mới cho sinh viên</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Danh cho Admin -->
+            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/admin/users}" class="text-decoration-none">
+                    <div class="card dashboard-card bg-white shadow-sm h-100 p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-danger text-white me-3">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-dark fw-bold mb-1">Quản lý người dùng</h5>
+                                <span class="text-muted small">Thêm mới, khóa tài khoản</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Danh cho moi user -->
+            <div class="col-md-4">
+                <a th:href="@{/announcements}" class="text-decoration-none">
+                    <div class="card dashboard-card bg-white shadow-sm h-100 p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-info text-white me-3">
+                                <i class="bi bi-bell"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-dark fw-bold mb-1">Bảng thông báo</h5>
+                                <span class="text-muted small">Cập nhật tin tức mới nhất</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 
