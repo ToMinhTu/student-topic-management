@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đề xuất đề tài</title>
-<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
+<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"><link rel="stylesheet" th:href="@{/css/topics.css}"></th:block>
 </head>
 <body>
-<main layout:fragment="content" class="part-b-page">
+<main layout:fragment="content" class="part-b-page topics-page">
 
-<div class="b-page-heading"><h1 th:text="${editMode} ? 'Chỉnh sửa đề xuất' : 'Tạo đề xuất mới'" class="page-title-tab mb-0"></h1></div>
+<div class="topics-heading"><h1 th:text="${editMode} ? 'Chỉnh sửa đề xuất' : 'Tạo đề xuất mới'"></h1></div>
 
 <form class="content-card b-proposal-form" th:action="${editMode}
         ? @{/topics/{id}(id=${topicId})}
@@ -56,8 +56,8 @@
     <textarea class="form-control" id="requirements"
               th:field="*{requirements}"></textarea>
 
-    <button type="submit" class="btn btn-theme">Lưu đề xuất nháp</button>
-    <a th:href="@{/topics/my}">Quay lại</a>
+    <div class="topics-actions"><button type="submit" class="btn btn-theme">Lưu đề xuất nháp</button>
+    <a class="btn btn-outline-secondary" th:href="@{/topics/my}">Quay lại</a></div>
 </form>
 
 </main>

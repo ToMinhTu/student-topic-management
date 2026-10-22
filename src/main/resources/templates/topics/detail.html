@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chi tiết đề tài</title>
-<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"></th:block>
+<th:block layout:fragment="css"><link rel="stylesheet" th:href="@{/css/part-b.css}"><link rel="stylesheet" th:href="@{/css/topics.css}"></th:block>
 </head>
 <body>
-<main layout:fragment="content" class="part-b-page">
+<main layout:fragment="content" class="part-b-page topics-page">
 
-<div class="b-page-heading"><h1 th:text="${topic.title}" class="page-title-tab mb-0">Chi tiết đề tài</h1></div>
+<div class="topics-heading"><h1 th:text="${topic.title}">Chi tiết đề tài</h1></div>
 
 <p class="alert alert-success" th:if="${success}" th:text="${success}"></p>
-<p role="alert" th:if="${error}" th:text="${error}" style="color: #b91c1c"></p>
+<p class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></p>
 
-<p><strong>Mã đề tài:</strong>
+<section class="topics-card topics-detail" aria-label="Thông tin đề tài"><p><strong>Mã đề tài:</strong>
     <span th:text="${topic.code}"></span></p>
 
 <p><strong>Đợt đăng ký:</strong>
@@ -24,7 +24,7 @@
     <span th:text="${topic.departmentId}"></span></p>
 
 <p><strong>Trạng thái:</strong>
-    <span th:text="${topic.status}"></span></p>
+    <span class="topic-status" th:attr="data-status=${topic.status}" th:switch="${topic.status.name()}"><span th:case="'DRAFT'">Bản nháp</span><span th:case="'SUBMITTED'">Chờ xét duyệt</span><span th:case="'APPROVED'">Đã phê duyệt</span><span th:case="'PUBLISHED'">Đã công bố</span><span th:case="'REJECTED'">Bị từ chối</span><span th:case="*" th:text="${topic.status}"></span></span></p>
 
 <p th:if="${topic.rejectionReason}" role="alert"><strong>Lý do từ chối:</strong> <span th:text="${topic.rejectionReason}"></span></p>
 <h3>Mô tả</h3>
@@ -35,7 +35,7 @@
 
 </section>
 
-<div class="actions"
+<div class="topics-actions"><div class="actions"
      th:if="${topic.status.name() == 'DRAFT' or topic.status.name() == 'REJECTED'}">
 
     <a class="btn btn-theme"
@@ -56,7 +56,7 @@
       onsubmit="return confirm('Bạn có chắc muốn xóa đề xuất nháp này?');">
     <button type="submit" class="btn btn-danger">Xóa đề xuất nháp</button>
 </form>
-<p><a th:href="@{/topics/my}">Quay lại danh sách</a></p>
+<a class="btn btn-outline-secondary" th:href="@{/topics/my}">Quay lại danh sách</a></div>
 
 </main>
 </body>
