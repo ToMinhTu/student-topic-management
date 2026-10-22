@@ -75,6 +75,9 @@ class LecturerRegistrationControllerTest {
         "LECTURER+DEAN+DEPARTMENT_HEAD, true, true",
         "DEPARTMENT_HEAD, false, true",
         "DEAN, false, false",
+        "DEAN+STUDENT, false, false",
+        "LECTURER+STUDENT, false, false",
+        "ADMIN+DEPARTMENT_HEAD, false, true",
         "STUDENT, false, false",
         "ADMIN, false, false",
         "LECTURER+ADMIN, false, false"
@@ -85,6 +88,14 @@ class LecturerRegistrationControllerTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         org.junit.jupiter.api.Assertions.assertEquals(showLecturerGroups, html.contains("Xem danh sách nhóm"));
         org.junit.jupiter.api.Assertions.assertEquals(showDepartmentReview, html.contains("href=\"/department/topics\""));
+        java.util.Set<String> roleSet = java.util.Set.of(roles.split("\\+"));
+        for (String path : List.of("/dean/rounds", "/dean/topics/supervisors", "/dean/topics/review", "/dean/topics/publish")) {
+            org.junit.jupiter.api.Assertions.assertEquals(roleSet.contains("DEAN"), html.contains("href=\"" + path + "\""), path);
+        }
+        boolean canPropose = roleSet.contains("LECTURER") || roleSet.contains("STUDENT");
+        org.junit.jupiter.api.Assertions.assertEquals(canPropose ? 1 : 0,
+                html.split("href=\"/topics/my\"", -1).length - 1, "Proposal link must appear once for eligible roles");
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("href=\"/catalog/topics\""));
         if (roles.contains("LECTURER")) {
             org.junit.jupiter.api.Assertions.assertEquals(1,
                     html.split("href=\"/groups\"", -1).length - 1, "Avoid duplicate group links");
