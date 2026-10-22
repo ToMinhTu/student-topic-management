@@ -138,8 +138,12 @@
             <h1>Thêm thành viên hội đồng</h1>
             <div class="notice">Hội đồng: <b th:text="${council.name}"></b></div>
             <form th:action="@{/councils/{id}/members/save(id=${council.id})}" th:object="${memberForm}" method="post">
-                <div class="form-row"><label for="lecturerId">Mã giảng viên</label><input id="lecturerId"
-                        class="form-control" type="number" th:field="*{lecturerId}">
+                <div class="form-row"><label for="lecturerId">Mã giảng viên</label><select id="lecturerId"
+                        class="form-select" th:field="*{lecturerId}">
+                        <option value="">-- Chọn giảng viên --</option>
+                        <option th:each="lecturer : ${lecturers}" th:value="${lecturer.userid}"
+                                th:text="|${lecturer.lecturerCode} - ${lecturer.user.fullname}|"></option>
+                    </select>
                     <div class="error" th:if="${#fields.hasErrors('lecturerId')}" th:errors="*{lecturerId}"></div>
                 </div>
                 <div class="form-row"><label for="slotNo">Vị trí trong hội đồng</label><select id="slotNo"

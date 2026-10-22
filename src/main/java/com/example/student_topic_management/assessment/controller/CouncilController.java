@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.student_topic_management.assessment.dto.CouncilForm;
 import com.example.student_topic_management.assessment.service.CouncilService;
+import com.example.student_topic_management.identity.repository.LecturerProfileRepository;
 
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,9 +23,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public class CouncilController {
 
     private final CouncilService councilService;
+    private final LecturerProfileRepository lecturerProfileRepository;
 
-    public CouncilController(CouncilService councilService) {
+    public CouncilController(CouncilService councilService, LecturerProfileRepository lecturerProfileRepository) {
         this.councilService = councilService;
+        this.lecturerProfileRepository = lecturerProfileRepository;
     }
 
     @GetMapping("/councils")
@@ -107,6 +110,7 @@ public class CouncilController {
             Model model) {
 
         model.addAttribute("council", councilService.findById(id));
+        model.addAttribute("lecturers", activeLecturers());
         model.addAttribute(
                 "memberForm",
                 new CouncilMemberForm());
@@ -123,12 +127,19 @@ public class CouncilController {
 
         if (result.hasErrors()) {
             model.addAttribute("council", councilService.findById(id));
+            model.addAttribute("lecturers", activeLecturers());
             return "councils/member-form";
         }
 
         councilService.addMember(id, form);
 
         return "redirect:/councils/{id}/members";
+    }
+
+    private java.util.List<com.example.student_topic_management.identity.entity.LecturerProfile> activeLecturers() {
+        return lecturerProfileRepository.findAll().stream()
+                .filter(lecturer -> Boolean.TRUE.equals(lecturer.getUser().getEnabled()))
+                .toList();
     }
 
 }

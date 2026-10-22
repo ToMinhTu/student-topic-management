@@ -15,19 +15,23 @@ import com.example.student_topic_management.assessment.dto.CouncilForm;
 import com.example.student_topic_management.assessment.entity.Council;
 import com.example.student_topic_management.assessment.entity.CouncilStatus;
 import com.example.student_topic_management.assessment.repository.CouncilRepository;
+import com.example.student_topic_management.identity.service.CurrentUserService;
 
 @Service
 public class CouncilService {
 
     private final CouncilRepository councilRepository;
     private final CouncilMemberRepository councilMemberRepository;
+    private final CurrentUserService currentUserService;
 
     public CouncilService(
             CouncilRepository councilRepository,
-            CouncilMemberRepository councilMemberRepository) {
+            CouncilMemberRepository councilMemberRepository,
+            CurrentUserService currentUserService) {
 
         this.councilRepository = councilRepository;
         this.councilMemberRepository = councilMemberRepository;
+        this.currentUserService = currentUserService;
     }
 
     public List<Council> findAll() {
@@ -57,7 +61,7 @@ public class CouncilService {
             council = new Council();
 
             council.setStatus(CouncilStatus.DRAFT);
-            council.setCreatedBy(1L);
+            council.setCreatedBy(currentUserService.getCurrentUserId());
         }
 
         council.setRoundId(form.getRoundId());
