@@ -82,6 +82,8 @@
             <!-- Trình tự nghiệp vụ của khoa: đợt/đề tài -> hội đồng/lịch -> chấm -> kết quả -->
             <th:block sec:authorize="hasRole('DEAN') and !hasRole('STUDENT')">
                 <div class="menu-header">Nghiệp vụ khoa</div>
+                <li class="nav-item"><a th:href="@{/dean/registrations}" class="nav-link"><i
+                            class="bi bi-clipboard-check me-2"></i>Duyệt đăng ký đề tài</a></li>
                 <li class="nav-item"><a th:href="@{/councils}" class="nav-link"><i
                             class="bi bi-journal-bookmark me-2"></i>Hội đồng</a></li>
                 <li class="nav-item"><a th:href="@{/defenses}" class="nav-link"><i

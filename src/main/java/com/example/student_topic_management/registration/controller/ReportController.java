@@ -11,11 +11,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.student_topic_management.registration.service.ReportService;
@@ -60,7 +62,7 @@ public class ReportController {
     @PostMapping("/{registrationId}/upload")
     public String uploadReport(
             @PathVariable Long registrationId,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(name = "file", required = false) MultipartFile file,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -87,6 +89,27 @@ public class ReportController {
         }
 
         return "redirect:/reports/" + registrationId;
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public String handleInvalidReportId(
+            RedirectAttributes redirectAttributes) {
+
+        redirectAttributes.addFlashAttribute(
+                "error",
+                "Mã hồ sơ hoặc mã báo cáo không hợp lệ"
+        );
+
+        return "redirect:/groups";
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public String handleReportError(
+            RuntimeException ex,
+            RedirectAttributes redirectAttributes) {
+
+        redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        return "redirect:/groups";
     }
 
     // C05.3 - Download PDF

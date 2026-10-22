@@ -227,6 +227,13 @@
             </a>
         </div>
 
+        <div class="alert alert-danger"
+             role="alert"
+             th:if="${error != null or errorMessage != null}"
+             th:text="${error != null ? error : errorMessage}">
+            Không thể xử lý yêu cầu.
+        </div>
+
         <!-- Khung danh sách -->
         <section class="group-card">
 
