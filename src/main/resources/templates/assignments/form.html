@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm phân công chấm điểm</title>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-4" style="max-width: 920px;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Thêm phân công chấm điểm
+            </h2>
+            <p class="text-muted mb-0">Chọn hồ sơ, giảng viên và vai trò chấm.</p>
+        </div>
+        <a th:href="@{/dean/assignments}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Quay lại
+        </a>
+    </div>
+
+    <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}"></div>
+
+    <div class="alert alert-info" th:if="${#lists.isEmpty(registrations)}">
+        Chưa có hồ sơ đủ điều kiện phân công. Hãy duyệt đăng ký, nhận báo cáo, tạo lịch bảo vệ và kích hoạt hội đồng trước.
+    </div>
+
+    <section class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3"><strong>Thông tin phân công</strong></div>
+        <div class="card-body p-4">
+            <form th:action="@{/dean/assignments}" th:object="${assignmentForm}" method="post">
+                <div class="mb-4">
+                    <label for="registrationId" class="form-label fw-semibold">Hồ sơ đăng ký</label>
+                    <select id="registrationId" th:field="*{registrationId}"
+                            class="form-select" th:errorclass="is-invalid" required>
+                        <option value="">-- Chọn hồ sơ --</option>
+                        <option th:each="registration : ${registrations}"
+                                th:value="${registration.id()}"
+                                th:text="|#${registration.id()} - ${registration.groupName()} - ${registration.topicCode()} - ${registration.topicTitle()}|">
+                        </option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{registrationId}"></div>
+                    <div class="form-text">Chỉ hiển thị hồ sơ đã duyệt, có báo cáo và lịch bảo vệ hợp lệ.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="lecturerId" class="form-label fw-semibold">Giảng viên chấm</label>
+                    <select id="lecturerId" th:field="*{lecturerId}"
+                            class="form-select" th:errorclass="is-invalid" required>
+                        <option value="">-- Chọn giảng viên --</option>
+                        <option th:each="lecturer : ${lecturers}"
+                                th:value="${lecturer.id()}"
+                                th:text="|${lecturer.lecturerCode()} - ${lecturer.fullName()} (ID ${lecturer.id()})|">
+                        </option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{lecturerId}"></div>
+                    <div class="form-text">Giảng viên hướng dẫn của đề tài không được phép chấm.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="assignmentType" class="form-label fw-semibold">Loại phân công</label>
+                    <select id="assignmentType" th:field="*{assignmentType}"
+                            class="form-select" th:errorclass="is-invalid" required>
+                        <option value="REVIEWER">Giảng viên phản biện</option>
+                        <option value="COUNCIL">Thành viên hội đồng</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{assignmentType}"></div>
+                    <div class="form-text">
+                        Phản biện phải độc lập với hội đồng. Loại “Hội đồng” chỉ nhận thành viên thuộc hội đồng của lịch bảo vệ.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                    <a th:href="@{/dean/assignments}" class="btn btn-outline-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary"
+                            th:disabled="${#lists.isEmpty(registrations)}">
+                        <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Lưu phân công
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+</body>
+</html>

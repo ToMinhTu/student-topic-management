@@ -54,19 +54,42 @@
                             class="bi bi-megaphone me-2"></i>QL Thông báo</a></li>
             </th:block>
 
+            <!-- Phần B: quyền hiển thị khớp với controller/service phía server. -->
+            <th:block sec:authorize="isAuthenticated()">
+                <li class="menu-header">Đợt và đề tài</li>
+                <li class="nav-item" sec:authorize="hasRole('DEAN')">
+                    <a th:href="@{/dean/rounds}" class="nav-link"><i class="bi bi-calendar-check me-2"></i>Quản lý đợt đăng ký</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('LECTURER', 'STUDENT')">
+                    <a th:href="@{/topics/my}" class="nav-link"><i class="bi bi-lightbulb me-2"></i>Đề xuất đề tài</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('DEAN')">
+                    <a th:href="@{/dean/topics/supervisors}" class="nav-link"><i class="bi bi-person-workspace me-2"></i>Phân công GVHD</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('DEPARTMENT_HEAD')">
+                    <a th:href="@{/department/topics}" class="nav-link"><i class="bi bi-journal-check me-2"></i>Duyệt đề tài cấp bộ môn</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('DEAN')">
+                    <a th:href="@{/dean/topics/review}" class="nav-link"><i class="bi bi-clipboard-check me-2"></i>Duyệt đề tài cấp khoa</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('DEAN')">
+                    <a th:href="@{/dean/topics/publish}" class="nav-link"><i class="bi bi-megaphone me-2"></i>Công bố đề tài</a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/catalog/topics}" class="nav-link"><i class="bi bi-search me-2"></i>Tra cứu đề tài công bố</a>
+                </li>
+            </th:block>
             <!-- Trình tự nghiệp vụ của khoa: đợt/đề tài -> hội đồng/lịch -> chấm -> kết quả -->
             <th:block sec:authorize="hasRole('DEAN') and !hasRole('STUDENT')">
                 <div class="menu-header">Nghiệp vụ khoa</div>
-                <li class="nav-item"><a th:href="@{/dean/rounds}" class="nav-link"><i
-                            class="bi bi-calendar-check me-2"></i>QL Đăng ký</a></li>
                 <li class="nav-item"><a th:href="@{/dean/registrations}" class="nav-link"><i
                             class="bi bi-clipboard-check me-2"></i>Duyệt đăng ký đề tài</a></li>
-                <li class="nav-item" sec:authorize="hasRole('LECTURER')"><a th:href="@{/topics/my}" class="nav-link"><i
-                            class="bi bi-lightbulb me-2"></i>Đề xuất đề tài</a></li>
                 <li class="nav-item"><a th:href="@{/councils}" class="nav-link"><i
                             class="bi bi-journal-bookmark me-2"></i>Hội đồng</a></li>
                 <li class="nav-item"><a th:href="@{/defenses}" class="nav-link"><i
                             class="bi bi-calendar2-check me-2"></i>Lịch bảo vệ</a></li>
+                <li class="nav-item"><a th:href="@{/dean/assignments}" class="nav-link"><i
+                            class="bi bi-person-check me-2"></i>Phân công chấm điểm</a></li>
                 <li class="nav-item"><a th:href="@{/evaluations}" class="nav-link"><i
                             class="bi bi-clipboard2-check me-2"></i>Phiếu chấm điểm</a></li>
                 <li class="nav-item"><a th:href="@{/results}" class="nav-link"><i class="bi bi-award me-2"></i>Kết quả
@@ -80,8 +103,6 @@
             <!-- Giảng viên thực hiện tuần tự từ đề tài đến xác nhận kết quả -->
             <th:block sec:authorize="hasRole('LECTURER') and !hasRole('DEAN') and !hasRole('STUDENT')">
                 <div class="menu-header">Nghiệp vụ giảng viên</div>
-                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i class="bi bi-lightbulb me-2"></i>Đề
-                        xuất đề tài</a></li>
                 <li class="nav-item"><a th:href="@{/councils}" class="nav-link"><i class="bi bi-people me-2"></i>Hội
                         đồng thi</a></li>
                 <li class="nav-item"><a th:href="@{/lecturer/registrations}" class="nav-link"><i
@@ -94,19 +115,11 @@
                         bảo vệ</a></li>
             </th:block>
 
-            <th:block sec:authorize="hasRole('DEPARTMENT_HEAD')">
-                <div class="menu-header">Nghiệp vụ bộ môn</div>
-                <li class="nav-item"><a th:href="@{/department/topics}" class="nav-link"><i
-                            class="bi bi-journal-check me-2"></i>Duyệt đề tài cấp bộ môn</a></li>
-            </th:block>
-
             <!-- Sinh viên chỉ có các chức năng học tập, kết quả nằm cuối quy trình -->
             <th:block sec:authorize="hasRole('STUDENT')">
                 <div class="menu-header">Nghiệp vụ sinh viên</div>
                 <li class="nav-item"><a th:href="@{/groups}" class="nav-link"><i class="bi bi-collection me-2"></i>Nhóm
                         sinh viên</a></li>
-                <li class="nav-item"><a th:href="@{/topics/my}" class="nav-link"><i class="bi bi-lightbulb me-2"></i>Đề
-                        xuất đề tài</a></li>
                 <li class="nav-item"><a th:href="@{/topics}" class="nav-link"><i
                             class="bi bi-bookmark-check me-2"></i>Đăng ký đề tài</a></li>
                 <li class="nav-item"><a th:href="@{/results}" class="nav-link"><i class="bi bi-award me-2"></i>Kết quả

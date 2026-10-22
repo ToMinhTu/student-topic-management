@@ -18,4 +18,8 @@ public interface ReviewerAssignmentRepository
     boolean existsByRegistrationIdAndLecturerId(
             Long registrationId,
             Long lecturerId);
+
+    boolean existsByRegistrationIdAndAssignmentType(
+            Long registrationId,
+            String assignmentType);
 }

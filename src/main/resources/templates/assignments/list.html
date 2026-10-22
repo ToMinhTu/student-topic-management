@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Phân công chấm điểm</title>
+</head>
+
+<body>
+<main layout:fragment="content" class="container-fluid py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-person-check me-2" aria-hidden="true"></i>Phân công chấm điểm
+            </h2>
+            <p class="text-muted mb-0">
+                Phân công giảng viên phản biện hoặc thành viên hội đồng chấm hồ sơ.
+            </p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/dean/assignments/new}">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Thêm phân công
+        </a>
+    </div>
+
+    <div class="alert alert-success" role="status" th:if="${success != null}" th:text="${success}"></div>
+    <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}"></div>
+
+    <section class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <strong>Phân công nhanh thành viên hội đồng</strong>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Hệ thống tạo phân công loại “Hội đồng” cho toàn bộ thành viên của hội đồng đã gắn với lịch bảo vệ.
+            </p>
+            <form class="row g-3 align-items-end"
+                  th:action="@{/dean/assignments/sync-council}"
+                  method="post">
+                <div class="col-lg-9">
+                    <label for="registrationId" class="form-label fw-semibold">Hồ sơ đăng ký</label>
+                    <select id="registrationId" name="registrationId" class="form-select" required>
+                        <option value="">-- Chọn hồ sơ đã có báo cáo và lịch bảo vệ --</option>
+                        <option th:each="registration : ${registrations}"
+                                th:value="${registration.id()}"
+                                th:text="|#${registration.id()} - ${registration.groupName()} - ${registration.topicCode()} - ${registration.councilName()}|">
+                        </option>
+                    </select>
+                </div>
+                <div class="col-lg-3 d-grid">
+                    <button type="submit" class="btn btn-outline-primary"
+                            th:disabled="${#lists.isEmpty(registrations)}">
+                        <i class="bi bi-people me-1" aria-hidden="true"></i>Đồng bộ hội đồng
+                    </button>
+                </div>
+            </form>
+            <div class="alert alert-info mt-3 mb-0" th:if="${#lists.isEmpty(registrations)}">
+                Chưa có hồ sơ đủ điều kiện. Hồ sơ cần được duyệt, có báo cáo, lịch bảo vệ và hội đồng ACTIVE.
+            </div>
+        </div>
+    </section>
+
+    <section class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3"><strong>Danh sách phân công</strong></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Hồ sơ / Nhóm</th>
+                    <th>Đề tài</th>
+                    <th>Giảng viên</th>
+                    <th>Loại</th>
+                    <th>Phiếu chấm</th>
+                    <th>Ngày phân công</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="assignment : ${assignments}">
+                    <td th:text="${assignment.id()}"></td>
+                    <td>
+                        <div class="fw-semibold" th:text="|#${assignment.registrationId()} - ${assignment.groupName()}|"></div>
+                        <small class="text-muted" th:text="${assignment.roundName()}"></small>
+                    </td>
+                    <td>
+                        <div class="fw-semibold" th:text="${assignment.topicCode()}"></div>
+                        <small class="text-muted" th:text="${assignment.topicTitle()}"></small>
+                    </td>
+                    <td>
+                        <div th:text="${assignment.lecturerName()}"></div>
+                        <small class="text-muted" th:text="|${assignment.lecturerCode()} · ID ${assignment.lecturerId()}|"></small>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${assignment.assignmentType() == 'REVIEWER'} ? ' text-bg-warning' : ' text-bg-info'"
+                              th:text="${assignment.assignmentType() == 'REVIEWER' ? 'Phản biện' : 'Hội đồng'}">
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${assignment.evaluated()} ? ' text-bg-success' : ' text-bg-secondary'"
+                              th:text="${assignment.evaluated() ? 'Đã có phiếu' : 'Chưa chấm'}">
+                        </span>
+                    </td>
+                    <td class="text-nowrap"
+                        th:text="${#temporals.format(assignment.createdAt(), 'dd/MM/yyyy HH:mm')}"></td>
+                    <td class="text-end">
+                        <form th:if="${!assignment.evaluated()}"
+                              th:action="@{/dean/assignments/{id}/delete(id=${assignment.id()})}"
+                              method="post"
+                              onsubmit="return confirm('Bạn có chắc muốn xóa phân công này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash me-1" aria-hidden="true"></i>Xóa
+                            </button>
+                        </form>
+                        <span th:if="${assignment.evaluated()}" class="text-muted small">Đã khóa</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(assignments)}">
+                    <td colspan="8" class="text-center text-muted py-5">
+                        <i class="bi bi-person-x fs-2 d-block mb-2" aria-hidden="true"></i>
+                        Chưa có phân công chấm điểm.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
